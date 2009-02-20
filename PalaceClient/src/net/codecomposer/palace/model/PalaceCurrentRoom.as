@@ -24,7 +24,7 @@ package net.codecomposer.palace.model
 		public var usersHash:Object = {};
 		public var roomFlags:int;
 		public var images:Object = {};
-		public var hotspots:ArrayCollection = new ArrayCollection();
+		public var hotSpots:ArrayCollection = new ArrayCollection();
 		public var selectedUser:PalaceUser;
 		public var selfUserId:int = -1;
 		

@@ -640,6 +640,38 @@ package net.codecomposer.palace.rpc
 			trace("Got media server: " + mediaServer);
 		}
 		
+		private function outputHexView(bytes:Array):void {
+			var output:String = "";
+			var outputLineHex:String = "";
+			var outputLineAscii:String = "";
+			for (var byteNum:int = 0; byteNum < bytes.length; byteNum++) {
+				var hexNum:String = uint(bytes[byteNum]).toString(16).toUpperCase();
+				if (hexNum.length == 1) {
+					hexNum = "0" + hexNum;
+				}
+
+				if (byteNum % 16 == 0) {
+					output = output.concat(outputLineHex, "      ", outputLineAscii, "\n");
+					outputLineHex = "";
+					outputLineAscii = "";
+				}
+				else if (byteNum % 4 == 0) {
+					outputLineHex = outputLineHex.concat("  ");
+					outputLineAscii = outputLineAscii.concat(" ");
+				}
+				else {
+					outputLineHex = outputLineHex.concat(" ");
+				}
+				outputLineHex = outputLineHex.concat(hexNum);
+				outputLineAscii = outputLineAscii.concat(
+					(bytes[byteNum] >= 32 && bytes[byteNum] <= 126) ? String.fromCharCode(bytes[byteNum]) : " "
+				);
+			}
+			output = output.concat(outputLineHex, "      ", outputLineAscii, "\n");
+			trace(output);
+		}
+
+		
 		// not fully implemented
 		private function getRoomDescription(size:int, referenceNumber:int):void {
 			var roomFlags:int = socket.readInt();
@@ -663,9 +695,11 @@ package net.codecomposer.palace.rpc
 			var roomBytes:Array = new Array(roomDataLength);
 
 			trace("Reading in room description: " + roomDataLength + " bytes to read.");
-			for (var i:int = 0; i < roomDataLength && socket.bytesAvailable > 0; i++) {
-				roomBytes[i] = socket.readByte();
+			for (var i:int = 0; i < roomDataLength; i++) {
+				roomBytes[i] = socket.readUnsignedByte();
 			}
+			
+			outputHexView(roomBytes);
 			
 			var padding:int = size - roomDataLength - 40;
 			for (i=0; i < padding; i++) {
@@ -693,14 +727,14 @@ package net.codecomposer.palace.rpc
 				imageName += String.fromCharCode(byte);
 			}
 			
-			// Hotspots
-			currentRoom.hotspots.removeAll();
-			for (i=0; i < hotSpotCount; i++) {
-				var hs:PalaceHotspot = new PalaceHotspot();
-				hs.fromBytes(roomBytes, hotSpotOffset);
-				hotSpotOffset += hs.size;
-				currentRoom.hotspots.addItem(hs);
-			}
+			// Hotspots -- Can't get this to work
+			currentRoom.hotSpots.removeAll();
+//			for (i=0; i < hotSpotCount; i++) {
+//				var hs:PalaceHotspot = new PalaceHotspot();
+//				hs.fromBytes(socket.endian, roomBytes, hotSpotOffset);
+//				hotSpotOffset += hs.size;
+//				currentRoom.hotSpots.addItem(hs);
+//			}
 			
 			// Images
 			var images:Object = {};

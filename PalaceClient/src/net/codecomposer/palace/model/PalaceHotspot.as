@@ -6,64 +6,68 @@ package net.codecomposer.palace.model
 	public class PalaceHotspot
 	{
 		
-		public var type:int = 0;
-		public var dest:int = 0;
-		public var id:int = 0;
-		public var flags:int = 0;
-		public var state:int = 0;
-		public var numStates:int = 0;
+		public var type:uint = 0;
+		public var dest:uint = 0;
+		public var id:uint = 0;
+		public var flags:uint = 0;
+		public var state:uint = 0;
+		public var numStates:uint = 0;
 		public var polygon:Array = []; // Array of points
 		public var name:String = null;
 		public var stateRecs:Array = []; // Array of HStateRec objects
 		public var eventHandlerRecs:Array = []; // Array of HEventHandlerRec objects
-		public var ory:int = 0;
-		public var orx:int = 0;
-		public var scriptEventMask:int = 0;
-		public var numScripts:int = 0;
+		public var ory:uint = 0;
+		public var orx:uint = 0;
+		public var scriptEventMask:uint = 0;
+		public var numScripts:uint = 0;
 		public var gSPBuf:Array = [];
-		public var gSPIdx:int = 0;
+		public var gSPIdx:uint = 0;
 		public var ungetFlag:Boolean = false;
 		public var gToken:String = "";
+		public var scriptText:String = "";
 		
 		public function PalaceHotspot()
 		{
 		}
-		
-		public function fromBytes(bs:Array, offset:int):void {
+
+		public function fromBytes(endian:String, bs:Array, offset:int):void {
+
+			
 			var ba:ByteArray = new ByteArray();
-			//imageBA.endian = Endian.BIG_ENDIAN;
-			for (var j:int=offset-1; j < offset+size-1; j++) {
+			for (var j:int=offset-1; j < offset+size; j++) {
 				ba.writeByte(bs[j]);
 			}
 			ba.position = 0;
+			//ba.endian = endian;
 			
-			scriptEventMask = ba.readInt();
-			flags = ba.readInt();
+			scriptEventMask = ba.readUnsignedInt();
+			flags = ba.readUnsignedInt();
 			ba.readInt();
 			ba.readInt();
-			ory = ba.readShort();
-			orx = ba.readShort();
-			id = ba.readShort();
-			dest = ba.readShort();
-			var ptCnt:int = ba.readShort();
-			var ptsOffset:int = ba.readShort();
-			type = ba.readShort();
+			ory = ba.readUnsignedShort();
+			orx = ba.readUnsignedShort();
+			id = ba.readUnsignedShort();
+			dest = ba.readUnsignedShort();
+			var ptCnt:uint = ba.readUnsignedShort();
+			var ptsOffset:uint = ba.readUnsignedShort();
+			type = ba.readUnsignedShort();
 			ba.readShort();
-			numScripts = ba.readShort();
+			numScripts = ba.readUnsignedShort();
 			ba.readShort();
-			state = ba.readShort();
-			numStates = ba.readShort();
-			var stateRecOffset:int = ba.readShort();
-			var nameOffset:int = ba.readShort();
-			var scriptTextOffset:int = ba.readShort();
+			state = ba.readUnsignedShort();
+			numStates = ba.readUnsignedShort();
+			var stateRecOffset:int = ba.readUnsignedShort();
+			var nameOffset:int = ba.readUnsignedShort();
+			var scriptTextOffset:int = ba.readUnsignedShort();
 			ba.readShort();
 			if (nameOffset > 0) {
-				name = "";
+				var nameByteArray:ByteArray = new ByteArray();
 				var nameLength:int = bs[nameOffset];
-				for (j=0; j < nameLength; j++) {
-					var nameByte:int = bs[nameOffset+j+1]; 
-					name += String.fromCharCode(nameByte);
+				for (var a:int = nameOffset+1; a < nameOffset+nameLength+1; a++) {
+					nameByteArray.writeByte(bs[a]);
 				}
+				nameByteArray.position = 0;
+				name = nameByteArray.readMultiByte(nameLength, 'iso-8859-1');
 			}
 			
 			// Not yet implemented
@@ -82,17 +86,19 @@ package net.codecomposer.palace.model
 //	        loadScripts(bs, scriptTextOffset);
 
 			ba = new ByteArray();
-			//imageBA.endian = Endian.BIG_ENDIAN;
-			var endPos:int = ptsOffset+(ptCnt*4)-1;
+			var endPos:int = ptsOffset+(ptCnt*4);
 			for (j=ptsOffset-1; j < endPos; j++) {
 				ba.writeByte(bs[j]);
 			}
 			ba.position = 0;
+			
+			//ba.endian = endian;
 			var startX:int = 0;
 			var startY:int = 0;
 			for (var i:int = 0; i < ptCnt; i++) {
 				var y:int = ba.readShort();
 				var x:int = ba.readShort();
+				trace("--------------------------------- X: " + x + " (" + x.toString(16) + ")    Y: " + y + "(" + y.toString(16) +")");
 				if (i == 0) {
 					startX = x;
 					startY = y;
@@ -102,7 +108,7 @@ package net.codecomposer.palace.model
 			
 			polygon.push(new Point(startX + orx, startY + ory));
 			
-			trace("Got new hotspot: " + this.id + " name: " + this.name);
+			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + ptCnt);
 		}
 		
 		public function get size():int {
