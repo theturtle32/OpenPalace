@@ -525,7 +525,7 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(0xcf07309c);// b[1]
 
 			var userNameBA:ByteArray = new ByteArray();
-			userNameBA.writeUTFBytes(userName);
+			userNameBA.writeMultiByte(userName, 'iso-8859-1');
 			userNameBA.position = 0;
 			socket.writeByte(userNameBA.bytesAvailable);
 			socket.writeBytes(userNameBA); //? name  or super.a?
@@ -649,25 +649,25 @@ package net.codecomposer.palace.rpc
 			var imageNameOffset:int = socket.readShort();
 			var artistNameOffset:int = socket.readShort();
 			var passwordOffset:int = socket.readShort();
-			var numHotSpots:int = socket.readShort();
+			var hotSpotCount:int = socket.readShort();
 			var hotSpotOffset:int = socket.readShort();
-			var numImages:int = socket.readShort();
+			var imageCount:int = socket.readShort();
 			var imageOffset:int = socket.readShort();
-			var numDrawCommands:int = socket.readShort();
+			var drawCommandsCount:int = socket.readShort();
 			var firstDrawCommand:int = socket.readShort();
-			var numPeople:int = socket.readShort();
-			var numLooseProps:int = socket.readShort();
+			var peopleCount:int = socket.readShort();
+			var loosePropCount:int = socket.readShort();
 			var firstLooseProp:int = socket.readShort();
 			socket.readShort();
-			var lenVars:int = socket.readShort();
-			var varsBytes:Array = new Array(lenVars);
-			// readFully reads in the specified number of bytes
-			trace("Reading in room description: " + lenVars + " bytes to read, " + socket.bytesAvailable + " bytes available.");
-			for (var i:int = 0; i < lenVars; i++) {
-				varsBytes[i] = socket.readByte();
+			var roomDataLength:int = socket.readShort();
+			var roomBytes:Array = new Array(roomDataLength);
+
+			trace("Reading in room description: " + roomDataLength + " bytes to read.");
+			for (var i:int = 0; i < roomDataLength && socket.bytesAvailable > 0; i++) {
+				roomBytes[i] = socket.readByte();
 			}
 			
-			var padding:int = size - lenVars - 40;
+			var padding:int = size - roomDataLength - 40;
 			for (i=0; i < padding; i++) {
 				socket.readByte();
 			}
@@ -675,41 +675,41 @@ package net.codecomposer.palace.rpc
 			var byte:int;
 			
 			// Room Name
-			var roomNameLength:int = varsBytes[roomNameOffset];
+			var roomNameLength:int = roomBytes[roomNameOffset];
 			var roomName:String = "";
 			var ba:ByteArray = new ByteArray();
 			for (i=0; i < roomNameLength; i++) {
-				byte = varsBytes[i+roomNameOffset+1];
+				byte = roomBytes[i+roomNameOffset+1];
 				ba.writeByte(byte);
 			}
 			ba.position = 0;
 			roomName = ba.readUTFBytes(roomNameLength);
 			
 			// Image Name
-			var imageNameLength:int = varsBytes[imageNameOffset];
+			var imageNameLength:int = roomBytes[imageNameOffset];
 			var imageName:String = "";
 			for (i=0; i < imageNameLength; i++) {
-				byte = varsBytes[i+imageNameOffset+1];
+				byte = roomBytes[i+imageNameOffset+1];
 				imageName += String.fromCharCode(byte);
 			}
 			
 			// Hotspots
 			currentRoom.hotspots.removeAll();
-			for (i=0; i < numHotSpots; i++) {
+			for (i=0; i < hotSpotCount; i++) {
 				var hs:PalaceHotspot = new PalaceHotspot();
-				hs.fromBytes(varsBytes, hotSpotOffset);
+				hs.fromBytes(roomBytes, hotSpotOffset);
 				hotSpotOffset += hs.size;
 				currentRoom.hotspots.addItem(hs);
 			}
 			
 			// Images
 			var images:Object = {};
-			for (i=0; i < numImages; i++) {
+			for (i=0; i < imageCount; i++) {
 				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
 				var imageBA:ByteArray = new ByteArray();
 				//imageBA.endian = Endian.BIG_ENDIAN;
 				for (var j:int=imageOffset-1; j < imageOffset+12-1; j++) {
-					imageBA.writeByte(varsBytes[j]);
+					imageBA.writeByte(roomBytes[j]);
 				}
 				imageBA.position = 0;
 				imageOverlay.refCon = imageBA.readInt();
@@ -717,10 +717,10 @@ package net.codecomposer.palace.rpc
 				var picNameOffset:int = imageBA.readShort();
 				imageOverlay.transparencyColor = imageBA.readShort();
 				imageBA.readShort(); // ??
-				var picNameLength:int = varsBytes[picNameOffset];
+				var picNameLength:int = roomBytes[picNameOffset];
 				var picName:String = "";
 				for (j=0; j < picNameLength; j++) {
-					var imageNameByte:int = varsBytes[picNameOffset+j+1]; 
+					var imageNameByte:int = roomBytes[picNameOffset+j+1]; 
 					picName += String.fromCharCode(imageNameByte);
 				}
 				imageOverlay.filename = picName;
@@ -733,7 +733,7 @@ package net.codecomposer.palace.rpc
 			// Loose props
 			var looseProps:Object = {};
 			var ofst:int = firstLooseProp;
-			for (i=0; i < numLooseProps; i++) {
+			for (i=0; i < loosePropCount; i++) {
 				// Not implemented
 			}
 			
