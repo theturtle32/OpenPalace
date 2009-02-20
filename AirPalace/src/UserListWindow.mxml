@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Window xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+	width="400" height="300" showStatusBar="false"
+	title="User List"
+	xmlns:view="net.codecomposer.palace.view.*">
+	<mx:Script>
+		<![CDATA[
+			import net.codecomposer.palace.rpc.PalaceSocket;
+			import net.codecomposer.palace.event.RoomSelectedEvent;
+			
+		]]>
+	</mx:Script>
+	<view:UserListGrid resizableColumns="false" id="userList" left="0" right="0" top="0" bottom="40" />
+	<mx:Button label="Go To Room" right="10" bottom="10" click="if (userList.selectedRoomId != -1) { PalaceSocket.getInstance().gotoRoom(userList.selectedRoomId); }"/>
+
+</mx:Window>

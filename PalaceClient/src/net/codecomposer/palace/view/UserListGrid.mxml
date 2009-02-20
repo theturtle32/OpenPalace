@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:mx="http://www.adobe.com/2006/mxml"
+	itemClick="handleSelection(event)"
+	dataProvider="{palace.userList}" draggableColumns="false">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.ListEvent;
+			import net.codecomposer.palace.rpc.PalaceSocket;
+			import net.codecomposer.palace.event.RoomSelectedEvent;
+			[Bindable]
+			private var palace:PalaceSocket = PalaceSocket.getInstance();
+			
+			[Bindable]
+			public var selectedUserId:int = -1;
+			[Bindable]
+			public var selectedRoomId:int = -1;
+			
+			private function handleSelection(event:ListEvent):void {
+				selectedRoomId = this.selectedItem.roomID;
+				selectedUserId = this.selectedItem.id;
+			}
+		]]>
+	</mx:Script>
+	<mx:columns>
+		<mx:DataGridColumn headerText="Name" dataField="name" />
+		<mx:DataGridColumn headerText="Room ID" dataField="roomName" />
+	</mx:columns>
+		
+</mx:DataGrid>

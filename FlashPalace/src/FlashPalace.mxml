@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+	xmlns:code="http://code.google.com/p/flexlib/" xmlns:local="*"
+	creationComplete="handleCreationComplete()">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.PropertyChangeEvent;
+			import mx.binding.utils.ChangeWatcher;
+			import net.codecomposer.palace.rpc.PalaceSocket;
+			[Bindable]
+			public var palace:PalaceSocket = PalaceSocket.getInstance();
+
+			private var connectWindow:ConnectWindow;
+			private var logWindow:LogWindow;
+			private var chatWindow:ChatWindow;
+			private var userListWindow:UserListWindow; 
+			private var roomListWindow:RoomListWindow;
+
+			private function handleCreationComplete():void {
+				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
+				connectWindow = new ConnectWindow();
+				mdic.windowManager.add(connectWindow);
+			}
+			
+			private function handleConnectedChange(event:PropertyChangeEvent):void {
+				if (palace.connected) {
+					if (!chatWindow) {
+						chatWindow = new ChatWindow();
+					}
+					mdic.windowManager.add(chatWindow);
+					mdic.windowManager.bringToFront(chatWindow);
+					showLogWindow();
+				}
+			}
+			
+			private function disconnect():void {
+				palace.disconnect();
+			}
+			
+			private function showConnectWindow():void {
+				if (!connectWindow) {
+					connectWindow = new ConnectWindow();
+				}
+				mdic.windowManager.addCenter(connectWindow);
+				mdic.windowManager.bringToFront(connectWindow);
+			}
+			
+			private function showLogWindow():void {
+				if (!logWindow) {
+					logWindow = new LogWindow();
+				}
+				mdic.windowManager.add(logWindow);
+				mdic.windowManager.bringToFront(logWindow);
+			}
+			
+			private function showUserList():void {
+				if (!userListWindow) {
+					userListWindow = new UserListWindow();
+				}
+				palace.requestUserList();
+				mdic.windowManager.add(userListWindow);
+				mdic.windowManager.bringToFront(userListWindow);
+			}
+			
+			private function showRoomList():void {
+				if (!roomListWindow) {
+					roomListWindow = new RoomListWindow();
+				}
+				palace.requestRoomList();
+				mdic.windowManager.add(roomListWindow);
+				mdic.windowManager.bringToFront(roomListWindow);
+			}
+		]]>
+	</mx:Script>
+	<mx:ApplicationControlBar id="controlBar" horizontalAlign="left" dock="true">
+		<mx:Button label="Chat Log" click="showLogWindow()" />
+		<mx:Button label="Room List" click="showRoomList()" />
+		<mx:Button label="User List" click="showUserList()" />
+		<mx:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
+		<mx:Button label="Connect" click="showConnectWindow()" />
+		<mx:CheckBox label="UTF-8 (Extended Characters)" id="useUTF8" selected="false"/>
+	</mx:ApplicationControlBar>
+
+	<mx:Binding source="useUTF8.selected" destination="palace.utf8" />
+
+	<code:MDICanvas id="mdic" width="100%" height="100%">
+
+	</code:MDICanvas>
+
+</mx:Application>

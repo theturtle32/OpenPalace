@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MDIWindow xmlns="flexlib.mdi.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="300" height="435" 
+	creationComplete="handleCreationComplete()"
+	left="530" top="10"
+	layout="absolute"
+	title="Chat Log">
+	<mx:Script>
+		<![CDATA[
+			import net.codecomposer.palace.rpc.PalaceSocket;
+			[Bindable]
+			public var palace:PalaceSocket = PalaceSocket.getInstance();
+			
+			private function handleCreationComplete():void {
+				palace.currentRoom.addEventListener('chatLogUpdated', handleChatLogUpdated);
+			}
+			
+			private function handleChatLogUpdated(event:Event):void {
+				logViewer.verticalScrollPosition = logViewer.maxVerticalScrollPosition;
+			}
+		
+		]]>
+	</mx:Script>
+
+	<mx:TextArea left="0" top="0" bottom="0" right="0" editable="false" id="logViewer"
+		htmlText="{palace.currentRoom.chatLog}"/>
+	
+</MDIWindow>

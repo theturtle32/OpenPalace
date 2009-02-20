@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Label color="#FFFFFF" fontWeight="bold" selectable="false" textAlign="center"
+	fontFamily="Arial" fontSize="12" text="{user.name}"
+	x="{user.x-width/2}" y="{user.y+14}"
+	xmlns:mx="http://www.adobe.com/2006/mxml" width="400" height="300" xmlns:filters="flash.filters.*">
+	<mx:Script>
+		<![CDATA[
+			import net.codecomposer.palace.model.PalaceUser;
+			[Bindable]
+			public var user:PalaceUser;
+		]]>
+	</mx:Script>
+	
+	<mx:filters>
+		<filters:GlowFilter color="#000000" alpha="1" blurX="2" blurY="2" quality="{BitmapFilterQuality.MEDIUM}" strength="5" />
+	</mx:filters>
+</mx:Label>

@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	width="{backgroundImage.width}" height="{backgroundImage.height}"
+	minWidth="512" minHeight="384"
+	xmlns:view="net.codecomposer.palace.view.*"
+	backgroundColor="#000000"
+	creationComplete="handleCreationComplete()">
+	<mx:Script>
+		<![CDATA[
+			import net.codecomposer.palace.util.AirTest;
+			import flash.utils.setTimeout;
+			import mx.core.UIComponent;
+			import mx.binding.utils.BindingUtils;
+			import net.codecomposer.palace.event.PalaceRoomEvent;
+			import net.codecomposer.palace.event.AvatarSelectEvent;
+			import net.codecomposer.palace.event.ChatEvent;
+			import mx.charts.HitData;
+			import net.codecomposer.palace.model.PalaceCurrentRoom;
+			import net.codecomposer.palace.rpc.PalaceSocket;
+			import mx.events.PropertyChangeEvent;
+			import net.codecomposer.palace.model.PalaceUser;
+			import mx.binding.utils.ChangeWatcher;
+			import net.codecomposer.palace.model.PalaceCurrentRoom;
+			[Bindable]
+			public var room:PalaceCurrentRoom;
+			
+			[Bindable]
+			public var mediaServer:String;
+			
+			private var avatarsByUser:Dictionary = new Dictionary();
+			private var nameTagsByUser:Dictionary = new Dictionary();
+			
+			private var baseBackgroundFile:String;
+			private var forcingJpeg:Boolean = false;
+			
+			private var isAir:Boolean;
+			
+			private function handleCreationComplete():void {
+				if (AirTest.isAir) {
+					trace("RUNNING IN AIR");
+				}
+				else {
+					trace("RUNNING IN BROWSER");
+				}
+				this.addEventListener(MouseEvent.CLICK, handleClick);
+				room.addEventListener(ChatEvent.CHAT, handleChat);
+				room.addEventListener(PalaceRoomEvent.ROOM_CLEARED, handleRoomCleared);
+				room.addEventListener(PalaceRoomEvent.USER_ENTERED, handleUserEntered);
+				room.addEventListener(PalaceRoomEvent.USER_LEFT, handleUserLeft);
+				ChangeWatcher.watch(room, 'backgroundFile', handleBGChange);
+			}
+			
+			private function getHitArea():UIComponent {
+				var hitArea:UIComponent = new UIComponent();
+				hitArea.visible = false;
+				hitArea.mouseEnabled = false;
+				hitArea.graphics.clear();
+				hitArea.graphics.beginFill(0x000000, 1.0);
+				hitArea.graphics.drawRect(0,0,44,44);
+				hitArea.height = hitArea.width = 44;
+				hitArea.graphics.endFill();
+				return hitArea;
+			}
+			
+			private function handleClick(event:MouseEvent):void {
+				var x:int = this.contentMouseX;
+				var y:int = this.contentMouseY;
+				trace("Movement requested x:" + x + " y:" + y);
+				var socket:PalaceSocket = PalaceSocket.getInstance();
+				socket.move(x, y);
+			}
+			
+			private function handleAvatarClick(event:MouseEvent):void {
+				if (event.currentTarget is Avatar) {
+					var user:PalaceUser = Avatar(event.currentTarget).user;
+					trace("Clicked avatar " + user.id + " - self is " + room.selfUserId);
+					if (user.id == room.selfUserId) {
+						room.selectedUser = null;
+					} 
+					else if (room.selectedUser != user) {
+						room.selectedUser = user;
+					}
+					else if (room.selectedUser == user) {
+						room.selectedUser = null;
+					}
+					updateAvatarTransparencies();
+					event.stopPropagation();
+				}
+			}
+			
+			private function updateAvatarTransparencies():void {
+				//trace("Updating avatar transparencies");
+				for each (var avatar:Object in avatarsByUser) {
+					var av:Avatar = Avatar(avatar);
+					if (room.selectedUser == null || av.user.id == room.selfUserId || av.user == room.selectedUser) {
+						//trace("User " + av.user.id + " is self or selected user or no user is selected");
+						av.alpha = 1;
+					}
+					else {
+						//trace("User " + av.user.id + " is not the selected user (" + room.selectedUser.id + ")");
+						av.alpha = 0.6;
+					}
+				}
+			}
+			
+			private function handleChat(event:ChatEvent):void {
+				var chatBubble:ChatBubble = new ChatBubble();
+				chatBubble.text = event.chatText;
+				chatBubble.x = event.user.x + 25;
+				chatBubble.y = event.user.y + 10;
+				textCanvas.addChild(chatBubble)
+				setTimeout(function():void {
+					textCanvas.removeChild(chatBubble);
+				}, 1500 + (event.chatText.length * 150));
+			}
+			
+			private function handleUserEntered(event:PalaceRoomEvent):void {
+				var avatar:Avatar = new Avatar();
+				avatar.user = event.user;
+				avatar.alpha = 1;
+				avatar.addEventListener(MouseEvent.CLICK, handleAvatarClick);
+				avatarsCanvas.addChild(avatar);
+				var hitArea:UIComponent = getHitArea();
+				avatar.addChild(hitArea);
+				avatar.hitArea = hitArea;
+				avatar.validateDisplayList();
+				avatarsByUser[event.user] = avatar;
+				updateAvatarTransparencies();
+				
+//				var nameTag:NameTag = new NameTag();
+//				nameTag.user = event.user;
+//				nameTagsByUser[event.user] = nameTag;
+//				nameTagsCanvas.addChild(nameTag);
+			}
+			
+			private function handleUserLeft(event:PalaceRoomEvent):void {
+				var avatar:Avatar = avatarsByUser[event.user];
+				if (avatar != null) {
+					avatar.removeEventListener(MouseEvent.CLICK, handleAvatarClick);
+					avatarsCanvas.removeChild(avatar);
+					avatarsByUser[event.user] = null;
+					delete avatarsByUser[event.user];
+				}
+								
+//				var nameTag:NameTag = nameTagsByUser[event.user];
+//				if (nameTag != null) {
+//					nameTagsCanvas.removeChild(nameTag);
+//					nameTagsByUser[event.user] = null;
+//					delete nameTagsByUser[event.user];
+//				}
+			}
+			
+			private function handleRoomCleared(event:PalaceRoomEvent):void {
+				for each (var avatar:Object in avatarsByUser) {
+					Avatar(avatar).removeEventListener(MouseEvent.CLICK, handleAvatarClick);
+				}
+				avatarsCanvas.removeAllChildren();
+				avatarsByUser = new Dictionary();
+				
+//				for each (var nameTag:Object in nameTagsByUser) {
+//					nameTagsCanvas.removeAllChildren();
+//					nameTagsByUser = new Dictionary();
+//				}
+			}
+			
+			private function handleBGChange(event:PropertyChangeEvent):void {
+				if (room.backgroundFile == null) {
+					return;
+				}
+				var match:Array = room.backgroundFile.match(/^(.*)\.gif$/i);
+				if (match != null && AirTest.isAir) {
+					forcingJpeg = true;
+					baseBackgroundFile = match[1];
+					trace("Trying to find jpeg version of background."); 
+					backgroundImage.source = mediaServer + baseBackgroundFile + ".jpg";
+				}
+				else {
+					backgroundImage.source = mediaServer + room.backgroundFile;
+				}
+			}
+			
+			private function handleBGHTTP(event:HTTPStatusEvent):void {
+				if (forcingJpeg && event.status == 404) {
+					trace("Unable to load " + backgroundImage.source + " - Reverting to gif.");
+					forcingJpeg = false;
+					setTimeout(function():void {
+						backgroundImage.source = mediaServer + room.backgroundFile;
+					}, 50);
+					trace("Loading: " + backgroundImage.source);
+				}
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
+		scaleContent="false" httpStatus="handleBGHTTP(event)"
+		visible="{room.backgroundFile != null}" />
+	<mx:Canvas id="avatarsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+<!--	<mx:Canvas id="nameTagsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off"  /> -->
+	<mx:Canvas id="textCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+</mx:Canvas>

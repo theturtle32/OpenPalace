@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MDIWindow xmlns="flexlib.mdi.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+	title="Connect..." width="286" height="126" layout="absolute" horizontalScrollPolicy="off"
+	verticalScrollPolicy="off" showControls="false" creationComplete="handleCreationComplete()">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.PropertyChangeEvent;
+			import mx.binding.utils.ChangeWatcher;
+			import net.codecomposer.palace.rpc.PalaceSocket;
+			[Bindable]
+			public var palace:PalaceSocket = PalaceSocket.getInstance();
+		
+			private function handleCreationComplete():void {
+				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
+			}
+			
+			private function handleConnectedChange(event:PropertyChangeEvent):void {
+				if (event.newValue == true) {
+					close();
+				}
+			}
+		
+			private function connect():void {
+				palace.connect(userName.text, hostName.text, int(port.text));
+			}
+			
+			private function handleConnectionKeydown(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.ENTER) {
+					connect();
+				}
+			}
+		]]>
+	</mx:Script>
+
+		<mx:TextInput id="userName" text="FlashPalace User" left="60" top="8"/>
+		<mx:Label text="Name:" textAlign="right" left="10" top="10"/>
+		<mx:Label text="Host:" textAlign="right" width="42" left="10" top="38"/>
+		<mx:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
+		<mx:TextInput id="hostName" text="altpub.net" keyDown="handleConnectionKeydown(event)" left="60" top="36"/>
+		<mx:HBox x="10" y="67" width="260" horizontalAlign="right">
+			<mx:Button label="Cancel" click="close()"/>
+			<mx:Button label="Connect" click="connect()" />
+		</mx:HBox>
+</MDIWindow>

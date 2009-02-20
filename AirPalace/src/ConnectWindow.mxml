@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Window xmlns:mx="http://www.adobe.com/2006/mxml" width="286" height="96" layout="absolute"
+	creationComplete="handleCreationComplete()"
+	title="Connect..."
+	showStatusBar="false">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.PropertyChangeEvent;
+			import mx.binding.utils.ChangeWatcher;
+			import net.codecomposer.palace.rpc.PalaceSocket;
+			[Bindable]
+			public var palace:PalaceSocket = PalaceSocket.getInstance();
+		
+			private function handleCreationComplete():void {
+				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
+			}
+			
+			private function handleConnectedChange(event:PropertyChangeEvent):void {
+				if (event.newValue == true) {
+					this.close();
+				}
+			}
+		
+			private function connect():void {
+				palace.connect(userName.text, hostName.text, int(port.text));
+			}
+			
+			private function handleConnectionKeydown(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.ENTER) {
+					connect();
+				}
+			}
+		]]>
+	</mx:Script>
+
+		<mx:TextInput id="userName" text="Turtle" left="60" top="8"/>
+		<mx:Label text="Name:" textAlign="right" left="10" top="10"/>
+		<mx:Label text="Host:" textAlign="right" width="42" left="10" top="38"/>
+		<mx:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
+		<mx:TextInput id="hostName" text="avatarpalace.net" keyDown="handleConnectionKeydown(event)" left="60" top="36"/>
+		<mx:Button label="Connect" click="connect()" right="8" top="66"/>
+
+</mx:Window>

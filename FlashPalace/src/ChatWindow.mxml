@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MDIWindow xmlns="flexlib.mdi.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+	title="{palace.serverName} - {palace.currentRoom.name}"
+	resizable="false" layout="vertical"
+	width="{roomView.width+6}" height="{roomView.height+chatBox.height+29}"
+	verticalGap="0"
+	verticalScrollPolicy="off" horizontalScrollPolicy="off"
+	left="10" top="10"
+	enabled="{palace.connected}"
+	showControls="false" xmlns:view="net.codecomposer.palace.view.*" xmlns:code="http://code.google.com/p/flexlib/">
+	
+	<mx:Script>
+		<![CDATA[
+			import net.codecomposer.palace.rpc.PalaceSocket;
+			[Bindable]
+			private var palace:PalaceSocket = PalaceSocket.getInstance();
+						
+			private function handleChatKeyDown(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.ENTER) {
+					palace.say(chatBox.text);
+					chatBox.text = "";
+				}
+			}
+		]]>
+	</mx:Script>
+	
+	<view:PalaceRoomView id="roomView" room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
+	<code:PromptingTextInput prompt="Type here to chat..." width="100%" id="chatBox" keyDown="handleChatKeyDown(event);" maxChars="254"/>
+	
+</MDIWindow>
