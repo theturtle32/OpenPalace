@@ -2,7 +2,7 @@ package net.codecomposer.palace.model
 {
 	import flash.utils.setTimeout;
 	
-	import net.codecomposer.palace.rpc.PalaceSocket;
+	import net.codecomposer.palace.rpc.PalaceClient;
 	
 	public class PalacePropStore
 	{
@@ -10,7 +10,7 @@ package net.codecomposer.palace.model
 		
 		private var props:Object = new Object();
 		
-		private var client:PalaceSocket = PalaceSocket.getInstance();
+		private var client:PalaceClient = PalaceClient.getInstance();
 		
 		public function PalacePropStore()
 		{

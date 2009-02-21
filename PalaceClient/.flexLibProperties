@@ -5,7 +5,7 @@
 <classEntry path="net.codecomposer.palace.event.RoomSelectedEvent"/>
 <classEntry path="net.codecomposer.palace.model.AssetManager"/>
 <classEntry path="net.codecomposer.palace.model.PalaceUser"/>
-<classEntry path="net.codecomposer.palace.rpc.PalaceSocket"/>
+<classEntry path="net.codecomposer.palace.rpc.PalaceClient"/>
 <classEntry path="net.codecomposer.palace.model.PalaceCurrentRoom"/>
 <classEntry path="net.codecomposer.palace.message.PalaceMessage"/>
 <classEntry path="net.codecomposer.palace.event.PalaceRoomEvent"/>

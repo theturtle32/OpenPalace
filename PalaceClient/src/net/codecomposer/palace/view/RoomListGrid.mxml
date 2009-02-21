@@ -8,10 +8,10 @@
 	<mx:Script>
 		<![CDATA[
 			import mx.events.ListEvent;
-			import net.codecomposer.palace.rpc.PalaceSocket;
+			import net.codecomposer.palace.rpc.PalaceClient;
 			import net.codecomposer.palace.event.RoomSelectedEvent;
 			[Bindable]
-			private var palace:PalaceSocket = PalaceSocket.getInstance();
+			private var palace:PalaceClient = PalaceClient.getInstance();
 			
 			[Bindable]
 			public var gotoRoomOnClick:Boolean = true;

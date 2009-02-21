@@ -6,9 +6,9 @@
 		<![CDATA[
 			import mx.events.PropertyChangeEvent;
 			import mx.binding.utils.ChangeWatcher;
-			import net.codecomposer.palace.rpc.PalaceSocket;
+			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
-			public var palace:PalaceSocket = PalaceSocket.getInstance();
+			public var palace:PalaceClient = PalaceClient.getInstance();
 
 			private var connectWindow:ConnectWindow;
 			private var logWindow:LogWindow;

@@ -5,9 +5,9 @@
 	showStatusBar="false">
 	<mx:Script>
 		<![CDATA[
-			import net.codecomposer.palace.rpc.PalaceSocket;
+			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
-			public var palace:PalaceSocket = PalaceSocket.getInstance();
+			public var palace:PalaceClient = PalaceClient.getInstance();
 			
 			private function handleCreationComplete():void {
 				palace.currentRoom.addEventListener('chatLogUpdated', handleChatLogUpdated);

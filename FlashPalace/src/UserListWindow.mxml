@@ -7,13 +7,13 @@
 	xmlns:view="net.codecomposer.palace.view.*">
 	<mx:Script>
 		<![CDATA[
-			import net.codecomposer.palace.rpc.PalaceSocket;
+			import net.codecomposer.palace.rpc.PalaceClient;
 			import net.codecomposer.palace.event.RoomSelectedEvent;
 			
 		]]>
 	</mx:Script>
 	<view:UserListGrid resizableColumns="false" id="userList" left="0" right="0" top="0" bottom="40" />
-	<mx:Button label="Go To Room" right="10" bottom="10" click="if (userList.selectedRoomId != -1) { PalaceSocket.getInstance().gotoRoom(userList.selectedRoomId); }"/>
+	<mx:Button label="Go To Room" right="10" bottom="10" click="if (userList.selectedRoomId != -1) { PalaceClient.getInstance().gotoRoom(userList.selectedRoomId); }"/>
 
 	
 </MDIWindow>

@@ -20,37 +20,30 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
-	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.model.PalaceImageOverlay;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceUser;
-	import net.codecomposer.palace.util.AirTest;
 	
 	
-	public class PalaceSocket
+	public class PalaceClient
 	{
-		private static var instance:PalaceSocket;
+		private static var instance:PalaceClient;
 		
 		private var socket:Socket = null;
-		
-		[Bindable]
-		public var utf8:Boolean = false;
-		
-		private var highFirst:Boolean = false;
-		
-		public var dkey:int = 0xa2c2a;
-		public var x:int = 0;
-		public var y:int = 0;
+				
 		public var version:int;
-		public var room:int;
 		public var id:int = 0;
 		
+		// Variables to keep state between packets if we didn't have enough
+		// data available in the first packet.
 		public var messageID:int = 0;
 		public var messageSize:int = 0;
 		public var messageP:int = 0;
 		public var waitingForMore:Boolean = false;
 		
+		[Bindable]
+		public var utf8:Boolean = false;
 		[Bindable]
 		public var port:int = 0;
 		[Bindable]
@@ -59,9 +52,6 @@ package net.codecomposer.palace.rpc
 		public var state:int = STATE_DISCONNECTED;
 		[Bindable]
 		public var connected:Boolean = false;
-		
-		public var lut:Array = [];
-		
 		[Bindable]
 		public var serverName:String = "No Server";
 		[Bindable]
@@ -71,40 +61,61 @@ package net.codecomposer.palace.rpc
 		[Bindable]
 		public var mediaServer:String = "";
 		[Bindable]
+		public var userList:ArrayCollection = new ArrayCollection();
+		[Bindable]
 		public var currentRoom:PalaceCurrentRoom = new PalaceCurrentRoom();
 		[Bindable]
 		public var roomList:ArrayCollection = new ArrayCollection();
 		public var roomById:Object = {};
-		[Bindable]
-		public var userList:ArrayCollection = new ArrayCollection();
+		
+		private var assetRequestQueueTimer:Timer = null;
+		private var assetRequestQueue:ByteArray = new ByteArray();
+		private var assetRequestQueueCounter:int = 0;
 		
 		// States
 		public static const STATE_DISCONNECTED:int = 0;
 		public static const STATE_HANDSHAKING:int = 1;
 		public static const STATE_READY:int = 2; 
 		
-		public static function getInstance():PalaceSocket {
-			if (PalaceSocket.instance == null) {
-				PalaceSocket.instance = new PalaceSocket();
+		public static function getInstance():PalaceClient {
+			if (PalaceClient.instance == null) {
+				PalaceClient.instance = new PalaceClient();
 			}
-			return PalaceSocket.instance;
+			return PalaceClient.instance;
 		}
 		
-		public function PalaceSocket()
+		public function PalaceClient()
 		{
-			if (PalaceSocket.instance != null) {
+			if (PalaceClient.instance != null) {
 				throw new Error("Cannot create more than one instance of a singleton.");
 			}
 		}
+		
+		private function resetState():void {
+			messageID = 0;
+			messageSize = 0;
+			messageP = 0;
+			connected = false;
+			currentRoom.name = "No Room";
+			currentRoom.users.removeAll();
+			currentRoom.usersHash = {};
+			currentRoom.backgroundFile = null;
+			currentRoom.selectedUser = null;
+			currentRoom.removeAllUsers();
+			serverName = "No Server"
+			roomList.removeAll();
+			userList.removeAll();
+			socket = null;
+		}
+		
+		// ***************************************************************
+		// Begin public functions for user interaction
+		// ***************************************************************
 
 		public function connect(userName:String, host:String, port:int = 9998):void {
 			this.host = host;
 			this.port = port;
 			this.userName = userName;
-			
-			if (!AirTest.isAir) {
-				Security.loadPolicyFile("http://altpub.net/socketpolicy.xml");
-			}
 			
 			if (connected || (socket && socket.connected)) {
 				disconnect();
@@ -129,23 +140,6 @@ package net.codecomposer.palace.rpc
 				socket.close();
 			}
 			resetState();
-		}
-		
-		public function resetState():void {
-			messageID = 0;
-			messageSize = 0;
-			messageP = 0;
-			connected = false;
-			currentRoom.name = "No Room";
-			currentRoom.users.removeAll();
-			currentRoom.usersHash = {};
-			currentRoom.backgroundFile = null;
-			currentRoom.selectedUser = null;
-			currentRoom.removeAllUsers();
-			serverName = "No Server"
-			roomList.removeAll();
-			userList.removeAll();
-			socket = null;
 		}
 
 		public function say(message:String):void {
@@ -218,33 +212,17 @@ package net.codecomposer.palace.rpc
 				return;
 			}
 			socket.writeInt(OutgoingMessageTypes.GOTO_ROOM);
-			socket.writeInt(2);
+			socket.writeInt(2); // length
 			socket.writeInt(id);
 			socket.writeShort(roomId);
 			socket.flush();
 		}
 		
-		
-		private var assetRequestQueueTimer:Timer = null;
-		private var assetRequestQueue:ByteArray = new ByteArray();
-		private var assetRequestQueueCounter:int = 0;
-		
-		private function sendAssetRequests(event:TimerEvent=null):void {
-			if (!connected || !socket || !socket.connected) {
-				return;
-			}
-			assetRequestQueueTimer.reset();
-			assetRequestQueueCounter = 0;
-			assetRequestQueue.position = 0;
-			trace("Flushing asset requests to socket.");
-			while (assetRequestQueue.bytesAvailable >= 4) {
-				socket.writeInt(assetRequestQueue.readInt());
-			}
-			socket.flush();
-			assetRequestQueue = new ByteArray();
-		}
-		
 		public function requestAsset(assetType:int, assetId:uint, assetCrc:uint):void {
+			// Asset requests queue up because flushing once every request is slow.
+			// Instead we batch an arbitrarily chosen 16 requests together.
+			// The buffer will flush when there are 16 assets to be requested, or if
+			// 250 milliseconds have elapsed since the last asset was added to the queue.
 			if (!connected) {
 				return;	
 			}
@@ -269,11 +247,32 @@ package net.codecomposer.palace.rpc
 				assetRequestQueueTimer.start();			
 			}
 		}
+		
+		private function sendAssetRequests(event:TimerEvent=null):void {
+			if (!connected || !socket || !socket.connected) {
+				assetRequestQueue = new ByteArray()
+				assetRequestQueueCounter = 0;
+				return;
+			}
+			assetRequestQueueTimer.reset();
+			assetRequestQueueCounter = 0;
+			assetRequestQueue.position = 0;
+			trace("Flushing asset requests to socket.");
+			while (assetRequestQueue.bytesAvailable >= 4) {
+				socket.writeInt(assetRequestQueue.readInt());
+			}
+			socket.flush();
+			assetRequestQueue = new ByteArray();
+		}
 				
 		
-		// Below this line are the functions to handle messages received from the server
 		
 		
+		
+		// ***************************************************************
+		// Begin private functions to messages from the server
+		// ***************************************************************
+				
 		private function onConnect(event:Event):void {
 			connected = true;
 			state = STATE_HANDSHAKING;
@@ -327,44 +326,44 @@ package net.codecomposer.palace.rpc
 								break;
 							
 							case IncomingMessageTypes.SERVER_VERSION:
-								getServerVersion(size, p);
+								handleReceiveServerVersion(size, p);
 								break;
 								
 							case IncomingMessageTypes.SERVER_INFO:
-								getServerInfo(size, p);
+								handleReceiveServerInfo(size, p);
 								break;
 								
 							case IncomingMessageTypes.USER_STATUS:
-								getUserStatus(size, p);
+								handleReceiveUserStatus(size, p);
 								break;
 							
 							case IncomingMessageTypes.USER_LOGGED_ON_AND_MAX:
-								getUserLog(size, p);
+								handleReceiveUserLog(size, p);
 								break;
 							
 							case IncomingMessageTypes.GOT_HTTP_SERVER_LOCATION:
-								getMediaAddress(size, p);
+								handleReceiveMediaServer(size, p);
 								break;
 							
 							case IncomingMessageTypes.GOT_ROOM_DESCRIPTION:
 							case IncomingMessageTypes.GOT_ROOM_DESCRIPTION_ALT:
-								getRoomDescription(size, p);
+								handleReceiveRoomDescription(size, p);
 								break;
 								
 							case IncomingMessageTypes.GOT_USER_LIST:
-								getUserList(size, p);
+								handleReceiveUserList(size, p);
 								break;
 								
 							case IncomingMessageTypes.GOT_REPLY_OF_ALL_USERS:
-								getFullUserList(size, p);
+								handleReceiveFullUserList(size, p);
 								break;
 							
 							case IncomingMessageTypes.GOT_ROOM_LIST:
-								getRoomList(size, p);
+								handleReceiveRoomList(size, p);
 								break;
 							
 							case IncomingMessageTypes.ROOM_DESCEND: // No idea...
-								getRoomDescend(size, p);
+								handleReceiveRoomDescend(size, p);
 								break;
 								
 							case IncomingMessageTypes.USER_NEW:
@@ -394,14 +393,6 @@ package net.codecomposer.palace.rpc
 							case IncomingMessageTypes.ASSET_INCOMING:
 								handleReceiveAsset(size, p);
 								break;
-	//						case IncomingMessage.RECEIVE_WHISPER:
-	//							break;
-	//							
-	//						case IncomingMessage.WHISPER_CHAT_1:
-	//							break;
-	//							
-	//						case IncomingMessage.WHISPER_CHAT_2:
-	//							break;
 							
 							case IncomingMessageTypes.MOVEMENT:
 								handleMovement(size, p);
@@ -433,6 +424,10 @@ package net.codecomposer.palace.rpc
 							case IncomingMessageTypes.USER_LEAVING:
 								handleUserLeaving(size, p);
 								break;
+
+							case IncomingMessageTypes.USER_EXIT_ROOM:
+								handleUserExitRoom(size, p);
+								break;
 								
 	//						case IncomingMessage.CONNECTION_DIED:
 	//							handleConnectionDied(size, p);
@@ -441,18 +436,9 @@ package net.codecomposer.palace.rpc
 	//						case IncomingMessage.INCOMING_FILE:
 	//							handleIncomingFile(size, p);
 	//							break;
-	//							
-	//						case IncomingMessage.ASSET_INCOMING:
-	//							handleIncomingAsset(size, p);
-	//							break;
-								
-							case IncomingMessageTypes.USER_EXIT_ROOM:
-								handleUserExitRoom(size, p);
-								break;
 							
 							default:
 								trace("Unhandled MessageID: " + messageID.toString());
-								//socket.readMultiByte(size, 'iso-8859-1'); // throw the rest away
 								_throwAwayData(size, p);
 								break;
 						}
@@ -524,17 +510,12 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(0x5905f923);// b[0]
 			socket.writeInt(0xcf07309c);// b[1]
 
+			// Username has to be ISO-8859-1
 			var userNameBA:ByteArray = new ByteArray();
 			userNameBA.writeMultiByte(userName, 'iso-8859-1');
 			userNameBA.position = 0;
 			socket.writeByte(userNameBA.bytesAvailable);
 			socket.writeBytes(userNameBA); //? name  or super.a?
-
-//			var nameArray:Array = userName.split('');
-//			for (i = 0; i<nameArray.length; i++) {
-//				var byte:int = String(nameArray[i]).charCodeAt();
-//				socket.writeByte(byte);
-//			}
 			
 			i = 64 - (1 + userName.length);
 			if (i < 0) { 	// padding???
@@ -610,12 +591,12 @@ package net.codecomposer.palace.rpc
 			//	fclose(fp);
 		}
 		
-		private function getServerVersion(a:int, b:int):void {
+		private function handleReceiveServerVersion(a:int, b:int):void {
 			version = b;
 			trace("Server version: " + b);
 		}
 		
-		private function getServerInfo(a:int, b:int):void {
+		private function handleReceiveServerInfo(a:int, b:int):void {
 			var unknown:int = socket.readInt();
 			var size:int = socket.readByte();
 			serverName = socket.readMultiByte(size, 'iso-8859-1');
@@ -623,19 +604,19 @@ package net.codecomposer.palace.rpc
 		}
 		
 		// not fully implemented
-		private function getUserStatus(a:int, b:int):void {
+		private function handleReceiveUserStatus(a:int, b:int):void {
 			// a is length? b is client id
 			var data:String = socket.readMultiByte(a, 'iso-8859-1');
 			trace("User status?  Data: \n" + data); 			
 		}
 		
 		//class c2
-		private function getUserLog(a:int, b:int):void {
+		private function handleReceiveUserLog(a:int, b:int):void {
 			population = socket.readInt();
 			trace("Got population: " + population);
 		}
 		
-		private function getMediaAddress(a:int, b:int):void {
+		private function handleReceiveMediaServer(a:int, b:int):void {
 			mediaServer = socket.readMultiByte(a, 'iso-8859-1');
 			trace("Got media server: " + mediaServer);
 		}
@@ -673,7 +654,7 @@ package net.codecomposer.palace.rpc
 
 		
 		// not fully implemented
-		private function getRoomDescription(size:int, referenceNumber:int):void {
+		private function handleReceiveRoomDescription(size:int, referenceNumber:int):void {
 			var roomFlags:int = socket.readInt();
 			var face:int = socket.readInt();
 			var roomID:int = socket.readShort();
@@ -785,7 +766,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		// List of users in current room
-		private function getUserList(a:int, b:int):void {
+		private function handleReceiveUserList(a:int, b:int):void {
 			// b is count
 			currentRoom.removeAllUsers();
 			
@@ -834,7 +815,7 @@ package net.codecomposer.palace.rpc
 			trace("Got list of users in room.  Count: " + currentRoom.users.length);
 		}
 		
-		private function getRoomList(size:int, referenceNumber:int):void {
+		private function handleReceiveRoomList(size:int, referenceNumber:int):void {
 			var numAdded:int = 0;
 			var roomCount:int = referenceNumber;
 			roomList.removeAll();
@@ -852,7 +833,7 @@ package net.codecomposer.palace.rpc
 			trace("There are " + roomCount + " rooms in this palace.");
 		}
 		
-		private function getFullUserList(size:int, referenceNumber:int):void {
+		private function handleReceiveFullUserList(size:int, referenceNumber:int):void {
 			userList.removeAll();
 			var userCount:int = referenceNumber;
 			for (var i:int = 0; i < userCount; i++) {
@@ -880,7 +861,7 @@ package net.codecomposer.palace.rpc
 			trace("There are " + userList.length + " users in this palace.");
 		}
 		
-		private function getRoomDescend(a:int, b:int):void {
+		private function handleReceiveRoomDescend(a:int, b:int):void {
 			//No idea...
 		}
 		

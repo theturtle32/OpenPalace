@@ -11,9 +11,9 @@
 	
 	<mx:Script>
 		<![CDATA[
-			import net.codecomposer.palace.rpc.PalaceSocket;
+			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
-			private var palace:PalaceSocket = PalaceSocket.getInstance();
+			private var palace:PalaceClient = PalaceClient.getInstance();
 						
 			private function handleChatKeyDown(event:KeyboardEvent):void {
 				if (event.keyCode == Keyboard.ENTER) {

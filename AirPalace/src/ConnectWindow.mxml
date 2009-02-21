@@ -7,9 +7,9 @@
 		<![CDATA[
 			import mx.events.PropertyChangeEvent;
 			import mx.binding.utils.ChangeWatcher;
-			import net.codecomposer.palace.rpc.PalaceSocket;
+			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
-			public var palace:PalaceSocket = PalaceSocket.getInstance();
+			public var palace:PalaceClient = PalaceClient.getInstance();
 		
 			private function handleCreationComplete():void {
 				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
@@ -33,11 +33,11 @@
 		]]>
 	</mx:Script>
 
-		<mx:TextInput id="userName" text="Turtle" left="60" top="8"/>
+		<mx:TextInput id="userName" text="OpenPalace User" left="60" top="8"/>
 		<mx:Label text="Name:" textAlign="right" left="10" top="10"/>
 		<mx:Label text="Host:" textAlign="right" width="42" left="10" top="38"/>
-		<mx:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
 		<mx:TextInput id="hostName" text="avatarpalace.net" keyDown="handleConnectionKeydown(event)" left="60" top="36"/>
+		<mx:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
 		<mx:Button label="Connect" click="connect()" right="8" top="66"/>
 
 </mx:Window>

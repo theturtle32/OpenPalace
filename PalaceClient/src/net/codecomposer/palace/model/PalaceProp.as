@@ -46,11 +46,11 @@ package net.codecomposer.palace.model
 		public static const PROP_FORMAT_32BIT:uint  = 0x100;
 		public static const PROP_FORMAT_8BIT:uint   = 0x00;
 		
-		private static const mask:uint = 0xFFC1; // Regular palace prop flags.
+		private static const mask:uint = 0xFFC1; // Original palace prop flags.
 		
-		private static var badMask:uint = PROP_FORMAT_20BIT |
-										  PROP_FORMAT_S20BIT |
-										  PROP_FORMAT_32BIT;
+		private static var unsupportedFormatMask:uint = PROP_FORMAT_20BIT |
+										 				PROP_FORMAT_S20BIT |
+										  				PROP_FORMAT_32BIT;
 		
 		private static var itemsToRender:int = 0;
 		
@@ -99,18 +99,18 @@ package net.codecomposer.palace.model
                 flags = asset.data[11] | asset.data[10] << 8;
             }
             
-            propFormat = flags & badMask;
+            propFormat = flags & unsupportedFormatMask;
             
-            trace("Interesting flags: " + uint(flags & mask).toString(16));
-        	var isBad:Boolean = Boolean(flags & badMask);
-        	if (isBad) {
-        		trace("Bad prop, bailing.");
+            trace("Non-Standard flags: " + uint(flags & mask).toString(16));
+        	var propUnsupported:Boolean = Boolean(flags & unsupportedFormatMask);
+        	if (propUnsupported) {
+        		trace("Unsupported prop format - bailing.");
         		badProp = true;
         		ready = false;
         		asset.data = null
         		return;
         	}
-                        
+                       
            	head = Boolean(flags & HEAD_FLAG);
            	ghost = Boolean(flags & GHOST_FLAG);
            	rare = Boolean(flags & RARE_FLAG);
@@ -137,7 +137,6 @@ package net.codecomposer.palace.model
                     	ready = false;
                     	asset.data = null
                     	return;
-                        //throw new IOError("Invalid data length");
                     }
                 	if (counter++ > 6000) {
                 		// script runaway protection

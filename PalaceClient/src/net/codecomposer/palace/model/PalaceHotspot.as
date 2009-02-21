@@ -14,24 +14,19 @@ package net.codecomposer.palace.model
 		public var numStates:uint = 0;
 		public var polygon:Array = []; // Array of points
 		public var name:String = null;
-		public var stateRecs:Array = []; // Array of HStateRec objects
-		public var eventHandlerRecs:Array = []; // Array of HEventHandlerRec objects
-		public var ory:uint = 0;
-		public var orx:uint = 0;
+		public var originY:uint = 0;
+		public var originX:uint = 0;
 		public var scriptEventMask:uint = 0;
 		public var numScripts:uint = 0;
-		public var gSPBuf:Array = [];
-		public var gSPIdx:uint = 0;
-		public var ungetFlag:Boolean = false;
-		public var gToken:String = "";
-		public var scriptText:String = "";
 		
 		public function PalaceHotspot()
 		{
 		}
 
-		public function fromBytes(endian:String, bs:Array, offset:int):void {
-
+		public function readData(endian:String, bs:Array, offset:int):void {
+			// FIXME:  This seems broken.  The name is not read reliably
+			// and the coordinates for the polygon are not at all correct
+			// most of the time, but are correct sometimes.  No idea.
 			
 			var ba:ByteArray = new ByteArray();
 			for (var j:int=offset-1; j < offset+size; j++) {
@@ -44,8 +39,8 @@ package net.codecomposer.palace.model
 			flags = ba.readUnsignedInt();
 			ba.readInt();
 			ba.readInt();
-			ory = ba.readUnsignedShort();
-			orx = ba.readUnsignedShort();
+			originY = ba.readUnsignedShort();
+			originX = ba.readUnsignedShort();
 			id = ba.readUnsignedShort();
 			dest = ba.readUnsignedShort();
 			var ptCnt:uint = ba.readUnsignedShort();
@@ -69,21 +64,6 @@ package net.codecomposer.palace.model
 				nameByteArray.position = 0;
 				name = nameByteArray.readMultiByte(nameLength, 'iso-8859-1');
 			}
-			
-			// Not yet implemented
-//	        if(nbrStates > 0)
-//	        {
-//	            stateRecs = new HStateRec[nbrStates];
-//	            for(int i = 0; i < nbrStates; i++)
-//	            {
-//	                HStateRec hs = new HStateRec();
-//	                hs.fromBytes(bigEndian, bs, stateRecOfst);
-//	                stateRecOfst += HStateRec.size();
-//	                stateRecs[i] = hs;
-//	            }
-//	
-//	        }
-//	        loadScripts(bs, scriptTextOffset);
 
 			ba = new ByteArray();
 			var endPos:int = ptsOffset+(ptCnt*4);
@@ -103,10 +83,10 @@ package net.codecomposer.palace.model
 					startX = x;
 					startY = y;
 				}
-				polygon.push(new Point(x + orx, y + ory));
+				polygon.push(new Point(x + originX, y + originY));
 			}
 			
-			polygon.push(new Point(startX + orx, startY + ory));
+			polygon.push(new Point(startX + originX, startY + originY));
 			
 			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + ptCnt);
 		}

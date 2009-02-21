@@ -5,12 +5,12 @@
 	xmlns:view="net.codecomposer.palace.view.*">
 	<mx:Script>
 		<![CDATA[
-			import net.codecomposer.palace.rpc.PalaceSocket;
+			import net.codecomposer.palace.rpc.PalaceClient;
 			import net.codecomposer.palace.event.RoomSelectedEvent;
 			
 		]]>
 	</mx:Script>
-	<view:RoomListGrid resizableColumns="false" id="roomList" left="0" right="0" top="0" bottom="40" roomSelected="PalaceSocket.getInstance().gotoRoom(roomList.selectedRoomId);"/>
-	<mx:Button label="Go To Room" right="10" bottom="10" click="PalaceSocket.getInstance().gotoRoom(roomList.selectedRoomId);"/>
+	<view:RoomListGrid resizableColumns="false" id="roomList" left="0" right="0" top="0" bottom="40" roomSelected="PalaceClient.getInstance().gotoRoom(roomList.selectedRoomId);"/>
+	<mx:Button label="Go To Room" right="10" bottom="10" click="PalaceClient.getInstance().gotoRoom(roomList.selectedRoomId);"/>
 
 </mx:Window>

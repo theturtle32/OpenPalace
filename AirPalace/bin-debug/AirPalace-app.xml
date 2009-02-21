@@ -14,17 +14,17 @@
 -->
 
 	<!-- The application identifier string, unique to this application. Required. -->
-	<id>Palace</id>
+	<id>OpenPalace</id>
 
 	<!-- Used as the filename for the application. Required. -->
-	<filename>Palace</filename>
+	<filename>OpenPalace</filename>
 
 	<!-- The name that is displayed in the AIR application installer. 
 	     May have multiple values for each language. See samples or xsd schema file. Optional. -->
-	<name>Palace</name>
+	<name>OpenPalace</name>
 
 	<!-- An application version designator (such as "v1", "2.5", or "Alpha 1"). Required. -->
-	<version>v1</version>
+	<version>0.7b</version>
 
 	<!-- Description, displayed in the AIR application installer.
 	     May have multiple values for each language. See samples or xsd schema file. Optional. -->
@@ -55,10 +55,10 @@
 		<!-- <minimizable></minimizable> -->
 
 		<!-- Whether the user can maximize the window. Optional. Default true. -->
-		<!-- <maximizable></maximizable> -->
+		<maximizable>false</maximizable>
 
 		<!-- Whether the user can resize the window. Optional. Default true. -->
-		<!-- <resizable></resizable> -->
+		<resizable>false</resizable>
 
 		<!-- The window's initial width. Optional. -->
 		<!-- <width></width> -->
@@ -67,10 +67,10 @@
 		<!-- <height></height> -->
 
 		<!-- The window's initial x position. Optional. -->
-		<!-- <x></x> -->
+		<x>15</x>
 
 		<!-- The window's initial y position. Optional. -->
-		<!-- <y></y> -->
+		<y>0</y>
 
 		<!-- The window's minimum size, specified as a width/height pair, such as "400 200". Optional. -->
 		<!-- <minSize></minSize> -->
