@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+	creationComplete="handleCreationComplete()">
+	<mx:Script>
+		<![CDATA[
+			import mx.binding.utils.ChangeWatcher;
+			import mx.events.CollectionEvent;
+			import mx.events.CollectionEventKind;
+			import mx.collections.ArrayCollection;
+			import net.codecomposer.palace.model.PalaceHotspot;
+			
+			[Bindable]
+			public var hotSpots:ArrayCollection;
+			
+			private var viewsByHotSpot:Dictionary = new Dictionary();
+			
+			private function handleCreationComplete():void {
+				hotSpots.addEventListener(CollectionEvent.COLLECTION_CHANGE, handleHotSpotsChange);
+			}
+			
+			private function handleHotSpotsChange(event:CollectionEvent):void {
+				if (event.kind == CollectionEventKind.ADD) {
+					for each (var hotSpot:Object in event.items) {
+						addHotSpot(PalaceHotspot(hotSpot));
+					}
+				}
+				else if (event.kind == CollectionEventKind.REMOVE) {
+					trace("Removing hotspot: " + event.items[0]);
+				}
+				else if (event.kind == CollectionEventKind.RESET) {
+					trace("Resetting hotspots");
+					resetHotSpots();
+				}
+				else {
+					trace("HotSpot CollectionEventKind: " + event.kind);
+				}
+			}
+			
+			private function addHotSpot(hotSpot:PalaceHotspot):void {
+				trace("DRAWING HOTSPOT");
+				
+				var polygon:Shape = new Shape();
+				var points:Array = hotSpot.polygon;
+				var firstPoint:Point = Point(points[0]);
+				polygon.graphics.lineStyle(1, 0);
+				polygon.graphics.beginFill(0x333333, 0.5);
+				polygon.graphics.moveTo(firstPoint.x, firstPoint.y);
+				for (var i:int = 1; i < points.length; i++) {
+					var point:Point = Point(points[i]);
+					polygon.graphics.lineTo(point.x, point.y);
+				}
+				polygon.graphics.lineTo(firstPoint.x, firstPoint.y);
+				polygon.graphics.endFill();
+				rawChildren.addChild(polygon);
+				viewsByHotSpot[hotSpot] = polygon;
+			}
+			
+			private function resetHotSpots():void {
+				viewsByHotSpot = new Dictionary();
+				while (this.rawChildren.numChildren > 0) {
+					this.rawChildren.removeChildAt(0);
+				}
+			}
+			
+		]]>
+	</mx:Script>	
+</mx:Canvas>
