@@ -107,7 +107,7 @@
 				var chatBubble:ChatBubble = new ChatBubble();
 				chatBubble.text = event.chatText;
 				chatBubble.x = event.user.x + 25;
-				chatBubble.y = event.user.y + 10;
+				chatBubble.y = event.user.y - 20;
 				textCanvas.addChild(chatBubble)
 				setTimeout(function():void {
 					textCanvas.removeChild(chatBubble);
