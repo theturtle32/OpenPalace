@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+This file is part of OpenPalace.
+
+OpenPalace is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+OpenPalace is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
 <mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
 	width="{backgroundImage.width}" height="{backgroundImage.height}"
 	minWidth="512" minHeight="384"
@@ -7,7 +25,6 @@
 	creationComplete="handleCreationComplete()">
 	<mx:Script>
 		<![CDATA[
-			import net.codecomposer.palace.util.AirTest;
 			import flash.utils.setTimeout;
 			import mx.core.UIComponent;
 			import mx.binding.utils.BindingUtils;
@@ -36,12 +53,6 @@
 			private var isAir:Boolean;
 			
 			private function handleCreationComplete():void {
-				if (AirTest.isAir) {
-					trace("RUNNING IN AIR");
-				}
-				else {
-					trace("RUNNING IN BROWSER");
-				}
 				this.addEventListener(MouseEvent.CLICK, handleClick);
 				room.addEventListener(ChatEvent.CHAT, handleChat);
 				room.addEventListener(PalaceRoomEvent.ROOM_CLEARED, handleRoomCleared);
@@ -168,7 +179,7 @@
 					return;
 				}
 				var match:Array = room.backgroundFile.match(/^(.*)\.gif$/i);
-				if (match != null && AirTest.isAir) {
+				if (match != null && Security.sandboxType == Security.APPLICATION) {
 					forcingJpeg = true;
 					baseBackgroundFile = match[1];
 					trace("Trying to find jpeg version of background."); 

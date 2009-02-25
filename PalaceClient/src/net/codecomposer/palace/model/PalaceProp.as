@@ -1,8 +1,26 @@
+/*
+This file is part of OpenPalace.
+
+OpenPalace is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+OpenPalace is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package net.codecomposer.palace.model
 {
 	import flash.display.BitmapData;
 	import flash.events.EventDispatcher;
 	import flash.geom.Rectangle;
+	import flash.utils.ByteArray;
 	import flash.utils.setTimeout;
 	
 	import mx.core.FlexBitmap;
@@ -45,6 +63,8 @@ package net.codecomposer.palace.model
 		public static const PROP_FORMAT_20BIT:uint  = 0x40;
 		public static const PROP_FORMAT_32BIT:uint  = 0x100;
 		public static const PROP_FORMAT_8BIT:uint   = 0x00;
+
+		private static const rect:Rectangle = new Rectangle(0,0,44,44);
 		
 		private static const mask:uint = 0xFFC1; // Original palace prop flags.
 		
@@ -76,7 +96,8 @@ package net.codecomposer.palace.model
 		}
 		
 		public function decodeProp():void {			
-			setTimeout(renderBitmap, 300+150*(++itemsToRender));
+			// Try not to block the UI while props are rendering.
+			setTimeout(renderBitmap, 200+40*(++itemsToRender));
 		}
 		
 		private function renderBitmap():void {
@@ -155,14 +176,20 @@ package net.codecomposer.palace.model
                 }
 
             }
-            var bitmapData:BitmapData = new BitmapData(width, height, true);
-            index = 44;
-            for (y = 0; y < height; y++) {
-				for (x = 0; x < width; x++) {
-					bitmapData.setPixel32(x, y, pixData[index++]);
-				}
+            
+			// Using setPixels() now instead of setPixel() -- WAY faster.
+            
+			var bitmapBytes:ByteArray = new ByteArray();
+			var z:int = pixData.length;
+			for (y = 44; y < z; y ++) {
+				bitmapBytes.writeUnsignedInt(pixData[y]);
 			}
+			bitmapBytes.position = 0;			
+
+            var bitmapData:BitmapData = new BitmapData(width, height, true);
+			bitmapData.setPixels(rect, bitmapBytes); 
 			bitmap = bitmapData;
+			
 			ready = true;
 			asset.data = null;
 			dispatchEvent(new PropEvent(PropEvent.PROP_LOADED, this));

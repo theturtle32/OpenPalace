@@ -1,3 +1,20 @@
+/*
+This file is part of OpenPalace.
+
+OpenPalace is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+OpenPalace is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package net.codecomposer.palace.rpc
 {
 	import flash.events.Event;
@@ -20,7 +37,6 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
-	import net.codecomposer.palace.model.PalaceImageOverlay;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceUser;
@@ -720,28 +736,28 @@ package net.codecomposer.palace.rpc
 			// Images
 			var images:Object = {};
 			for (i=0; i < imageCount; i++) {
-				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
-				var imageBA:ByteArray = new ByteArray();
-				//imageBA.endian = Endian.BIG_ENDIAN;
-				for (var j:int=imageOffset-1; j < imageOffset+12-1; j++) {
-					imageBA.writeByte(roomBytes[j]);
-				}
-				imageBA.position = 0;
-				imageOverlay.refCon = imageBA.readInt();
-				imageOverlay.id = imageBA.readShort();
-				var picNameOffset:int = imageBA.readShort();
-				imageOverlay.transparencyColor = imageBA.readShort();
-				imageBA.readShort(); // ??
-				var picNameLength:int = roomBytes[picNameOffset];
-				var picName:String = "";
-				for (j=0; j < picNameLength; j++) {
-					var imageNameByte:int = roomBytes[picNameOffset+j+1]; 
-					picName += String.fromCharCode(imageNameByte);
-				}
-				imageOverlay.filename = picName;
-				images[imageOverlay.id] = imageOverlay; 
-				trace("picture id: " + imageOverlay.id + " - Name: " + imageOverlay.filename);
-				imageOffset += 12;
+//				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
+//				var imageBA:ByteArray = new ByteArray();
+//				//imageBA.endian = Endian.BIG_ENDIAN;
+//				for (var j:int=imageOffset-1; j < imageOffset+12-1; j++) {
+//					imageBA.writeByte(roomBytes[j]);
+//				}
+//				imageBA.position = 0;
+//				imageOverlay.refCon = imageBA.readInt();
+//				imageOverlay.id = imageBA.readShort();
+//				var picNameOffset:int = imageBA.readShort();
+//				imageOverlay.transparencyColor = imageBA.readShort();
+//				imageBA.readShort(); // ??
+//				var picNameLength:int = roomBytes[picNameOffset];
+//				var picName:String = "";
+//				for (j=0; j < picNameLength; j++) {
+//					var imageNameByte:int = roomBytes[picNameOffset+j+1]; 
+//					picName += String.fromCharCode(imageNameByte);
+//				}
+//				imageOverlay.filename = picName;
+//				images[imageOverlay.id] = imageOverlay; 
+//				trace("picture id: " + imageOverlay.id + " - Name: " + imageOverlay.filename);
+//				imageOffset += 12;
 			}
 			currentRoom.images = images;
 			
