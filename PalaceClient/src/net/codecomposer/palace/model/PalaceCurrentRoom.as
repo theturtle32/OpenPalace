@@ -24,6 +24,7 @@ package net.codecomposer.palace.model
 	
 	import net.codecomposer.palace.event.ChatEvent;
 	import net.codecomposer.palace.event.PalaceRoomEvent;
+	import net.codecomposer.palace.util.PalaceUtil;
 	
 	[Event(name="chatLogUpdated")]
 	[Event(name="chat",type="net.codecomposer.palace.event.ChatEvent")]
@@ -86,7 +87,7 @@ package net.codecomposer.palace.model
 		
 		public function chat(userId:int, message:String):void {
 			var user:PalaceUser = getUserById(userId);
-			chatLog = chatLog.concat("<b>", user.name, ":</b> ", message, "\n");
+			chatLog = chatLog.concat("<b>", PalaceUtil.htmlEscape(user.name), ":</b> ", PalaceUtil.htmlEscape(message), "\n");
 			dispatchEvent(new Event('chatLogUpdated'));
 			var event:ChatEvent = new ChatEvent(user, message);
 			dispatchEvent(event);
@@ -94,17 +95,17 @@ package net.codecomposer.palace.model
 		
 		public function whisper(userId:int, message:String):void {
 			var user:PalaceUser = getUserById(userId);
-			chatLog = chatLog.concat("<i><b>", user.name, " (whisper):</b> ", message, "</i>\n");
+			chatLog = chatLog.concat("<i><b>", PalaceUtil.htmlEscape(user.name), " (whisper):</b> ", PalaceUtil.htmlEscape(message), "</i>\n");
 			dispatchEvent(new Event('chatLogUpdated'));
 		}
 		
 		public function roomMessage(message:String):void {
-			chatLog = chatLog.concat("<b>*** " + message, "</b>\n");
+			chatLog = chatLog.concat("<b>*** " + PalaceUtil.htmlEscape(message), "</b>\n");
 			dispatchEvent(new Event('chatLogUpdated'));
 		}
 		
 		public function roomWhisper(message:String):void {
-			chatLog = chatLog.concat("<b><i>*** " + message, "</i></b>\n");
+			chatLog = chatLog.concat("<b><i>*** " + PalaceUtil.htmlEscape(message), "</i></b>\n");
 			dispatchEvent(new Event('chatLogUpdated'));
 		}
 	}
