@@ -87,6 +87,7 @@ package net.codecomposer.palace.rpc
 		private var assetRequestQueueTimer:Timer = null;
 		private var assetRequestQueue:ByteArray = new ByteArray();
 		private var assetRequestQueueCounter:int = 0;
+		private var assetsLastRequestedAt:Date = new Date();
 		
 		// States
 		public static const STATE_DISCONNECTED:int = 0;
@@ -270,6 +271,17 @@ package net.codecomposer.palace.rpc
 				assetRequestQueueCounter = 0;
 				return;
 			}
+			
+			// Don't flood the server with asset requests
+//			var now:Date = new Date();
+//			if (now.valueOf() - assetsLastRequestedAt.valueOf() < 150) {
+//				assetRequestQueueTimer.reset();
+//				assetRequestQueueTimer.start();
+//				trace("WAITING to request props...");
+//				return;
+//			}
+//			assetsLastRequestedAt = now;
+			 
 			assetRequestQueueTimer.reset();
 			assetRequestQueueCounter = 0;
 			assetRequestQueue.position = 0;

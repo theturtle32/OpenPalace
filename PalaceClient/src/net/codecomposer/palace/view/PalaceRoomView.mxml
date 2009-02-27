@@ -204,7 +204,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		]]>
 	</mx:Script>
 	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
-		scaleContent="false" httpStatus="handleBGHTTP(event)"
+		scaleContent="false" httpStatus="handleBGHTTP(event)" 
 		visible="{room.backgroundFile != null}" />
 	<view:PalaceHotspotView id="hotSpotCanvas" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
 	<mx:Canvas id="avatarsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />

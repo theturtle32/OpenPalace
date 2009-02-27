@@ -14,12 +14,16 @@ package net.codecomposer.palace.view
 		public var hotSpot:PalaceHotspot;
 		public var client:PalaceClient = PalaceClient.getInstance();		
 		
-		public function HotSpotSprite(hotSpot:PalaceHotspot)
+		public function HotSpotSprite(hotSpot:PalaceHotspot, highlightOnMouseOver:Boolean = false)
 		{
 			this.hotSpot = hotSpot;
 			super();
 			draw();
 			addEventListener(MouseEvent.CLICK, handleHotSpotClick);
+			if (highlightOnMouseOver) {
+				addEventListener(MouseEvent.ROLL_OVER, handleMouseOver);
+				addEventListener(MouseEvent.ROLL_OUT, handleMouseOut);
+			}
 		}
 		
 		public function draw():void {
@@ -48,6 +52,14 @@ package net.codecomposer.palace.view
 				client.gotoRoom(hotSpot.dest);
 			}
 			trace("Clicked hotspot - Destination: " + hotSpot.dest);
+		}
+		
+		private function handleMouseOver(event:MouseEvent):void {
+			alpha = 1;
+		}
+		
+		private function handleMouseOut(event:MouseEvent):void {
+			alpha = 0;
 		}
 
 	}

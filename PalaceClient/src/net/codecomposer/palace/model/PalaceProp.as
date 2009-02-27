@@ -124,13 +124,6 @@ package net.codecomposer.palace.model
             
             trace("Non-Standard flags: " + uint(flags & mask).toString(16));
         	var propUnsupported:Boolean = Boolean(flags & unsupportedFormatMask);
-        	if (propUnsupported) {
-        		trace("Unsupported prop format - bailing.");
-        		badProp = true;
-        		ready = false;
-        		asset.data = null
-        		return;
-        	}
                        
            	head = Boolean(flags & HEAD_FLAG);
            	ghost = Boolean(flags & GHOST_FLAG);
@@ -139,6 +132,175 @@ package net.codecomposer.palace.model
            	palindrome = Boolean(flags & PALINDROME_FLAG);
            	bounce = Boolean(flags & BOUNCE_FLAG);
             
+            if (Boolean(flags & PROP_FORMAT_S20BIT)) {
+            	trace("s20bit prop");
+            	decodeS20BitProp();
+            }
+            else if (Boolean(flags & PROP_FORMAT_32BIT)) {
+            	trace("32bit prop");
+	       		badProp = true;
+        		ready = false;
+        		asset.data = null
+        		return;
+            }
+            else if (Boolean(flags & PROP_FORMAT_20BIT)) {
+            	trace("20bit prop");
+	       		badProp = true;
+        		ready = false;
+        		asset.data = null
+        		return;
+            }
+            else {
+            	trace("8bit prop");
+            	decode8BitProp();
+            }
+			
+			
+			ready = true;
+			asset.data = null;
+			dispatchEvent(new PropEvent(PropEvent.PROP_LOADED, this));
+		}
+		
+		
+		// Constant for decoding s20bit props
+		private static const l:Number = 8.2258064516129;
+		
+		private function decodeS20BitProp():void {
+			// Implementation thanks to Phalanx team
+			
+			trace("Decoding 20 bit prop... have " + asset.data.length + " bytes to work with, need " + 5*968);
+			
+			var bd:BitmapData = new BitmapData(width, height);
+			var A:int = 0;
+			var R:int = 0;
+			var G:int = 0;
+			var B:int = 0;
+			var colors:Array = new Array(9); // array of bytes
+			var C:uint;
+			var x:int = 0;
+			var y:int = 0;
+			var ofst:int = 0;
+			var X:int = 0;
+			
+			var Col:int = 32; // Bit depth??
+			
+			var color:uint;
+			
+			var ba:ByteArray = new ByteArray();
+			
+			for (X = 0; X < 968; X++) {
+				ofst = X * 5;
+				
+				colors[2] = uint(((asset.data[ofst] >> 3) & 31) * l) & 0xFF; // << 3; //red
+				C = (asset.data[ofst] << 8) | asset.data[ofst+1];
+				colors[1] = uint((C >> 6 & 31) * l) & 0xFF; //<< 3; //green
+				colors[0] = uint((C >> 1 & 31) * l) & 0xFF; //<< 3; //blue
+				C = (asset.data[ofst+1] << 8) | asset.data[ofst+2];
+				colors[3] = uint((C >> 4 & 31) * l) & 0xFF; //<< 3; //alpha
+				
+				if (Col == 32) {
+					colors[0] = uint(colors[0] * colors[3] / 255) & 0xFF; // >> 8;
+					colors[1] = uint(colors[1] * colors[3] / 255) & 0xFF; // >> 8;
+					colors[2] = uint(colors[2] * colors[3] / 255) & 0xFF; // >> 8;
+				}
+				else {
+					if (colors[3] < 128) {
+						colors[3] = 0;
+						colors[1] = 254;
+						colors[2] = 0;
+						colors[0] = 0;
+					}
+					else {
+						colors[3] = 255;
+					}
+				}
+				
+				//          Alpha                  Red               Green           Blue
+				//color = (colors[3] << 24) | (colors[2] << 16) | (colors[1] << 8) | colors[0];
+				//bd.setPixel32(x, y, color);
+				
+				ba.writeByte(colors[3]);
+				ba.writeByte(colors[2]);
+				ba.writeByte(colors[1]);
+				ba.writeByte(colors[0]);
+				
+				x++;
+				
+				C = (asset.data[ofst+2] << 8) | asset.data[ofst+3];
+				colors[6] = uint((C >> 7 & 31) * l) & 0xFF; // << 3; //red
+				colors[5] = uint((C >> 2 & 31) * l) & 0xFF; // << 3; //green
+				C = (asset.data[ofst+3] << 8) | asset.data[ofst+4];
+				colors[4] = uint((C >> 5 & 31) * l) & 0xFF; // << 3; //blue
+				colors[7] = uint((C & 31) * l) & 0xFF; // << 3; //alpha
+				
+				if (Col == 32) { // if ((a<128) && (Col < 32)) return; //{
+					colors[4] = uint(colors[4] * colors[7] / 255) & 0xFF; // >> 8;
+					colors[5] = uint(colors[5] * colors[7] / 255) & 0xFF; // >> 8;
+					colors[6] = uint(colors[6] * colors[7] / 255) & 0xFF; // >> 8;
+				}
+				else {
+					if (colors[7] < 128) {
+						colors[6] = 0;
+						colors[5] = 254;
+						colors[4] = 0;
+						colors[7] = 0;
+					}
+					else {
+						colors[7] = 255;
+					}
+				}				
+				
+				//          Alpha                  Red               Green           Blue
+//				color = (colors[7] << 24) | (colors[6] << 16) | (colors[5] << 8) | colors[4];
+//				bd.setPixel32(x, y, color);
+
+				ba.writeByte(colors[7]);
+				ba.writeByte(colors[6]);
+				ba.writeByte(colors[5]);
+				ba.writeByte(colors[4]);
+				
+				if (x > 43) {
+					x = 0;
+					y++;
+				}
+			}
+			ba.position = 0;
+			bd.setPixels(rect, ba);
+			bitmap = bd;
+		}
+		
+		private function decode16BitProp():void {
+			var ba:ByteArray = new ByteArray();
+			var bd:BitmapData = new BitmapData(44,44);
+			var A:uint = 0;
+			var R:uint = 0;
+			var G:uint = 0;
+			var B:uint = 0;
+			var C:uint;
+			var x:int = 0;
+			var y:int = 0;
+			var ofst:int = 0;
+			var X:int = 0;
+			
+			for (X=0; X < 1935; X++) {
+				ofst = X * 2;
+				C = asset.data[ofst] & 0xFF * 256 | asset.data[ofst + 1];
+				R = uint((uint(asset.data[ofst] / 8) & 31) * 255 / 31);
+				G = uint((uint(C / 64) & 31) * 255 / 31);
+				B = uint((uint(C / 2) & 31) * 255 / 31);
+				A = (C & 1) * 255;
+				
+				ba.writeByte(A);
+				ba.writeByte(R);
+				ba.writeByte(G);
+				ba.writeByte(B);
+			}
+			
+			bd.setPixels(rect, ba);
+			bitmap = bd;
+		}
+
+		private function decode8BitProp():void {
             var counter:int = 0; 
             
             var pixData:Array = new Array(width * (height + 1));
@@ -187,15 +349,10 @@ package net.codecomposer.palace.model
 			bitmapBytes.position = 0;			
 
             var bitmapData:BitmapData = new BitmapData(width, height, true);
-			bitmapData.setPixels(rect, bitmapBytes); 
-			bitmap = bitmapData;
+			bitmapData.setPixels(rect, bitmapBytes);
 			
-			ready = true;
-			asset.data = null;
-			dispatchEvent(new PropEvent(PropEvent.PROP_LOADED, this));
+			bitmap = bitmapData;
 		}
-
-
 
 
 		// Color Lookup Table for the Palace "M&M" Palette
