@@ -24,7 +24,7 @@
 <classEntry path="net.codecomposer.palace.view.ChatBubble"/>
 <classEntry path="net.codecomposer.palace.view.HotSpotSprite"/>
 <classEntry path="net.codecomposer.palace.view.NameTag"/>
-<classEntry path="net.codecomposer.palace.view.PalaceHotSpotView"/>
+<classEntry path="net.codecomposer.palace.view.PalaceHotspotView"/>
 <classEntry path="net.codecomposer.palace.view.PalaceRoomView"/>
 <classEntry path="net.codecomposer.palace.view.RoomListGrid"/>
 <classEntry path="net.codecomposer.palace.view.UserListGrid"/>
