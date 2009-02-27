@@ -21,6 +21,7 @@ package net.codecomposer.palace.model
 	import flash.events.EventDispatcher;
 	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
+	import flash.utils.Endian;
 	import flash.utils.setTimeout;
 	
 	import mx.core.FlexBitmap;
@@ -59,6 +60,7 @@ package net.codecomposer.palace.model
 		public static const ANIMATE_FLAG:uint = 0x10;
 		public static const PALINDROME_FLAG:uint = 0x20; //Bounce?
 		public static const BOUNCE_FLAG:uint = 0x20;
+
 		public static const PROP_FORMAT_S20BIT:uint = 0x200;
 		public static const PROP_FORMAT_20BIT:uint  = 0x40;
 		public static const PROP_FORMAT_32BIT:uint  = 0x100;
@@ -68,9 +70,9 @@ package net.codecomposer.palace.model
 		
 		private static const mask:uint = 0xFFC1; // Original palace prop flags.
 		
-		private static var unsupportedFormatMask:uint = PROP_FORMAT_20BIT |
-										 				PROP_FORMAT_S20BIT |
-										  				PROP_FORMAT_32BIT;
+		private static var formatMask:uint = PROP_FORMAT_20BIT |
+							 				 PROP_FORMAT_S20BIT |
+							  	 			 PROP_FORMAT_32BIT;
 		
 		private static var itemsToRender:int = 0;
 		
@@ -120,11 +122,19 @@ package net.codecomposer.palace.model
                 flags = asset.data[11] | asset.data[10] << 8;
             }
             
-            propFormat = flags & unsupportedFormatMask;
+            propFormat = flags & formatMask;
             
             trace("Non-Standard flags: " + uint(flags & mask).toString(16));
-        	var propUnsupported:Boolean = Boolean(flags & unsupportedFormatMask);
-                       
+            
+            if ((flags & mask) == 0xff80) {
+            	//WTF?!
+            	trace("WTF?! Unsupported and unknown prop -- specifically avoiding it.");
+	       		badProp = true;
+        		ready = false;
+        		asset.data = null
+        		return;
+            } 
+            
            	head = Boolean(flags & HEAD_FLAG);
            	ghost = Boolean(flags & GHOST_FLAG);
            	rare = Boolean(flags & RARE_FLAG);
@@ -132,18 +142,18 @@ package net.codecomposer.palace.model
            	palindrome = Boolean(flags & PALINDROME_FLAG);
            	bounce = Boolean(flags & BOUNCE_FLAG);
             
-            if (Boolean(flags & PROP_FORMAT_S20BIT)) {
+            if (Boolean(propFormat & PROP_FORMAT_S20BIT)) {
             	trace("s20bit prop");
             	decodeS20BitProp();
             }
-            else if (Boolean(flags & PROP_FORMAT_32BIT)) {
+            else if (Boolean(propFormat & PROP_FORMAT_32BIT)) {
             	trace("32bit prop");
 	       		badProp = true;
         		ready = false;
         		asset.data = null
         		return;
             }
-            else if (Boolean(flags & PROP_FORMAT_20BIT)) {
+            else if (Boolean(propFormat & PROP_FORMAT_20BIT)) {
             	trace("20bit prop");
 	       		badProp = true;
         		ready = false;
@@ -168,6 +178,19 @@ package net.codecomposer.palace.model
 		private function decodeS20BitProp():void {
 			// Implementation thanks to Phalanx team
 			
+			var unzipByteArray:ByteArray = new ByteArray();
+			for (var i:int = 12; i < asset.data.length; i ++) {
+				unzipByteArray.writeByte(asset.data[i]);
+			}
+			unzipByteArray.position = 0;
+			unzipByteArray.endian = Endian.LITTLE_ENDIAN;
+			unzipByteArray.uncompress();
+			unzipByteArray.position = 0;
+			var data:Array = [];
+			while (unzipByteArray.bytesAvailable) {
+				data.push(unzipByteArray.readUnsignedByte());
+			}
+			
 			trace("Decoding 20 bit prop... have " + asset.data.length + " bytes to work with, need " + 5*968);
 			
 			var bd:BitmapData = new BitmapData(width, height);
@@ -191,11 +214,11 @@ package net.codecomposer.palace.model
 			for (X = 0; X < 968; X++) {
 				ofst = X * 5;
 				
-				colors[2] = uint(((asset.data[ofst] >> 3) & 31) * l) & 0xFF; // << 3; //red
-				C = (asset.data[ofst] << 8) | asset.data[ofst+1];
+				colors[2] = uint(((data[ofst] >> 3) & 31) * l) & 0xFF; // << 3; //red
+				C = (data[ofst] << 8) | data[ofst+1];
 				colors[1] = uint((C >> 6 & 31) * l) & 0xFF; //<< 3; //green
 				colors[0] = uint((C >> 1 & 31) * l) & 0xFF; //<< 3; //blue
-				C = (asset.data[ofst+1] << 8) | asset.data[ofst+2];
+				C = (data[ofst+1] << 8) | data[ofst+2];
 				colors[3] = uint((C >> 4 & 31) * l) & 0xFF; //<< 3; //alpha
 				
 				if (Col == 32) {
@@ -226,10 +249,10 @@ package net.codecomposer.palace.model
 				
 				x++;
 				
-				C = (asset.data[ofst+2] << 8) | asset.data[ofst+3];
+				C = (data[ofst+2] << 8) | data[ofst+3];
 				colors[6] = uint((C >> 7 & 31) * l) & 0xFF; // << 3; //red
 				colors[5] = uint((C >> 2 & 31) * l) & 0xFF; // << 3; //green
-				C = (asset.data[ofst+3] << 8) | asset.data[ofst+4];
+				C = (data[ofst+3] << 8) | data[ofst+4];
 				colors[4] = uint((C >> 5 & 31) * l) & 0xFF; // << 3; //blue
 				colors[7] = uint((C & 31) * l) & 0xFF; // << 3; //alpha
 				

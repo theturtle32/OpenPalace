@@ -85,7 +85,7 @@ package net.codecomposer.palace.rpc
 		public var roomById:Object = {};
 		
 		private var assetRequestQueueTimer:Timer = null;
-		private var assetRequestQueue:ByteArray = new ByteArray();
+		private var assetRequestQueue:Array = [];
 		private var assetRequestQueueCounter:int = 0;
 		private var assetsLastRequestedAt:Date = new Date();
 		
@@ -236,61 +236,58 @@ package net.codecomposer.palace.rpc
 		}
 		
 		public function requestAsset(assetType:int, assetId:uint, assetCrc:uint):void {
-			// Asset requests queue up because flushing once every request is slow.
-			// Instead we batch an arbitrarily chosen 16 requests together.
-			// The buffer will flush when there are 16 assets to be requested, or if
-			// 250 milliseconds have elapsed since the last asset was added to the queue.
+			// Assets are requested in packets of up to 16 requests, separated by 200ms
+			// to prevent flooding the server and getting killed.
 			if (!connected) {
 				return;	
 			}
 			trace("Requesting asset (Type:" + assetType.toString(16) + ") (ID:" + assetId + ") (CRC:" + assetCrc + ")");
 			if (assetRequestQueueTimer == null) {
-				assetRequestQueueTimer = new Timer(250, 1);
+				assetRequestQueueTimer = new Timer(300, 1);
 				assetRequestQueueTimer.addEventListener(TimerEvent.TIMER, sendAssetRequests);
 			}
 
-			assetRequestQueue.writeInt(OutgoingMessageTypes.REQUEST_ASSET);
-			assetRequestQueue.writeInt(12); // size
-			assetRequestQueue.writeInt(id);
-			assetRequestQueue.writeInt(assetType);
-			assetRequestQueue.writeInt(assetId);
-			assetRequestQueue.writeInt(assetCrc);
+			assetRequestQueue.push([
+				assetType,
+				assetId,
+				assetCrc
+			]);
 			
-			if (++assetRequestQueueCounter >= 16) {
-				sendAssetRequests();
-			}
-			else {
-				assetRequestQueueTimer.reset();
-				assetRequestQueueTimer.start();			
-			}
+			assetRequestQueueTimer.reset();
+			assetRequestQueueTimer.start();			
 		}
 		
 		private function sendAssetRequests(event:TimerEvent=null):void {
 			if (!connected || !socket || !socket.connected) {
-				assetRequestQueue = new ByteArray()
-				assetRequestQueueCounter = 0;
+				assetRequestQueue = [];
 				return;
 			}
 			
-			// Don't flood the server with asset requests
-//			var now:Date = new Date();
-//			if (now.valueOf() - assetsLastRequestedAt.valueOf() < 150) {
-//				assetRequestQueueTimer.reset();
-//				assetRequestQueueTimer.start();
-//				trace("WAITING to request props...");
-//				return;
-//			}
-//			assetsLastRequestedAt = now;
-			 
-			assetRequestQueueTimer.reset();
-			assetRequestQueueCounter = 0;
-			assetRequestQueue.position = 0;
-			trace("Flushing asset requests to socket.");
-			while (assetRequestQueue.bytesAvailable >= 4) {
-				socket.writeInt(assetRequestQueue.readInt());
+			if (assetRequestQueue.length == 0) {
+				assetRequestQueueTimer.reset();
+				return;
+			}
+
+			// only do 16 requests at a time
+			var count:int = (assetRequestQueue.length > 16) ? 16 : assetRequestQueue.length;
+			
+			trace("Requesting a group of props");
+			for (var i:int = 0; i < count; i++) {
+				var request:Array = assetRequestQueue.shift() as Array;
+				socket.writeInt(OutgoingMessageTypes.REQUEST_ASSET);
+				socket.writeInt(12);
+				socket.writeInt(id);
+				for (var j:int = 0; j < 3; j++) {
+					socket.writeInt(request[j]);
+				}
 			}
 			socket.flush();
-			assetRequestQueue = new ByteArray();
+			
+			// If there are still assets left to request, schedule another timer.
+			if (assetRequestQueue.length > 0) {
+				assetRequestQueueTimer.reset();
+				assetRequestQueueTimer.start();
+			}
 		}
 				
 		
