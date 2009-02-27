@@ -196,8 +196,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					forcingJpeg = false;
 					setTimeout(function():void {
 						backgroundImage.source = mediaServer + room.backgroundFile;
+						trace("Loading: " + backgroundImage.source);
 					}, 50);
-					trace("Loading: " + backgroundImage.source);
 				}
 			}
 			
