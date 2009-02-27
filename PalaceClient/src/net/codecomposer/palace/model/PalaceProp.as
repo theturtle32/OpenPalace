@@ -194,10 +194,6 @@ package net.codecomposer.palace.model
 			trace("Decoding 20 bit prop... have " + asset.data.length + " bytes to work with, need " + 5*968);
 			
 			var bd:BitmapData = new BitmapData(width, height);
-			var A:int = 0;
-			var R:int = 0;
-			var G:int = 0;
-			var B:int = 0;
 			var colors:Array = new Array(9); // array of bytes
 			var C:uint;
 			var x:int = 0;
