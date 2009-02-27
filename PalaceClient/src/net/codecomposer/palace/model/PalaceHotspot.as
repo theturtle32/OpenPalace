@@ -19,58 +19,68 @@ package net.codecomposer.palace.model
 {
 	import flash.geom.Point;
 	import flash.utils.ByteArray;
+	import flash.utils.Endian;
 	
 	public class PalaceHotspot
 	{
 		
-		public var type:uint = 0;
-		public var dest:uint = 0;
-		public var id:uint = 0;
-		public var flags:uint = 0;
-		public var state:uint = 0;
-		public var numStates:uint = 0;
+		public var type:int = 0;
+		public var dest:int = 0;
+		public var id:int = 0;
+		public var flags:int = 0;
+		public var state:int = 0;
+		public var numStates:int = 0;
 		public var polygon:Array = []; // Array of points
 		public var name:String = null;
-		public var originY:uint = 0;
-		public var originX:uint = 0;
-		public var scriptEventMask:uint = 0;
-		public var numScripts:uint = 0;
+		public var location:Point;
+		public var scriptEventMask:int = 0;
+		public var numScripts:int = 0;
+		public var secureInfo:int;
+		public var refCon:int;
+		public var groupId:int;
+		public var scriptRecordOffset:int;
 		
 		public function PalaceHotspot()
 		{
 		}
 
 		public function readData(endian:String, bs:Array, offset:int):void {
+			trace("Hotspot offset " + offset);
+			location = new Point();
+			
 			// FIXME:  This seems broken.  The name is not read reliably
 			// and the coordinates for the polygon are not at all correct
 			// most of the time, but are correct sometimes.  No idea.
 			
 			var ba:ByteArray = new ByteArray();
-			for (var j:int=offset-1; j < offset+size; j++) {
+			for (var j:int=offset; j < offset+size+1; j++) {
 				ba.writeByte(bs[j]);
 			}
 			ba.position = 0;
-			//ba.endian = endian;
+			ba.endian = endian;
 			
-			scriptEventMask = ba.readUnsignedInt();
-			flags = ba.readUnsignedInt();
-			ba.readInt();
-			ba.readInt();
-			originY = ba.readUnsignedShort();
-			originX = ba.readUnsignedShort();
-			id = ba.readUnsignedShort();
-			dest = ba.readUnsignedShort();
-			var ptCnt:uint = ba.readUnsignedShort();
-			var ptsOffset:uint = ba.readUnsignedShort();
-			type = ba.readUnsignedShort();
-			ba.readShort();
-			numScripts = ba.readUnsignedShort();
-			ba.readShort();
-			state = ba.readUnsignedShort();
-			numStates = ba.readUnsignedShort();
-			var stateRecOffset:int = ba.readUnsignedShort();
-			var nameOffset:int = ba.readUnsignedShort();
-			var scriptTextOffset:int = ba.readUnsignedShort();
+			scriptEventMask = ba.readInt();
+			flags = ba.readInt();
+			secureInfo = ba.readInt();
+			refCon = ba.readInt();
+			location.y = ba.readShort();
+			location.x = ba.readShort();
+			trace("Location X: " + location.x + " - Location Y: " + location.y);
+			id = ba.readShort();
+			dest = ba.readShort();
+			var numPoints:int = ba.readShort();
+			trace("Number points: " + numPoints);
+			var pointsOffset:int = ba.readShort();
+			trace("Points offset: " + pointsOffset);
+			type = ba.readShort();
+			groupId = ba.readShort();
+			numScripts = ba.readShort();
+			scriptRecordOffset = ba.readShort();
+			state = ba.readShort();
+			numStates = ba.readShort();
+			var stateRecordOffset:int = ba.readShort();
+			var nameOffset:int = ba.readShort();
+			var scriptTextOffset:int = ba.readShort();
 			ba.readShort();
 			if (nameOffset > 0) {
 				var nameByteArray:ByteArray = new ByteArray();
@@ -83,29 +93,29 @@ package net.codecomposer.palace.model
 			}
 
 			ba = new ByteArray();
-			var endPos:int = ptsOffset+(ptCnt*4);
-			for (j=ptsOffset-1; j < endPos; j++) {
+			var endPos:int = pointsOffset+(numPoints*4);
+			for (j=pointsOffset; j < endPos+1; j++) {
 				ba.writeByte(bs[j]);
 			}
 			ba.position = 0;
+			ba.endian = endian;
 			
-			//ba.endian = endian;
 			var startX:int = 0;
 			var startY:int = 0;
-			for (var i:int = 0; i < ptCnt; i++) {
+			for (var i:int = 0; i < numPoints; i++) {
 				var y:int = ba.readShort();
 				var x:int = ba.readShort();
-				trace("--------------------------------- X: " + x + " (" + x.toString(16) + ")    Y: " + y + "(" + y.toString(16) +")");
+				trace("--------------------------------- X: " + x + " (" + uint(x).toString(16) + ")    Y: " + y + "(" + uint(y).toString(16) +")");
 				if (i == 0) {
 					startX = x;
 					startY = y;
 				}
-				polygon.push(new Point(x + originX, y + originY));
+				polygon.push(new Point(x + location.x, y + location.y));
 			}
 			
-			polygon.push(new Point(startX + originX, startY + originY));
+			polygon.push(new Point(startX + location.x, startY + location.y));
 			
-			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + ptCnt);
+			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + numPoints);
 		}
 		
 		public function get size():int {

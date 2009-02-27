@@ -23,7 +23,6 @@ package net.codecomposer.palace.rpc
 	import flash.events.SecurityErrorEvent;
 	import flash.events.TimerEvent;
 	import flash.net.Socket;
-	import flash.system.Security;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
@@ -37,6 +36,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
+	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceUser;
@@ -726,12 +726,12 @@ package net.codecomposer.palace.rpc
 			
 			// Hotspots -- Can't get this to work
 			currentRoom.hotSpots.removeAll();
-//			for (i=0; i < hotSpotCount; i++) {
-//				var hs:PalaceHotspot = new PalaceHotspot();
-//				hs.fromBytes(socket.endian, roomBytes, hotSpotOffset);
-//				hotSpotOffset += hs.size;
-//				currentRoom.hotSpots.addItem(hs);
-//			}
+			for (i=0; i < hotSpotCount; i++) {
+				var hs:PalaceHotspot = new PalaceHotspot();
+				hs.readData(socket.endian, roomBytes, hotSpotOffset);
+				hotSpotOffset += hs.size;
+				currentRoom.hotSpots.addItem(hs);
+			}
 			
 			// Images
 			var images:Object = {};
@@ -878,7 +878,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		private function handleReceiveRoomDescend(a:int, b:int):void {
-			//No idea...
+			// We're done receiving room description & user list
 		}
 		
 		private function handleUserNew(a:int, b:int):void {

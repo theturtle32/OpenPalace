@@ -11,6 +11,7 @@
 <classEntry path="net.codecomposer.palace.view.PalaceHotSpotView"/>
 <classEntry path="net.codecomposer.palace.model.PalaceHotspot"/>
 <classEntry path="net.codecomposer.palace.view.Avatar"/>
+<classEntry path="net.codecomposer.palace.util.PalaceUtil"/>
 <classEntry path="net.codecomposer.palace.view.UserListGrid"/>
 <classEntry path="net.codecomposer.palace.model.PalaceRoom"/>
 <classEntry path="net.codecomposer.palace.message.IncomingMessageTypes"/>
@@ -23,7 +24,6 @@
 <classEntry path="net.codecomposer.palace.view.ChatBubble"/>
 <classEntry path="net.codecomposer.palace.event.PropEvent"/>
 <classEntry path="com.deviant.HueColorMatrixFilter"/>
-<classEntry path="net.codecomposer.palace.Palace"/>
 <classEntry path="net.codecomposer.palace.view.PalaceRoomView"/>
 <classEntry path="net.codecomposer.palace.event.ChatEvent"/>
 </includeClasses>
