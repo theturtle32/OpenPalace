@@ -102,7 +102,7 @@ h1 {
 	background: #FFFFFF;
 	min-height: 400px;
 	border-top: 14px solid #2BBBE3;
-	border-bottom: 14px solid #0E108F;
+	border-bottom: 14px solid #000;
 }
 
 .article {
@@ -113,6 +113,6 @@ h1 {
 	text-shadow: #162e00 1px 1px 1px;
 	padding-bottom: 3px;
 	margin-bottom: 16px;
-	border-bottom: 4px solid #2bbbe3;
+	border-bottom: 4px solid #96d4e5;
 	color: #71be1e;
 }
