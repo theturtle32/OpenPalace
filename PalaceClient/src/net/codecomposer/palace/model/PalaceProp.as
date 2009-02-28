@@ -126,23 +126,19 @@ package net.codecomposer.palace.model
             
             trace("Non-Standard flags: " + uint(flags & mask).toString(16));
             
-            if ((flags & mask) == 0xff80) {
-            	//WTF?!
-            	trace("WTF?! Unsupported and unknown prop -- specifically avoiding it.");
-	       		badProp = true;
-        		ready = false;
-        		asset.data = null
-        		return;
-            } 
-            
            	head = Boolean(flags & HEAD_FLAG);
            	ghost = Boolean(flags & GHOST_FLAG);
            	rare = Boolean(flags & RARE_FLAG);
            	animate = Boolean(flags & ANIMATE_FLAG);
            	palindrome = Boolean(flags & PALINDROME_FLAG);
            	bounce = Boolean(flags & BOUNCE_FLAG);
-            
-            if (Boolean(propFormat & PROP_FORMAT_S20BIT)) {
+
+            if ((flags & mask) == 0xff80) {
+            	//WTF?!  Bizarre flags...
+            	trace("16bit prop");
+            	decode16BitProp();
+            }
+            else if (Boolean(propFormat & PROP_FORMAT_S20BIT)) {
             	trace("s20bit prop");
             	decodeS20BitProp();
             }
@@ -182,16 +178,12 @@ package net.codecomposer.palace.model
 			for (var i:int = 12; i < asset.data.length; i ++) {
 				unzipByteArray.writeByte(asset.data[i]);
 			}
-			unzipByteArray.position = 0;
-			unzipByteArray.endian = Endian.LITTLE_ENDIAN;
 			unzipByteArray.uncompress();
 			unzipByteArray.position = 0;
 			var data:Array = [];
 			while (unzipByteArray.bytesAvailable) {
 				data.push(unzipByteArray.readUnsignedByte());
 			}
-			
-			trace("Decoding 20 bit prop... have " + asset.data.length + " bytes to work with, need " + 5*968);
 			
 			var bd:BitmapData = new BitmapData(width, height);
 			var colors:Array = new Array(9); // array of bytes
@@ -234,10 +226,6 @@ package net.codecomposer.palace.model
 					}
 				}
 				
-				//          Alpha                  Red               Green           Blue
-				//color = (colors[3] << 24) | (colors[2] << 16) | (colors[1] << 8) | colors[0];
-				//bd.setPixel32(x, y, color);
-				
 				ba.writeByte(colors[3]);
 				ba.writeByte(colors[2]);
 				ba.writeByte(colors[1]);
@@ -269,10 +257,6 @@ package net.codecomposer.palace.model
 					}
 				}				
 				
-				//          Alpha                  Red               Green           Blue
-//				color = (colors[7] << 24) | (colors[6] << 16) | (colors[5] << 8) | colors[4];
-//				bd.setPixel32(x, y, color);
-
 				ba.writeByte(colors[7]);
 				ba.writeByte(colors[6]);
 				ba.writeByte(colors[5]);
@@ -290,7 +274,7 @@ package net.codecomposer.palace.model
 		
 		private function decode16BitProp():void {
 			var ba:ByteArray = new ByteArray();
-			var bd:BitmapData = new BitmapData(44,44);
+			var bd:BitmapData = new BitmapData(44,44, true);
 			var A:uint = 0;
 			var R:uint = 0;
 			var G:uint = 0;
@@ -301,20 +285,41 @@ package net.codecomposer.palace.model
 			var ofst:int = 0;
 			var X:int = 0;
 			
-			for (X=0; X < 1935; X++) {
+			// gunzip the props...
+			var unzipByteArray:ByteArray = new ByteArray();
+			for (var i:int = 12; i < asset.data.length; i ++) {
+				unzipByteArray.writeByte(asset.data[i]);
+			}
+			unzipByteArray.uncompress();
+			unzipByteArray.position = 0;
+			var data:Array = [];
+			while (unzipByteArray.bytesAvailable) {
+				data.push(unzipByteArray.readUnsignedByte());
+			}
+			
+			for (X=0; X < 1936; X++) {
 				ofst = X * 2;
-				C = asset.data[ofst] & 0xFF * 256 | asset.data[ofst + 1];
-				R = uint((uint(asset.data[ofst] / 8) & 31) * 255 / 31);
-				G = uint((uint(C / 64) & 31) * 255 / 31);
-				B = uint((uint(C / 2) & 31) * 255 / 31);
-				A = (C & 1) * 255;
+				C = data[ofst] * 256 | data[ofst + 1];
+				R = uint((uint(data[ofst] / 8) & 31) * 255 / 31) & 0xFF;
+				G = uint((uint(C / 64) & 31) * 255 / 31) & 0xFF;
+				B = uint((uint(C / 2) & 31) * 255 / 31) & 0xFF;
+				A = (C & 1) * 255 & 0xFF;
 				
 				ba.writeByte(A);
 				ba.writeByte(R);
 				ba.writeByte(G);
 				ba.writeByte(B);
+				
+				x ++;
+				
+				if (x > 43) {
+					x = 0;
+					y++;
+				}
+				
 			}
 			
+			ba.position = 0;
 			bd.setPixels(rect, ba);
 			bitmap = bd;
 		}
