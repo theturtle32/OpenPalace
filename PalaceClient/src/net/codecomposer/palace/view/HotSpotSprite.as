@@ -38,7 +38,13 @@ package net.codecomposer.palace.view
 			super();
 			draw();
 			addEventListener(MouseEvent.CLICK, handleHotSpotClick);
-			if (highlightOnMouseOver) {
+			if (highlightOnMouseOver &&
+					(hotSpot.type == PalaceHotspot.TYPE_DOOR ||
+					 hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
+					 hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR) &&
+					 hotSpot.dest > 0
+				)
+			{
 				addEventListener(MouseEvent.ROLL_OVER, handleMouseOver);
 				addEventListener(MouseEvent.ROLL_OUT, handleMouseOut);
 			}

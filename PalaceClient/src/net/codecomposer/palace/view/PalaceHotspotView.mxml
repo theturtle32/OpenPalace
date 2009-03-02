@@ -65,7 +65,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private function addHotSpot(hotSpot:PalaceHotspot):void {
 				trace("DRAWING HOTSPOT");
 				
-				var hotSpotSprite:HotSpotSprite = new HotSpotSprite(hotSpot);
+				var hotSpotSprite:HotSpotSprite = new HotSpotSprite(hotSpot, true);
 				
 				hotspotCanvas.rawChildren.addChild(hotSpotSprite);
 				viewsByHotSpot[hotSpot] = hotSpotSprite;
