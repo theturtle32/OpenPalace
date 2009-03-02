@@ -47,8 +47,14 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					if (!bitmap.bitmapData.transparent || transparencyIndex != 0) {
 						// Process transparency only if image isn't already transparent
 						trace("PROCESSING TRANSPARENCY!");
-						bd = new BitmapData(bitmap.bitmapData.width, bitmap.bitmapData.height, true, 0x00000000);
-						bd.copyPixels(bitmap.bitmapData, bitmap.bitmapData.rect, new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y));
+						try {
+							bd = new BitmapData(bitmap.bitmapData.width, bitmap.bitmapData.height, true, 0x00000000);
+							bd.copyPixels(bitmap.bitmapData, bitmap.bitmapData.rect, new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y));
+						}
+						catch (error:Error) {
+							trace("WARNING: Error processing transparency: " + error.toString());
+							return;
+						}
 						bitmap.bitmapData = bd;
 						bitmap.bitmapData.threshold(
 							bitmap.bitmapData,

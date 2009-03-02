@@ -251,10 +251,11 @@ package net.codecomposer.palace.rpc
 			}
 			trace("Requesting asset (Type:" + assetType.toString(16) + ") (ID:" + assetId + ") (CRC:" + assetCrc + ")");
 			if (assetRequestQueueTimer == null) {
-				assetRequestQueueTimer = new Timer(300, 1);
+				assetRequestQueueTimer = new Timer(100, 1);
 				assetRequestQueueTimer.addEventListener(TimerEvent.TIMER, sendAssetRequests);
+				assetRequestQueueTimer.start();
 			}
-
+			
 			assetRequestQueue.push([
 				assetType,
 				assetId,
@@ -262,7 +263,7 @@ package net.codecomposer.palace.rpc
 			]);
 			
 			assetRequestQueueTimer.reset();
-			assetRequestQueueTimer.start();			
+			assetRequestQueueTimer.start();
 		}
 		
 		private function sendAssetRequests(event:TimerEvent=null):void {
@@ -273,11 +274,12 @@ package net.codecomposer.palace.rpc
 			
 			if (assetRequestQueue.length == 0) {
 				assetRequestQueueTimer.reset();
+				assetRequestQueueTimer.delay = 100;
 				return;
 			}
 
-			// only do 16 requests at a time
-			var count:int = (assetRequestQueue.length > 16) ? 16 : assetRequestQueue.length;
+			// only do 20 requests at a time
+			var count:int = (assetRequestQueue.length > 20) ? 20 : assetRequestQueue.length;
 			
 			trace("Requesting a group of props");
 			for (var i:int = 0; i < count; i++) {
@@ -294,6 +296,7 @@ package net.codecomposer.palace.rpc
 			// If there are still assets left to request, schedule another timer.
 			if (assetRequestQueue.length > 0) {
 				assetRequestQueueTimer.reset();
+				assetRequestQueueTimer.delay = 1000;
 				assetRequestQueueTimer.start();
 			}
 		}
@@ -726,7 +729,7 @@ package net.codecomposer.palace.rpc
 				roomBytes[i] = socket.readUnsignedByte();
 			}
 			
-			outputHexView(roomBytes);
+			//outputHexView(roomBytes);
 			
 			var padding:int = size - roomDataLength - 40;
 			for (i=0; i < padding; i++) {
@@ -795,13 +798,15 @@ package net.codecomposer.palace.rpc
 			
 			// Loose Props
 			currentRoom.looseProps.removeAll();
+			var tempPropArray:Array = []; 
 			var propOffset:int = firstLooseProp;
 			for (i=0; i < loosePropCount; i++) {
 				var looseProp:PalaceLooseProp = new PalaceLooseProp();
 				looseProp.loadData(socket.endian, roomBytes, propOffset);
-				currentRoom.looseProps.addItem(looseProp);
+				tempPropArray.push(looseProp);
 				propOffset = looseProp.nextOffset;
 			}
+			currentRoom.looseProps.source = tempPropArray;
 			
 			// Draw Commands
 //			currentRoom.drawCommands.removeAll();

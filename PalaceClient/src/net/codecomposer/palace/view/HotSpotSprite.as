@@ -51,10 +51,14 @@ package net.codecomposer.palace.view
 		}
 		
 		public function draw():void {
-			trace("Hotspot " + hotSpot.name + " is type: " + hotSpot.type); 
+			trace("Hotspot " + hotSpot.name + " is type: " + hotSpot.type);
 			alpha = 0;
 			graphics.clear();
 			var points:Array = hotSpot.polygon;
+			if (points.length < 3) {
+				trace("Not enough vertices to draw hotspot: " + points.length);
+				return;
+			}
 			var firstPoint:Point = Point(points[0]);
 			graphics.lineStyle(1, 0);
 			graphics.beginFill(0x333333, 0.5);
