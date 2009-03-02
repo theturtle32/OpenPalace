@@ -21,7 +21,6 @@ package net.codecomposer.palace.model
 	import flash.events.EventDispatcher;
 	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
-	import flash.utils.Endian;
 	import flash.utils.setTimeout;
 	
 	import mx.core.FlexBitmap;
@@ -144,17 +143,11 @@ package net.codecomposer.palace.model
             }
             else if (Boolean(propFormat & PROP_FORMAT_32BIT)) {
             	trace("32bit prop");
-	       		badProp = true;
-        		ready = false;
-        		asset.data = null
-        		return;
+	       		decode32BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_20BIT)) {
             	trace("20bit prop");
-	       		badProp = true;
-        		ready = false;
-        		asset.data = null
-        		return;
+	       		decode20BitProp();
             }
             else {
             	trace("8bit prop");
@@ -165,6 +158,166 @@ package net.codecomposer.palace.model
 			ready = true;
 			asset.data = null;
 			dispatchEvent(new PropEvent(PropEvent.PROP_LOADED, this));
+		}
+		
+		
+		private function decode32BitProp():void {
+			// Implementation thanks to Phalanx team
+			// Translated from VB6 implementation
+			
+			var unzipByteArray:ByteArray = new ByteArray();
+			for (var i:int = 12; i < asset.data.length; i ++) {
+				unzipByteArray.writeByte(asset.data[i]);
+			}
+			unzipByteArray.uncompress();
+			unzipByteArray.position = 0;
+			var data:Array = [];
+			while (unzipByteArray.bytesAvailable) {
+				data.push(unzipByteArray.readUnsignedByte());
+			}
+			
+			var bd:BitmapData = new BitmapData(width, height);
+			var ba:ByteArray = new ByteArray();
+			var C:uint;
+			var x:int = 0;
+			var y:int = 0;
+			var ofst:int = 0;
+			var X:int = 0;
+			var A:uint = 0;
+			var R:uint = 0;
+			var G:uint = 0;
+			var B:uint = 0;
+			
+			var Col:int = 32; // Bit depth??
+			
+			for (X = 0; X <= 1935; X++) {
+				ofst = X * 4;
+				R = data[ofst];
+				G = data[ofst+1];
+				B = data[ofst+2];
+				A = data[ofst+3];
+				if (Col == 32) {
+					R = uint(R * A / 255) & 0xFF;
+					G = uint(G * A / 255) & 0xFF;
+					B = uint(B * A / 255) & 0xFF;
+				}
+				else {
+					if (A < 128) {
+						R = B = A = 0;
+						G = 254;
+					}
+					else {
+						A = 255;
+					}
+				}
+				ba.writeByte(A);
+				ba.writeByte(R);
+				ba.writeByte(G);
+				ba.writeByte(B);
+			}
+			ba.position = 0;
+			bd.setPixels(rect, ba);
+			bitmap = bd;
+		}
+		
+		
+		private static const dither20bit:Number = 255/63;
+		
+		private function decode20BitProp():void {
+			// Implementation thanks to Phalanx team
+			// Translated from VB6 implementation
+			
+			var unzipByteArray:ByteArray = new ByteArray();
+			for (var i:int = 12; i < asset.data.length; i ++) {
+				unzipByteArray.writeByte(asset.data[i]);
+			}
+			unzipByteArray.uncompress();
+			unzipByteArray.position = 0;
+			var data:Array = [];
+			while (unzipByteArray.bytesAvailable) {
+				data.push(unzipByteArray.readUnsignedByte());
+			}
+			
+			var bd:BitmapData = new BitmapData(width, height);
+			var ba:ByteArray = new ByteArray();
+			var C:uint;
+			var x:int = 0;
+			var y:int = 0;
+			var ofst:int = 0;
+			var X:int = 0;
+			var A:uint = 0;
+			var R:uint = 0;
+			var G:uint = 0;
+			var B:uint = 0;
+			
+			var Col:int = 32; // Bit depth??
+			
+			for (X = 0; X <= 967; X++) {
+				ofst = X * 5;
+				R = uint((uint(data[ofst] >> 2) & 63) * dither20bit);
+				C = (data[ofst] << 8) | data[ofst+1];
+				G = uint(((C >> 4) & 63) * dither20bit);
+				C = (data[ofst+1] << 8) | data[ofst+2];
+				B = uint(((C >> 6) & 63) * dither20bit);
+				A = (((C >> 4) & 3) * 85);
+				
+				if (Col == 32) {
+					R = uint((R * A) / 255) & 0xFF;
+					G = uint((G * A) / 255) & 0xFF;
+					B = uint((B * A) / 255) & 0xFF;
+				}
+				else {
+					if (A < 128) {
+						R = B = A = 0;
+						G = 254;
+					}
+					else {
+						A = 255;
+					}
+				}
+
+				ba.writeByte(A);
+				ba.writeByte(R);
+				ba.writeByte(G);
+				ba.writeByte(B);
+
+//				x ++;
+//				if (x > 44) {
+//					y ++;
+//				}
+//				
+//				var color:uint = A << 24 | R << 16 | G << 8 | B;
+//				bd.setPixel32(x,y,color);
+
+				C = (data[ofst+2] << 8) | data[ofst+3];
+				R = uint(((C >> 6) & 63) * dither20bit);
+				G = uint((C & 63) * dither20bit);
+				C = data[ofst+4];
+				B = uint(((C >> 2) & 63) * dither20bit);
+				A = ((C & 3) * 85);
+				if (Col == 32) {
+					R = uint((R * A) / 255) & 0xFF;
+					G = uint((G * A) / 255) & 0xFF;
+					B = uint((B * A) / 255) & 0xFF;
+				}
+				else {
+					if (A < 128) {
+						R = B = A = 0;
+						G = 254;
+					}
+					else {
+						A = 255;
+					}
+				}
+				
+				ba.writeByte(A);
+				ba.writeByte(R);
+				ba.writeByte(G);
+				ba.writeByte(B);
+			}
+			ba.position = 0; 
+			bd.setPixels(rect, ba);
+			bitmap = bd;
 		}
 		
 		

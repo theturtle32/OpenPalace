@@ -37,6 +37,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceAsset;
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
 	import net.codecomposer.palace.model.PalaceHotspot;
+	import net.codecomposer.palace.model.PalaceLooseProp;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceUser;
@@ -119,6 +120,7 @@ package net.codecomposer.palace.rpc
 			currentRoom.backgroundFile = null;
 			currentRoom.selectedUser = null;
 			currentRoom.removeAllUsers();
+			currentRoom.looseProps.removeAll();
 			serverName = "No Server"
 			roomList.removeAll();
 			userList.removeAll();
@@ -233,6 +235,8 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(id);
 			socket.writeShort(roomId);
 			socket.flush();
+			
+			currentRoom.selectedUser = null;
 		}
 		
 		public function requestAsset(assetType:int, assetId:uint, assetCrc:uint):void {
@@ -453,6 +457,19 @@ package net.codecomposer.palace.rpc
 							case IncomingMessageTypes.USER_EXIT_ROOM:
 								handleUserExitRoom(size, p);
 								break;
+								
+							case IncomingMessageTypes.PROP_MOVE:
+								handlePropMove(size, p);
+								break;
+								
+							case IncomingMessageTypes.PROP_DELETE:
+								handlePropDelete(size, p);
+								break;
+								
+							case IncomingMessageTypes.PROP_NEW:
+								handlePropNew(size, p);
+								break;
+							
 								
 	//						case IncomingMessage.CONNECTION_DIED:
 	//							handleConnectionDied(size, p);
@@ -733,13 +750,23 @@ package net.codecomposer.palace.rpc
 				imageName += String.fromCharCode(byte);
 			}
 			
-			// Hotspots -- Can't get this to work
+			// Hotspots
 			currentRoom.hotSpots.removeAll();
 			for (i=0; i < hotSpotCount; i++) {
 				var hs:PalaceHotspot = new PalaceHotspot();
 				hs.readData(socket.endian, roomBytes, hotSpotOffset);
 				hotSpotOffset += hs.size;
 				currentRoom.hotSpots.addItem(hs);
+			}
+			
+			// Loose Props
+			currentRoom.looseProps.removeAll();
+			var propOffset:int = firstLooseProp;
+			for (i=0; i < loosePropCount; i++) {
+				var looseProp:PalaceLooseProp = new PalaceLooseProp();
+				looseProp.loadData(socket.endian, roomBytes, propOffset);
+				currentRoom.looseProps.addItem(looseProp);
+				propOffset = looseProp.nextOffset;
 			}
 			
 			// Images
@@ -770,24 +797,12 @@ package net.codecomposer.palace.rpc
 			}
 			currentRoom.images = images;
 			
-			// Loose props
-			var looseProps:Object = {};
-			var ofst:int = firstLooseProp;
-			for (i=0; i < loosePropCount; i++) {
-				// Not implemented
-			}
-			
-			
 			currentRoom.backgroundFile = imageName;
 			trace("Background Image: " + currentRoom.backgroundFile);
 			
 			currentRoom.name = roomName;
 			trace("Room name: " + currentRoom.name);
 			
-			currentRoom.selectedUser = null;
-			
-			currentRoom.users.removeAll();
-			currentRoom.usersHash = {};
 		}
 		
 		// List of users in current room
@@ -1136,6 +1151,30 @@ package net.codecomposer.palace.rpc
 			user.propIds = propIds;
 			user.propCrcs = propCrcs;
 			user.loadProps();
+		}
+		
+		private function handlePropMove(size:int, referenceId:int):void {
+			var propIndex:int = socket.readInt();
+			var y:int = socket.readShort();
+			var x:int = socket.readShort();
+			var prop:PalaceLooseProp = PalaceLooseProp(currentRoom.looseProps.getItemAt(propIndex));
+			prop.x = x;
+			prop.y = y;
+		}
+		
+		private function handlePropDelete(size:int, referenceId:int):void {
+			var propIndex:int = socket.readInt();
+			currentRoom.looseProps.removeItemAt(propIndex);
+		}
+		
+		private function handlePropNew(size:int, referenceId:int):void {
+			var prop:PalaceLooseProp = new PalaceLooseProp();
+			prop.id = socket.readUnsignedInt();
+			prop.crc = socket.readUnsignedInt();
+			prop.y = socket.readShort();
+			prop.x = socket.readShort();
+			prop.loadProp();
+			currentRoom.looseProps.addItemAt(prop, 0);
 		}
 		
 		private function _throwAwayData(a:int, b:int):void {

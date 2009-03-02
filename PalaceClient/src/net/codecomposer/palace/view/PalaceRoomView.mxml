@@ -207,6 +207,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		scaleContent="false" httpStatus="handleBGHTTP(event)" 
 		visible="{room.backgroundFile != null}" />
 	<view:PalaceHotspotView id="hotSpotCanvas" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+	<mx:Canvas id="loosePropsCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="0" right="0" bottom="0" left="0">
+		<mx:Repeater id="loosePropsRepeater" dataProvider="{room.looseProps}">
+			<mx:Image source="{loosePropsRepeater.currentItem.prop.bitmap}"
+				alpha="{loosePropsRepeater.currentItem.prop.ghost ? 0.5 : 1.0}"
+				x="{loosePropsRepeater.currentItem.x}"
+				y="{loosePropsRepeater.currentItem.y}" />
+		</mx:Repeater>
+	</mx:Canvas>
+	
 	<mx:Canvas id="avatarsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
 <!--	<mx:Canvas id="nameTagsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off"  /> -->
 	<mx:Canvas id="textCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />

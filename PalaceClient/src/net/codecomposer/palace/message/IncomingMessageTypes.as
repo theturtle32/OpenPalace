@@ -39,7 +39,7 @@ package net.codecomposer.palace.message
 		
 		// the following four are whenever you change rooms as well as login
 		public static const GOT_ROOM_DESCRIPTION:int = 1919905645;
-		public static const GOT_ROOM_DESCRIPTION_ALT:int = 1919905645;
+		public static const GOT_ROOM_DESCRIPTION_ALT:int = 1934782317;
 		public static const GOT_USER_LIST:int = 1919971955;
 		public static const GOT_ROOM_LIST:int = 1917612916;
 		public static const ROOM_DESCEND:int = 1701733490; // ???
@@ -64,6 +64,12 @@ package net.codecomposer.palace.message
 		public static const USER_EXIT_ROOM:int = 1701868147;
 		public static const GOT_REPLY_OF_ALL_ROOMS:int = 1917612916;
 		public static const GOT_REPLY_OF_ALL_USERS:int = 1967944564;
+		
+		// Loose Props
+		public static const PROP_MOVE:int = 1833988720;
+		public static const PROP_DELETE:int = 1682993776;
+		public static const PROP_NEW:int = 1850765936;
+		
 		
 	}
 }

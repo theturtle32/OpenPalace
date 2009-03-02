@@ -57,10 +57,6 @@ package net.codecomposer.palace.model
 			trace("Hotspot offset " + offset);
 			location = new Point();
 			
-			// FIXME:  This seems broken.  The name is not read reliably
-			// and the coordinates for the polygon are not at all correct
-			// most of the time, but are correct sometimes.  No idea.
-			
 			var ba:ByteArray = new ByteArray();
 			for (var j:int=offset; j < offset+size+1; j++) {
 				ba.writeByte(bs[j]);

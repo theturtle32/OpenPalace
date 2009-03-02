@@ -43,6 +43,7 @@ package net.codecomposer.palace.model
 		public var roomFlags:int;
 		public var images:Object = {};
 		public var hotSpots:ArrayCollection = new ArrayCollection();
+		public var looseProps:ArrayCollection = new ArrayCollection();
 		public var selectedUser:PalaceUser;
 		public var selfUserId:int = -1;
 		

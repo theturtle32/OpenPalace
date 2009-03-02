@@ -146,6 +146,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		verticalScrollPolicy="off" horizontalScrollPolicy="off">
 		<mx:Repeater id="propRepeater" dataProvider="{user.props}">
 			<mx:Image source="{propRepeater.currentItem.bitmap}"
+				alpha="{propRepeater.currentItem.ghost ? 0.5 : 1.0}"
 				x="{propRepeater.currentItem.horizontalOffset+43}"
 				y="{propRepeater.currentItem.verticalOffset+43}" />
 		</mx:Repeater>
