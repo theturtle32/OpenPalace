@@ -9,31 +9,86 @@
   <body class="standards">
     
     <div id="header">
-      <ul id="navigation">
-        <li><a href="#">Get OpenPalace!</a></li>
-        <li><a href="#">Get the Source</a></li>
-        <li><a href="#">Documentation</a></li>
-        <li><a href="#">Contribute</a></li>
-        <li><a href="#">Contact</a></li>
-        <li><a href="#">About</a></li>
-      </ul>
-      <h1>OpenPalace</h1>
-      <h2>Catchy tagline goes here.</h2>
-
+      <div class="widthConstraint">
+        <h1>OpenPalace</h1>
+        <h2>Catchy tagline goes here.</h2>
+        <ul id="navigation">
+          <li><a href="/comingsoon.html">Get OpenPalace</a></li>
+          <li><a href="/comingsoon.html">Get the Source</a></li>
+          <li><a href="/comingsoon.html">Documentation</a></li>
+          <li><a href="/comingsoon.html">Contribute</a></li>
+          <li><a href="/comingsoon.html">Contact</a></li>
+          <li><a href="/comingsoon.html">About</a></li>
+        </ul>
+      </div>
     </div>
     
     <div id="mainContent">
-      
-      <div class="article">
-      
-        <h1>Lorem ipsum dolor sit amet.</h1>
-        <p>Consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-      
+      <div class="widthConstraint">
+        <div class="article">
+          <h1>What is it?</h1>
+          <p>OpenPalace is a free, open source client application for The Palace, a 2d graphical avatar chat platform.  It is available as a desktop application built on the Adobe Air platform, and also as a browser-based version, meant to replace the aging InstantPalace client.  The project is still under heavy development, and I have only my spare time to work with, so your patience while I prepare the first public release is appreciated.  Until then, you're welcome to try out the web-based version.  Because of security restrictions in the flash player, it will only connect to my test palace at openpalace.org:9998. For more information about The Palace, visit <a href="http://www.thepalace.com/">thepalace.com</a>.</p>
+        </div>
+        <div class="tryItNow">
+          <a href="/demo">Try it now!</a>
+          <p style="text-align:center;">
+            Current Version: 0.95<br/>
+            <a href="changelog.html">Changelog</a>
+          </p>
+        </div>
+        <div class="article">
+          <h1>Current Features</h1>
+          <ul class="bulleted">
+            <li>Background Image Formats: GIF, JPEG, PNG, and SWF.</li>
+            <li>Avatar Formats: 8bit, 16bit, 20bit, s20bit, and 32bit</li>
+            <li>Loose Props</li>
+            <li>Working door hotspots.</li>
+            <li>Chat &amp; Whispers.</li>
+            <li>Working Log Window, User List, and Room List.</li>
+          </ul>
+        </div>
+        <div class="article">
+          <h1>Planned Features</h1>
+          <ul class="bulleted">
+            <li>Iptscrae.</li>
+            <li>Sounds.</li>
+            <li>Hotspots with Images.</li>
+            <li>Avatar (Prop) Bag.</li>
+            <li>User Interface Overhaul (the current UI is just enough to test the features.)</li>
+            <li>Caching avatar images between sessions.</li>
+          </ul>
+        </div>
+        <div class="article">
+          <h1>Known Issues</h1>
+          <ul class="bulleted">
+            <li>Chat bubbles are extremely static and need serious improvements to be usable.</li>
+            <li>Whispers and Room Messages only appear in the log window.</li>
+            <li>Quirky behavior when clicking on other avatars for whispering.</li>
+            <li>Entering a highly populated room in certain palaces causes the connection to be dropped.</li>
+          </ul>
+        </div>
+        <div class="article">
+          <h1>Acknowledgements</h1>
+          <p>Special thanks to Chris and Martyn of the <a href="http://www.bhlabs.com">Phalanx</a> team for all their support, and for providing code snippets for decoding the new avatar formats.</p>
+        </div>
       </div>
-      
     </div>
-    <div id="footer"></div>
-    <div id="copyright"></div>
-    
+    <div id="footer">
+      <div class="widthConstraint">
+        <div id="copyright">
+          Copyright © 2009 Brian McKelvey
+        </div>
+      </div>
+    </div>
+
+    <script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+    try {
+    var pageTracker = _gat._getTracker("UA-7700604-1");
+    pageTracker._trackPageview();
+    } catch(err) {}</script>
   </body>
 </html>
