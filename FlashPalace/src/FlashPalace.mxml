@@ -91,6 +91,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		]]>
 	</mx:Script>
 	<mx:ApplicationControlBar id="controlBar" horizontalAlign="left" dock="true">
+		<mx:Label color="#FFFFFF" text="{palace.currentRoom.users.length}/{palace.population}" />
+		<mx:Spacer width="100%" />
 		<mx:Button label="Chat Log" click="showLogWindow()" />
 		<mx:Button label="Room List" click="showRoomList()" />
 		<mx:Button label="User List" click="showUserList()" />

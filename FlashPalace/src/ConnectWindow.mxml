@@ -53,7 +53,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		<mx:TextInput id="userName" text="OpenPalace User" left="60" top="8"/>
 		<mx:Label text="Name:" textAlign="right" left="10" top="10"/>
 		<mx:Label text="Host:" textAlign="right" width="42" left="10" top="38"/>
-		<mx:TextInput id="hostName" text="altpub.net" keyDown="handleConnectionKeydown(event)" left="60" top="36"/>
+		<mx:TextInput id="hostName" text="openpalace.org" keyDown="handleConnectionKeydown(event)" left="60" top="36"/>
 		<mx:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
 		<mx:HBox x="10" y="67" width="260" horizontalAlign="right">
 			<mx:Button label="Cancel" click="close()"/>
