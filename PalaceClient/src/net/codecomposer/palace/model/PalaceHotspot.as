@@ -20,6 +20,9 @@ package net.codecomposer.palace.model
 	import flash.geom.Point;
 	import flash.utils.ByteArray;
 	
+	import mx.collections.ArrayCollection;
+	
+	[Bindable]
 	public class PalaceHotspot
 	{
 		
@@ -31,13 +34,14 @@ package net.codecomposer.palace.model
 		public var numStates:int = 0;
 		public var polygon:Array = []; // Array of points
 		public var name:String = null;
-		public var location:Point;
+		public var location:FlexPoint;
 		public var scriptEventMask:int = 0;
 		public var numScripts:int = 0;
 		public var secureInfo:int;
 		public var refCon:int;
 		public var groupId:int;
 		public var scriptRecordOffset:int;
+		public var states:ArrayCollection = new ArrayCollection();
 		
 		public static const TYPE_NORMAL:int = 0;
 		public static const TYPE_DOOR:int = 1;
@@ -49,17 +53,20 @@ package net.codecomposer.palace.model
 		public static const STATE_UNLOCKED:int = 0;
 		public static const STATE_LOCKED:int = 1;
 		
+		// Hotspot records are 48 bytes
+		public const size:int = 48;
+		
 		public function PalaceHotspot()
 		{
 		}
 
-		public function readData(endian:String, bs:Array, offset:int):void {
+		public function readData(endian:String, roomBytes:Array, offset:int):void {
 			trace("Hotspot offset " + offset);
-			location = new Point();
+			location = new FlexPoint();
 			
 			var ba:ByteArray = new ByteArray();
 			for (var j:int=offset; j < offset+size+1; j++) {
-				ba.writeByte(bs[j]);
+				ba.writeByte(roomBytes[j]);
 			}
 			ba.position = 0;
 			ba.endian = endian;
@@ -89,9 +96,9 @@ package net.codecomposer.palace.model
 			ba.readShort();
 			if (nameOffset > 0) {
 				var nameByteArray:ByteArray = new ByteArray();
-				var nameLength:int = bs[nameOffset];
+				var nameLength:int = roomBytes[nameOffset];
 				for (var a:int = nameOffset+1; a < nameOffset+nameLength+1; a++) {
-					nameByteArray.writeByte(bs[a]);
+					nameByteArray.writeByte(roomBytes[a]);
 				}
 				nameByteArray.position = 0;
 				name = nameByteArray.readMultiByte(nameLength, 'iso-8859-1');
@@ -100,31 +107,32 @@ package net.codecomposer.palace.model
 			ba = new ByteArray();
 			var endPos:int = pointsOffset+(numPoints*4);
 			for (j=pointsOffset; j < endPos+1; j++) {
-				ba.writeByte(bs[j]);
+				ba.writeByte(roomBytes[j]);
 			}
 			ba.position = 0;
 			ba.endian = endian;
 			
+			// Get vertices
 			var startX:int = 0;
 			var startY:int = 0;
 			for (var i:int = 0; i < numPoints; i++) {
 				var y:int = ba.readShort();
 				var x:int = ba.readShort();
-				trace("--------------------------------- X: " + x + " (" + uint(x).toString(16) + ")    Y: " + y + "(" + uint(y).toString(16) +")");
-				if (i == 0) {
-					startX = x;
-					startY = y;
-				}
+				// trace("----- X: " + x + " (" + uint(x).toString(16) + ")    Y: " + y + "(" + uint(y).toString(16) +")");
 				polygon.push(new Point(x + location.x, y + location.y));
 			}
 			
-			polygon.push(new Point(startX + location.x, startY + location.y));
+			// Get States
+			states.removeAll();
+			var stateOffset:int = stateRecordOffset;
+			for (i=0; i < numStates; i++) {
+				var state:PalaceHotspotState = new PalaceHotspotState();
+				state.readData(endian, roomBytes, stateOffset);
+				stateOffset += PalaceHotspotState.size;
+				states.addItem(state);
+			}
 			
 			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + numPoints);
-		}
-		
-		public function get size():int {
-			return 48;
 		}
 
 	}

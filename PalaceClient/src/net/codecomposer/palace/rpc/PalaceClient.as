@@ -37,7 +37,9 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceAsset;
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
 	import net.codecomposer.palace.model.PalaceHotspot;
+	import net.codecomposer.palace.model.PalaceImageOverlay;
 	import net.codecomposer.palace.model.PalaceLooseProp;
+	import net.codecomposer.palace.model.PalacePalette;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceUser;
@@ -121,6 +123,8 @@ package net.codecomposer.palace.rpc
 			currentRoom.selectedUser = null;
 			currentRoom.removeAllUsers();
 			currentRoom.looseProps.removeAll();
+			currentRoom.hotSpots.removeAll();
+			population = 0;
 			serverName = "No Server"
 			roomList.removeAll();
 			userList.removeAll();
@@ -749,7 +753,37 @@ package net.codecomposer.palace.rpc
 				byte = roomBytes[i+imageNameOffset+1];
 				imageName += String.fromCharCode(byte);
 			}
-			
+
+			// Images
+			var images:Object = {};
+			for (i=0; i < imageCount; i++) {
+				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
+				var imageBA:ByteArray = new ByteArray();
+				for (var j:int=imageOffset; j < imageOffset+12; j++) {
+					imageBA.writeByte(roomBytes[j]);
+				}
+				imageBA.endian = socket.endian;
+				imageBA.position = 0;
+				imageOverlay.refCon = imageBA.readInt(); // appears unused
+				imageOverlay.id = imageBA.readShort();
+				var picNameOffset:int = imageBA.readShort(); // pstring offset
+				imageOverlay.transparencyIndex = imageBA.readShort();
+				imageOverlay.transparencyColor = PalacePalette.clutARGB[imageOverlay.transparencyIndex];
+				trace("Transparency Index: " + imageOverlay.transparencyIndex + " - Transparency Color: " + imageOverlay.transparencyColor + " (" + imageOverlay.transparencyColor.toString(16) + ")");
+				imageBA.readShort(); // Reserved.  Padding.. field alignment
+				var picNameLength:int = roomBytes[picNameOffset];
+				var picName:String = "";
+				for (j=0; j < picNameLength; j++) {
+					var imageNameByte:int = roomBytes[picNameOffset+j+1]; 
+					picName += String.fromCharCode(imageNameByte);
+				}
+				imageOverlay.filename = picName;
+				images[imageOverlay.id] = imageOverlay; 
+				trace("picture id: " + imageOverlay.id + " - Name: " + imageOverlay.filename);
+				imageOffset += 12;
+			}
+			currentRoom.images = images;
+
 			// Hotspots
 			currentRoom.hotSpots.removeAll();
 			for (i=0; i < hotSpotCount; i++) {
@@ -769,33 +803,15 @@ package net.codecomposer.palace.rpc
 				propOffset = looseProp.nextOffset;
 			}
 			
-			// Images
-			var images:Object = {};
-			for (i=0; i < imageCount; i++) {
-//				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
-//				var imageBA:ByteArray = new ByteArray();
-//				//imageBA.endian = Endian.BIG_ENDIAN;
-//				for (var j:int=imageOffset-1; j < imageOffset+12-1; j++) {
-//					imageBA.writeByte(roomBytes[j]);
-//				}
-//				imageBA.position = 0;
-//				imageOverlay.refCon = imageBA.readInt();
-//				imageOverlay.id = imageBA.readShort();
-//				var picNameOffset:int = imageBA.readShort();
-//				imageOverlay.transparencyColor = imageBA.readShort();
-//				imageBA.readShort(); // ??
-//				var picNameLength:int = roomBytes[picNameOffset];
-//				var picName:String = "";
-//				for (j=0; j < picNameLength; j++) {
-//					var imageNameByte:int = roomBytes[picNameOffset+j+1]; 
-//					picName += String.fromCharCode(imageNameByte);
-//				}
-//				imageOverlay.filename = picName;
-//				images[imageOverlay.id] = imageOverlay; 
-//				trace("picture id: " + imageOverlay.id + " - Name: " + imageOverlay.filename);
-//				imageOffset += 12;
-			}
-			currentRoom.images = images;
+			// Draw Commands
+//			currentRoom.drawCommands.removeAll();
+//			var drawCommandOffset:int = firstDrawCommand;
+//			for (i=0; i < drawCommandsCount; i++) {
+//				trace("Draw command at offset: " + drawCommandOffset);
+//				var drawRecord:PalaceDrawRecord = new PalaceDrawRecord();
+//				drawRecord.readData(socket.endian, roomBytes, drawCommandOffset);
+//				drawCommandOffset = drawRecord.nextOffset;
+//			}
 			
 			currentRoom.backgroundFile = imageName;
 			trace("Background Image: " + currentRoom.backgroundFile);
@@ -1164,7 +1180,12 @@ package net.codecomposer.palace.rpc
 		
 		private function handlePropDelete(size:int, referenceId:int):void {
 			var propIndex:int = socket.readInt();
-			currentRoom.looseProps.removeItemAt(propIndex);
+			if (propIndex == -1) {
+				currentRoom.looseProps.removeAll();
+			}
+			else {
+				currentRoom.looseProps.removeItemAt(propIndex);
+			}
 		}
 		
 		private function handlePropNew(size:int, referenceId:int):void {

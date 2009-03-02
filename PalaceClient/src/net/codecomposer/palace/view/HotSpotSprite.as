@@ -23,6 +23,7 @@ package net.codecomposer.palace.view
 	import mx.core.FlexSprite;
 	
 	import net.codecomposer.palace.model.PalaceHotspot;
+	import net.codecomposer.palace.model.PalaceHotspotState;
 	import net.codecomposer.palace.rpc.PalaceClient;
 
 	public class HotSpotSprite extends FlexSprite
@@ -44,6 +45,7 @@ package net.codecomposer.palace.view
 		}
 		
 		public function draw():void {
+			trace("Hotspot " + hotSpot.name + " is type: " + hotSpot.type); 
 			alpha = 0;
 			graphics.clear();
 			var points:Array = hotSpot.polygon;
@@ -57,18 +59,38 @@ package net.codecomposer.palace.view
 			}
 			graphics.lineTo(firstPoint.x, firstPoint.y);
 			graphics.endFill();
-			if (hotSpot.type == PalaceHotspot.TYPE_DOOR) {
+			if (hotSpot.dest != 0 &&
+				 ( hotSpot.type == PalaceHotspot.TYPE_DOOR ||
+				   hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
+				   hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR )
+			    )
+			{
 				buttonMode = true;
 				useHandCursor = true;
 			}
 		}
 		
 		private function handleHotSpotClick(event:MouseEvent):void {
-			if (hotSpot.type == PalaceHotspot.TYPE_DOOR) {
-				event.stopPropagation();
-				client.gotoRoom(hotSpot.dest);
+			if (hotSpot.dest != 0 &&
+				 ( hotSpot.type == PalaceHotspot.TYPE_DOOR ||
+				   hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
+				   hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR )
+			    ) {
+			    	
+			    if (hotSpot.state == PalaceHotspotState.LOCKED &&
+			    	( hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
+			    	  hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR)
+			    	)
+			   	{
+			    	client.currentRoom.roomMessage("Sorry, the door is locked.");
+			    }
+			    else {
+					event.stopPropagation();
+					client.gotoRoom(hotSpot.dest);
+			    }
+			    
 			}
-			trace("Clicked hotspot - Destination: " + hotSpot.dest);
+			trace("Clicked hotspot - id: " + hotSpot.id + " Destination: " + hotSpot.dest + " type: " + hotSpot.type + " state: " + hotSpot.state);
 		}
 		
 		private function handleMouseOver(event:MouseEvent):void {

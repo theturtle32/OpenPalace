@@ -4,18 +4,23 @@
 <classEntry path="net.codecomposer.palace.model.PalaceAsset"/>
 <classEntry path="net.codecomposer.palace.event.RoomSelectedEvent"/>
 <classEntry path="net.codecomposer.palace.model.AssetManager"/>
+<classEntry path="net.codecomposer.palace.view.HotSpotImage"/>
 <classEntry path="net.codecomposer.palace.model.PalaceUser"/>
 <classEntry path="net.codecomposer.palace.model.PalaceCurrentRoom"/>
+<classEntry path="net.codecomposer.palace.model.PalacePalette"/>
 <classEntry path="net.codecomposer.palace.event.PalaceRoomEvent"/>
+<classEntry path="net.codecomposer.palace.model.PalaceHotspotState"/>
 <classEntry path="net.codecomposer.palace.view.RoomListGrid"/>
 <classEntry path="net.codecomposer.palace.model.PalaceHotspot"/>
 <classEntry path="net.codecomposer.palace.view.Avatar"/>
+<classEntry path="net.codecomposer.palace.model.PalaceImageOverlay"/>
 <classEntry path="net.codecomposer.palace.util.PalaceUtil"/>
 <classEntry path="net.codecomposer.palace.model.PalaceLooseProp"/>
 <classEntry path="net.codecomposer.palace.view.UserListGrid"/>
 <classEntry path="net.codecomposer.palace.model.PalaceRoom"/>
 <classEntry path="net.codecomposer.palace.message.IncomingMessageTypes"/>
 <classEntry path="net.codecomposer.palace.rpc.PalaceClient"/>
+<classEntry path="net.codecomposer.palace.model.PalaceDrawRecord"/>
 <classEntry path="net.codecomposer.palace.view.NameTag"/>
 <classEntry path="net.codecomposer.palace.event.AvatarSelectEvent"/>
 <classEntry path="net.codecomposer.palace.message.OutgoingMessageTypes"/>
@@ -24,6 +29,7 @@
 <classEntry path="net.codecomposer.palace.view.ChatBubble"/>
 <classEntry path="net.codecomposer.palace.event.PropEvent"/>
 <classEntry path="com.deviant.HueColorMatrixFilter"/>
+<classEntry path="net.codecomposer.palace.model.FlexPoint"/>
 <classEntry path="net.codecomposer.palace.view.PalaceRoomView"/>
 <classEntry path="net.codecomposer.palace.event.ChatEvent"/>
 </includeClasses>

@@ -70,6 +70,9 @@ package net.codecomposer.palace.message
 		public static const PROP_DELETE:int = 1682993776;
 		public static const PROP_NEW:int = 1850765936;
 		
+		// Status...
+		public static const NAV_ERROR:int = 1933931122;
+		
 		
 	}
 }
