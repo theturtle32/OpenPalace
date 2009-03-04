@@ -15,4 +15,46 @@
 		<nature>com.adobe.flexbuilder.project.flexnature</nature>
 		<nature>com.adobe.flexbuilder.project.actionscriptnature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>bin-release7</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.952</location>
+		</link>
+		<link>
+			<name>bin-release4</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.94</location>
+		</link>
+		<link>
+			<name>bin-release8</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.953</location>
+		</link>
+		<link>
+			<name>bin-release1</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.1</location>
+		</link>
+		<link>
+			<name>bin-release5</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.95</location>
+		</link>
+		<link>
+			<name>bin-release6</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.951</location>
+		</link>
+		<link>
+			<name>bin-release2</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.11</location>
+		</link>
+		<link>
+			<name>bin-release3</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.92</location>
+		</link>
+	</linkedResources>
 </projectDescription>
