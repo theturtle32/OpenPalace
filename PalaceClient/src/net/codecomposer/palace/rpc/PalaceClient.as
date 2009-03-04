@@ -23,6 +23,7 @@ package net.codecomposer.palace.rpc
 	import flash.events.SecurityErrorEvent;
 	import flash.events.TimerEvent;
 	import flash.net.Socket;
+	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
@@ -48,6 +49,9 @@ package net.codecomposer.palace.rpc
 	public class PalaceClient
 	{
 		private static var instance:PalaceClient;
+		
+		[Bindable]
+		public static var loaderContext:LoaderContext = new LoaderContext();
 		
 		private var socket:Socket = null;
 				
@@ -136,6 +140,8 @@ package net.codecomposer.palace.rpc
 		// ***************************************************************
 
 		public function connect(userName:String, host:String, port:int = 9998):void {
+			PalaceClient.loaderContext.checkPolicyFile = true;
+			
 			this.host = host;
 			this.port = port;
 			this.userName = userName;

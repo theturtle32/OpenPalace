@@ -18,9 +18,11 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 <mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" source="{mediaServer}{filename}"
 	x="{hotspot.location.x + state.x - this.width/2}"
 	y="{hotspot.location.y + state.y - this.height/2}"
+	loaderContext="{PalaceClient.loaderContext}"
 	complete="handleLoaded(event)">
 	<mx:Script>
 		<![CDATA[
+			import net.codecomposer.palace.rpc.PalaceClient;
 			import net.codecomposer.palace.model.PalaceImageOverlay;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
 			import net.codecomposer.palace.model.PalaceHotspotState;
