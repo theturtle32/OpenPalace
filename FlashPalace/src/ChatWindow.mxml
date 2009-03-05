@@ -17,15 +17,14 @@ You should have received a copy of the GNU General Public License
 along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<MDIWindow xmlns="flexlib.mdi.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
 	title="{palace.serverName} - {palace.currentRoom.name}"
-	resizable="false" layout="vertical"
-	width="{roomView.width+6}" height="{roomView.height+chatBox.height+29}"
+	layout="absolute"
 	verticalGap="0"
 	verticalScrollPolicy="off" horizontalScrollPolicy="off"
 	left="10" top="10"
 	enabled="{palace.connected}"
-	showControls="false" xmlns:view="net.codecomposer.palace.view.*" xmlns:code="http://code.google.com/p/flexlib/">
+	xmlns:view="net.codecomposer.palace.view.*" xmlns:code="http://code.google.com/p/flexlib/">
 	
 	<mx:Script>
 		<![CDATA[
@@ -42,7 +41,17 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		]]>
 	</mx:Script>
 	
-	<view:PalaceRoomView id="roomView" room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
-	<code:PromptingTextInput prompt="Type here to chat..." width="100%" id="chatBox" keyDown="handleChatKeyDown(event);" maxChars="254"/>
+	<mx:VBox verticalGap="0">
+		<mx:Canvas borderColor="#111111" borderStyle="solid"
+			width="{roomView.width+2}" height="{roomView.height+2}">
+			<view:PalaceRoomView id="roomView"
+				horizontalCenter="0" verticalCenter="0"
+				room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
+		</mx:Canvas>
+		<code:PromptingTextInput prompt="Type here to chat..."
+			width="{roomView.width+2}"
+			id="chatBox" keyDown="handleChatKeyDown(event);" maxChars="254"/>
+	</mx:VBox>
 	
-</MDIWindow>
+	
+</mx:Panel>

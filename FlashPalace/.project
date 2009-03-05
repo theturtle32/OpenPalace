@@ -17,6 +17,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>bin-release10</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.956</location>
+		</link>
+		<link>
 			<name>bin-release7</name>
 			<type>2</type>
 			<location>/Users/theturtle32/work/releases/FlashPalace/0.952</location>
@@ -37,19 +42,24 @@
 			<location>/Users/theturtle32/work/releases/FlashPalace/0.1</location>
 		</link>
 		<link>
+			<name>bin-release9</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.955</location>
+		</link>
+		<link>
 			<name>bin-release5</name>
 			<type>2</type>
 			<location>/Users/theturtle32/work/releases/FlashPalace/0.95</location>
 		</link>
 		<link>
-			<name>bin-release6</name>
-			<type>2</type>
-			<location>/Users/theturtle32/work/releases/FlashPalace/0.951</location>
-		</link>
-		<link>
 			<name>bin-release2</name>
 			<type>2</type>
 			<location>/Users/theturtle32/work/releases/FlashPalace/0.11</location>
+		</link>
+		<link>
+			<name>bin-release6</name>
+			<type>2</type>
+			<location>/Users/theturtle32/work/releases/FlashPalace/0.951</location>
 		</link>
 		<link>
 			<name>bin-release3</name>

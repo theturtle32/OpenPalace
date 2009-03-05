@@ -56,7 +56,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		<mx:TextInput id="hostName" text="openpalace.org" keyDown="handleConnectionKeydown(event)" left="60" top="36"/>
 		<mx:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
 		<mx:HBox x="10" y="67" width="260" horizontalAlign="right">
-			<mx:Button label="Cancel" click="close()"/>
-			<mx:Button label="Connect" click="connect()" />
+			<mx:Button styleName="buttonNoOfficial" label="Cancel" click="close()"/>
+			<mx:Button styleName="buttonNoOfficial" label="Connect" click="connect()" />
 		</mx:HBox>
 </MDIWindow>
