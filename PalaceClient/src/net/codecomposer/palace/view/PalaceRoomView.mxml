@@ -67,7 +67,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				hitArea.mouseEnabled = false;
 				hitArea.graphics.clear();
 				hitArea.graphics.beginFill(0x000000, 1.0);
-				hitArea.graphics.drawRect(0,0,44,44);
+				hitArea.graphics.drawRect(44,44,44,44);
 				hitArea.height = hitArea.width = 44;
 				hitArea.graphics.endFill();
 				return hitArea;

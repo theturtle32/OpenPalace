@@ -104,7 +104,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				face9,
 				face10,
 				face11,
-				face12
+				face12,
+				face0,
+				face1,
+				face2
 			]);
 
 			private var colors:Object = {};
