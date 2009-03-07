@@ -29,6 +29,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		]]>
 	</mx:Script>
 	<view:RoomListGrid resizableColumns="false" id="roomList" left="0" right="0" top="0" bottom="40" roomSelected="PalaceClient.getInstance().gotoRoom(roomList.selectedRoomId);"/>
-	<mx:Button label="Go To Room" right="10" bottom="10" click="PalaceClient.getInstance().gotoRoom(roomList.selectedRoomId);"/>
+	<mx:Button label="Go To Room" right="10" bottom="10"
+		click="PalaceClient.getInstance().gotoRoom(roomList.selectedRoomId);"
+		enabled="{roomList.selectedItem != null}"/>
 
 </mx:Window>

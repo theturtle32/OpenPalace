@@ -47,6 +47,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private var userListWindow:UserListWindow = new UserListWindow();
 			private var connectWindow:ConnectWindow = new ConnectWindow();
 			private var logWindow:LogWindow = new LogWindow();
+			private var propsWindow:PropsWindow = new PropsWindow();
 			
 			private function disconnect():void {
 				palace.disconnect();
@@ -104,15 +105,25 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				logWindow.activate();
 			}
 			
+			private function openPropsWindow():void {
+				if (propsWindow.nativeWindow && propsWindow.closed) {
+					propsWindow = new PropsWindow();
+				}
+				propsWindow.open();
+				propsWindow.nativeWindow.x = 575;
+				propsWindow.nativeWindow.y = 10;
+			}
+			
 		]]>
 	</mx:Script>
 	
 	<mx:ApplicationControlBar id="controlBar" horizontalAlign="right" dock="true">
 		<mx:Label color="#FFFFFF" text="{palace.currentRoom.users.length}/{palace.population}" />
 		<mx:Spacer width="100%" />
-		<mx:Button label="Chat Log" click="openLogWindow()"/>
-		<mx:Button label="Room List" click="openRoomList()"/>
-		<mx:Button label="User List" click="openUserList()"/>
+		<mx:Button label="Props" click="openPropsWindow()" />
+		<mx:Button label="Log" click="openLogWindow()"/>
+		<mx:Button label="Rooms" click="openRoomList()"/>
+		<mx:Button label="Users" click="openUserList()"/>
 		<mx:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
 		<mx:Button label="Connect" click="openConnectWindow()" />
 	</mx:ApplicationControlBar>

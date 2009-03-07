@@ -32,7 +32,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			
 			private function handleChatLogUpdated(event:Event):void {
-				logViewer.verticalScrollPosition = logViewer.maxVerticalScrollPosition;
+				logViewer.verticalScrollPosition = logViewer.maxVerticalScrollPosition+500;
 			}
 		
 		]]>
