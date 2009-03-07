@@ -26,7 +26,6 @@ package net.codecomposer.palace.model
 	import mx.core.FlexBitmap;
 	
 	import net.codecomposer.palace.event.PropEvent;
-	import net.codecomposer.palace.util.CRC32Generator;
 	
 	[Event(name="propLoaded",type="net.codecomposer.palace.event.PropEvent")]
 	
