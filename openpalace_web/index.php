@@ -8,7 +8,7 @@
           <a href="/demo">Try it now!</a>
           <p style="text-align:center;">
             Current Version: 0.956<br/>
-            <a href="changelog.html">Changelog</a><br/>
+            <a href="changelog.php">Changelog</a><br/>
             <a href="/trac/newticket">Report a Bug</a>
           </p>
         </div>
