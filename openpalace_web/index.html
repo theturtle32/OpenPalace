@@ -1,31 +1,5 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-        "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-<html>
-  <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-    <title>OpenPalace - Flash-based 2d Avatar Chat</title>
-    <link rel="stylesheet" href="stylesheet.css" type="text/css" media="screen" title="no title" charset="utf-8">
-  </head>
-  <body class="standards">
-    
-    <div id="header">
-      <div class="widthConstraint">
-        <h1>OpenPalace</h1>
-        <h2>Catchy tagline goes here.</h2>
-        <ul id="navigation">
-          <li><a href="/comingsoon.html">Get OpenPalace</a></li>
-          <li><a href="/comingsoon.html">Get the Source</a></li>
-          <li><a href="/trac/newticket">Report Bug</a></li>
-          <li><a href="/comingsoon.html">Documentation</a></li>
-          <li><a href="/comingsoon.html">Contribute</a></li>
-          <li><a href="/comingsoon.html">Contact</a></li>
-          <li><a href="/comingsoon.html">About</a></li>
-        </ul>
-      </div>
-    </div>
-    
-    <div id="mainContent">
-      <div class="widthConstraint">
+<?php include("header.php") ?>
+
         <div class="article">
           <h1>What is it?</h1>
           <p>OpenPalace is a free, open source client application for The Palace, a 2d graphical avatar chat platform.  It is available as a desktop application built on the Adobe Air platform, and also as a browser-based version, meant to replace the aging InstantPalace client.  The project is still under heavy development, and I have only my spare time to work with, so your patience while I prepare the first public release is appreciated.  Until then, you're welcome to try out the web-based version.  Because of security restrictions in the flash player, it will only connect to my test palace at openpalace.org:9998. For more information about The Palace, visit <a href="http://www.thepalace.com/">thepalace.com</a>.</p>
@@ -75,24 +49,5 @@
           <h1>Acknowledgements</h1>
           <p>Special thanks to Chris and Martyn of the <a href="http://www.bhlabs.com">Phalanx</a> team for all their support, and for providing code snippets for decoding the new avatar formats.</p>
         </div>
-      </div>
-    </div>
-    <div id="footer">
-      <div class="widthConstraint">
-        <div id="copyright">
-          Copyright © 2009 Brian McKelvey
-        </div>
-      </div>
-    </div>
 
-    <script type="text/javascript">
-    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-    </script>
-    <script type="text/javascript">
-    try {
-    var pageTracker = _gat._getTracker("UA-7700604-1");
-    pageTracker._trackPageview();
-    } catch(err) {}</script>
-  </body>
-</html>
+<?php include("footer.php") ?>
