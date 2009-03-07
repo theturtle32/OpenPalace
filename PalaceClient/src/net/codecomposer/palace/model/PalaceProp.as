@@ -326,6 +326,7 @@ package net.codecomposer.palace.model
 		
 		private function decodeS20BitProp():void {
 			// Implementation thanks to Phalanx team
+			// Translated from C++ implementation
 			
 			var unzipByteArray:ByteArray = new ByteArray();
 			for (var i:int = 12; i < asset.data.length; i ++) {
@@ -426,6 +427,9 @@ package net.codecomposer.palace.model
 		}
 		
 		private function decode16BitProp():void {
+			// Implementation thanks to Phalanx team
+			// Translated from C++ implementation
+			
 			var ba:ByteArray = new ByteArray();
 			var bd:BitmapData = new BitmapData(44,44, true);
 			var A:uint = 0;

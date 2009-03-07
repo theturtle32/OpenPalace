@@ -53,7 +53,54 @@ package net.codecomposer.palace.model
 			props.refresh();
 		}
 		
+		public function toggleProp(prop:PalaceProp):void {
+			var wearingProp:Boolean = false;
+			for each (var currentProp:PalaceProp in props) {
+				if (currentProp.asset.id == prop.asset.id) {
+					wearingProp = true;
+				}
+			}
+			if (wearingProp) {
+				removeProp(prop);
+			}
+			else {
+				wearProp(prop);
+			}
+		}
 		
+		public function wearProp(prop:PalaceProp):void {
+			if (props.length < 9) {
+				props.addItem(prop);
+			}
+			checkFaceProps();
+		}
+		
+		public function removeProp(prop:PalaceProp):void {
+			var propIndex:int;
+			var wearingProp:Boolean = false;
+			for (var i:int = 0; i < props.length; i++) {
+				var currentProp:PalaceProp = PalaceProp(props.getItemAt(i));
+				if (currentProp.asset.id == prop.asset.id) {
+					wearingProp = true;
+					propIndex = i;
+				}
+			}
+			
+			if (wearingProp) {
+				props.removeItemAt(propIndex);
+			}
+			checkFaceProps();
+		}
+		
+		public function syncPropIdsToProps():void {
+			propCount = props.length;
+			propIds = [];
+			propCrcs = [];
+			for each (var prop:PalaceProp in props) {
+				propIds.push(prop.asset.id);
+				propCrcs.push(prop.asset.crc);
+			}
+		}
 		
 		public function loadProps():void {
 			var i:int = 0;
@@ -86,7 +133,7 @@ package net.codecomposer.palace.model
 					showFace = false;
 				}
 			}
-			if (propCount == 0) {
+			if (props.length == 0) {
 				showFace = true;
 			}
 			this.showFace = showFace;

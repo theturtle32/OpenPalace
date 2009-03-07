@@ -31,5 +31,6 @@ package net.codecomposer.palace.message
 		public static const GOTO_ROOM:int = 0x6e617652;
 		public static const REQUEST_USER_LIST:int = 0x754c7374;
 		public static const REQUEST_ASSET:int = 0x71417374;
+		public static const USER_PROP:int = 1970500176;
 	}
 }

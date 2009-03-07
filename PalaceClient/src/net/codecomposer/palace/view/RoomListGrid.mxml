@@ -18,7 +18,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <mx:DataGrid xmlns:mx="http://www.adobe.com/2006/mxml"
-	itemClick="handleSelection(event)"
+	itemDoubleClick="handleSelection(event)"
+	doubleClickEnabled="true"
 	dataProvider="{palace.roomList}" draggableColumns="false">
 	<mx:Metadata>
 		[Event(name="roomSelected",type="net.codecomposer.palace.event.RoomSelectedEvent")]

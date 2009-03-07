@@ -31,6 +31,7 @@ package net.codecomposer.palace.rpc
 	import mx.collections.ArrayCollection;
 	import mx.controls.Alert;
 	
+	import net.codecomposer.openpalace.accountserver.rpc.AccountServerClient;
 	import net.codecomposer.palace.crypto.PalaceEncryption;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
@@ -41,6 +42,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceImageOverlay;
 	import net.codecomposer.palace.model.PalaceLooseProp;
 	import net.codecomposer.palace.model.PalacePalette;
+	import net.codecomposer.palace.model.PalaceProp;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceUser;
@@ -54,6 +56,8 @@ package net.codecomposer.palace.rpc
 		public static var loaderContext:LoaderContext = new LoaderContext();
 		
 		private var socket:Socket = null;
+		
+		private var accountClient:AccountServerClient = AccountServerClient.getInstance();
 				
 		public var version:int;
 		public var id:int = 0;
@@ -306,8 +310,27 @@ package net.codecomposer.palace.rpc
 				assetRequestQueueTimer.start();
 			}
 		}
-				
+
+		public function get currentUser():PalaceUser {
+			return currentRoom.getUserById(id);
+		}
 		
+		public function updateUserProps():void {
+			if (!connected) {
+				return;
+			}
+			var user:PalaceUser = currentUser;
+			socket.writeInt(OutgoingMessageTypes.USER_PROP);
+			// size -- 8 bytes per prop, 4 bytes for number of props 
+			socket.writeInt(user.props.length * 8 + 4);
+			socket.writeInt(id);
+			socket.writeInt(user.props.length);
+			for each (var prop:PalaceProp in user.props) {
+				socket.writeUnsignedInt(prop.asset.id);
+				socket.writeUnsignedInt(prop.asset.crc);
+			}
+			socket.flush();
+		}
 		
 		
 		

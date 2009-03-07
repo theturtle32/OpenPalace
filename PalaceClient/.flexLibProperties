@@ -6,7 +6,9 @@
 <classEntry path="net.codecomposer.palace.model.AssetManager"/>
 <classEntry path="net.codecomposer.palace.view.HotSpotImage"/>
 <classEntry path="net.codecomposer.palace.model.PalaceUser"/>
+<classEntry path="net.codecomposer.openpalace.accountserver.rpc.AccountServerClient"/>
 <classEntry path="net.codecomposer.palace.model.PalaceCurrentRoom"/>
+<classEntry path="net.codecomposer.palace.model.PropBag"/>
 <classEntry path="net.codecomposer.palace.model.PalacePalette"/>
 <classEntry path="net.codecomposer.palace.event.PalaceRoomEvent"/>
 <classEntry path="net.codecomposer.palace.model.PalaceHotspotState"/>

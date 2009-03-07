@@ -17,8 +17,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.model
 {
-	import flash.utils.setTimeout;
-	
 	import net.codecomposer.palace.rpc.PalaceClient;
 	
 	public class PalacePropStore
@@ -53,9 +51,17 @@ package net.codecomposer.palace.model
 			var prop:PalaceProp = props[assetId];
 			if (prop == null) {
 				 prop = props[assetId] = new PalaceProp(assetId, assetCrc);
-				 client.requestAsset(AssetManager.ASSET_TYPE_PROP, assetId, assetCrc);
+				 loadImage(prop);
 			}
 			return prop;
+		}
+		
+		public function loadImage(prop:PalaceProp):void {
+			requestAsset(prop);
+		}
+		
+		public function requestAsset(prop:PalaceProp):void {
+			client.requestAsset(AssetManager.ASSET_TYPE_PROP, prop.asset.id, prop.asset.crc);
 		}
 	}
 }
