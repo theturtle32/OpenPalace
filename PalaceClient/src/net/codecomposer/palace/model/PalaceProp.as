@@ -26,6 +26,7 @@ package net.codecomposer.palace.model
 	import mx.core.FlexBitmap;
 	
 	import net.codecomposer.palace.event.PropEvent;
+	import net.codecomposer.palace.util.CRC32Generator;
 	
 	[Event(name="propLoaded",type="net.codecomposer.palace.event.PropEvent")]
 	
@@ -164,17 +165,12 @@ package net.codecomposer.palace.model
 		private function decode32BitProp():void {
 			// Implementation thanks to Phalanx team
 			// Translated from VB6 implementation
-			
-			var unzipByteArray:ByteArray = new ByteArray();
+			var data:ByteArray = new ByteArray();
 			for (var i:int = 12; i < asset.data.length; i ++) {
-				unzipByteArray.writeByte(asset.data[i]);
+				data.writeByte(asset.data[i]);
 			}
-			unzipByteArray.uncompress();
-			unzipByteArray.position = 0;
-			var data:Array = [];
-			while (unzipByteArray.bytesAvailable) {
-				data.push(unzipByteArray.readUnsignedByte());
-			}
+			data.uncompress();
+			data.position = 0;
 			
 			var bd:BitmapData = new BitmapData(width, height);
 			var ba:ByteArray = new ByteArray();
@@ -227,16 +223,12 @@ package net.codecomposer.palace.model
 			// Implementation thanks to Phalanx team
 			// Translated from VB6 implementation
 			
-			var unzipByteArray:ByteArray = new ByteArray();
+			var data:ByteArray = new ByteArray();
 			for (var i:int = 12; i < asset.data.length; i ++) {
-				unzipByteArray.writeByte(asset.data[i]);
+				data.writeByte(asset.data[i]);
 			}
-			unzipByteArray.uncompress();
-			unzipByteArray.position = 0;
-			var data:Array = [];
-			while (unzipByteArray.bytesAvailable) {
-				data.push(unzipByteArray.readUnsignedByte());
-			}
+			data.uncompress();
+			data.position = 0;
 			
 			var bd:BitmapData = new BitmapData(width, height);
 			var ba:ByteArray = new ByteArray();
@@ -328,16 +320,12 @@ package net.codecomposer.palace.model
 			// Implementation thanks to Phalanx team
 			// Translated from C++ implementation
 			
-			var unzipByteArray:ByteArray = new ByteArray();
+			var data:ByteArray = new ByteArray();
 			for (var i:int = 12; i < asset.data.length; i ++) {
-				unzipByteArray.writeByte(asset.data[i]);
+				data.writeByte(asset.data[i]);
 			}
-			unzipByteArray.uncompress();
-			unzipByteArray.position = 0;
-			var data:Array = [];
-			while (unzipByteArray.bytesAvailable) {
-				data.push(unzipByteArray.readUnsignedByte());
-			}
+			data.uncompress();
+			data.position = 0;
 			
 			var bd:BitmapData = new BitmapData(width, height);
 			var colors:Array = new Array(9); // array of bytes
@@ -443,16 +431,12 @@ package net.codecomposer.palace.model
 			var X:int = 0;
 			
 			// gunzip the props...
-			var unzipByteArray:ByteArray = new ByteArray();
+			var data:ByteArray = new ByteArray();
 			for (var i:int = 12; i < asset.data.length; i ++) {
-				unzipByteArray.writeByte(asset.data[i]);
+				data.writeByte(asset.data[i]);
 			}
-			unzipByteArray.uncompress();
-			unzipByteArray.position = 0;
-			var data:Array = [];
-			while (unzipByteArray.bytesAvailable) {
-				data.push(unzipByteArray.readUnsignedByte());
-			}
+			data.uncompress();
+			data.position = 0;
 			
 			for (X=0; X < 1936; X++) {
 				ofst = X * 2;
