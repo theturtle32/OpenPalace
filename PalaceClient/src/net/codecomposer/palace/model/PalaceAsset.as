@@ -21,7 +21,7 @@ package net.codecomposer.palace.model
 	
 	public class PalaceAsset
 	{
-		public var id:uint;
+		public var id:int;
 		public var crc:uint;
 		public var type:int;
 		public var name:String;

@@ -17,13 +17,24 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.model
 {
+	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.Loader;
+	import flash.display.LoaderInfo;
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.IOErrorEvent;
+	import flash.filesystem.File;
+	import flash.filesystem.FileMode;
+	import flash.filesystem.FileStream;
 	import flash.geom.Rectangle;
+	import flash.net.URLRequest;
+	import flash.system.Security;
 	import flash.utils.ByteArray;
 	import flash.utils.setTimeout;
 	
 	import mx.core.FlexBitmap;
+	import mx.graphics.codec.PNGEncoder;
 	
 	import net.codecomposer.palace.event.PropEvent;
 	
@@ -40,7 +51,6 @@ package net.codecomposer.palace.model
 		public var verticalOffset:int;
 		public var scriptOffset:int;
 		public var flags:uint;
-		public var bounds:Rectangle;
 		private var _bitmap:BitmapData;		
 		public var ready:Boolean = false;
 		public var badProp:Boolean = false;
@@ -52,6 +62,8 @@ package net.codecomposer.palace.model
 		public var palindrome:Boolean = false;
 		public var bounce:Boolean = false;
 		public var propFormat:uint = 0x00;
+		
+		private var _propImageDirectory:File;
 		
 		public static const HEAD_FLAG:uint = 0x02;
 		public static const GHOST_FLAG:uint = 0x04;
@@ -83,6 +95,37 @@ package net.codecomposer.palace.model
 			//BindingUtils.bindProperty(this, "source", this, "bitmap")
 		}
 		
+		public static function fromObject(source:Object):PalaceProp {
+			var prop:PalaceProp = new PalaceProp(source.asset.id, source.asset.crc);
+			prop.animate = source.animate;
+			prop.width = source.width;
+			prop.height = source.height;
+			prop.horizontalOffset = source.horizontalOffset;
+			prop.verticalOffset = source.verticalOffset;
+			prop.scriptOffset = source.scriptOffset;
+			prop.flags = source.flags;
+			prop.ready = false;
+			prop.badProp = source.badProp;
+			prop.head = source.head;
+			prop.ghost = source.ghost;
+			prop.rare = source.rare;
+			prop.animate = source.animate;
+			prop.palindrome = source.palindrome;
+			prop.bounce = source.bounce;
+			prop.propFormat = source.propFormat;
+			prop.asset.blockCount = source.asset.blockCount;
+			prop.asset.blockNumber = source.asset.blockNumber;
+			prop.asset.blockOffset = source.asset.blockOffset;
+			prop.asset.blockSize = source.asset.blockSize;
+			prop.asset.crc = source.asset.crc;
+			prop.asset.data = source.asset.data;
+			prop.asset.flags = source.asset.flags;
+			prop.asset.id = source.asset.id;
+			prop.asset.name = source.asset.name;
+			prop.asset.type = source.asset.type;
+			return prop;
+		}
+		
 		public function set bitmap(newBitmap:Object):void {
 			_bitmap = BitmapData(newBitmap);
 		}
@@ -90,6 +133,73 @@ package net.codecomposer.palace.model
 		public function get bitmap():Object {
 			if (_bitmap) {
 				return new FlexBitmap(_bitmap);
+			}
+			else {
+				return null;
+			}
+		}
+		
+		private function get propImageDirectory():File {
+			if (_propImageDirectory == null) {
+				_propImageDirectory = File.applicationStorageDirectory.resolvePath('prop_images_cache');
+				_propImageDirectory.createDirectory();
+			}
+			return _propImageDirectory;
+		} 
+		
+		public function loadImageFromCache():Boolean {
+			if (Security.sandboxType == Security.APPLICATION) {
+				var bucketNumber:uint = uint(asset.id) % 256;
+				var dir:File = propImageDirectory.resolvePath(String(bucketNumber));
+				dir.createDirectory();
+				var file:File = dir.resolvePath(uint(asset.id) + ".png");
+				if (file.exists) {
+					var req:URLRequest = new URLRequest(file.url);
+					var loader:Loader = new Loader();
+					loader.contentLoaderInfo.addEventListener(Event.COMPLETE, handleImageLoadComplete);
+		            loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, handleImageIOError);
+					loader.load(req);
+					return true;
+				}
+				else {
+					return false;
+				}
+			}
+			else {
+				return false;
+			}
+		}
+		
+		private function handleImageLoadComplete(event:Event):void {
+			if (LoaderInfo(event.target).content is Bitmap) {
+				bitmap = Bitmap(LoaderInfo(event.target).content).bitmapData;
+			}
+		}
+		
+		private function handleImageIOError(event:Event):void {
+			trace(event);
+		}
+		
+		public function cacheImage():void {
+			if (Security.sandboxType == Security.APPLICATION) {
+				var png:ByteArray = pngData;
+				if (png) {
+					var bucketNumber:uint = uint(asset.id) % 256;
+					var dir:File = propImageDirectory.resolvePath(String(bucketNumber));
+					dir.createDirectory();
+					var file:File = dir.resolvePath(uint(asset.id) + ".png");
+					var fileStream:FileStream = new FileStream();
+					fileStream.open(file, FileMode.WRITE);
+					fileStream.writeBytes(png, 0, png.length);
+					fileStream.close();
+				}
+			}
+		}
+		
+		public function get pngData():ByteArray {
+			if (_bitmap != null) {
+				var encoder:PNGEncoder = new PNGEncoder();
+				return encoder.encode(_bitmap);
 			}
 			else {
 				return null;
@@ -154,6 +264,7 @@ package net.codecomposer.palace.model
             	decode8BitProp();
             }
 			
+			cacheImage();
 			
 			ready = true;
 			asset.data = null;

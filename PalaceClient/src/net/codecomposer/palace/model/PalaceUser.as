@@ -54,12 +54,7 @@ package net.codecomposer.palace.model
 		}
 		
 		public function toggleProp(prop:PalaceProp):void {
-			var wearingProp:Boolean = false;
-			for each (var currentProp:PalaceProp in props) {
-				if (currentProp.asset.id == prop.asset.id) {
-					wearingProp = true;
-				}
-			}
+			var wearingProp:Boolean = (props.source.indexOf(prop) != -1);
 			if (wearingProp) {
 				removeProp(prop);
 			}
@@ -72,23 +67,22 @@ package net.codecomposer.palace.model
 			if (props.length < 9) {
 				props.addItem(prop);
 			}
+			syncPropIdsToProps();
 			checkFaceProps();
 		}
 		
 		public function removeProp(prop:PalaceProp):void {
-			var propIndex:int;
-			var wearingProp:Boolean = false;
-			for (var i:int = 0; i < props.length; i++) {
-				var currentProp:PalaceProp = PalaceProp(props.getItemAt(i));
-				if (currentProp.asset.id == prop.asset.id) {
-					wearingProp = true;
-					propIndex = i;
-				}
-			}
-			
-			if (wearingProp) {
+			var propIndex:int = props.source.indexOf(prop);
+			if (propIndex != -1) {
 				props.removeItemAt(propIndex);
 			}
+			syncPropIdsToProps();
+			checkFaceProps();
+		}
+		
+		public function naked():void {
+			props.removeAll();
+			syncPropIdsToProps();
 			checkFaceProps();
 		}
 		
@@ -121,7 +115,6 @@ package net.codecomposer.palace.model
 		}
 		
 		private function handlePropLoaded(event:PropEvent):void {
-			trace("Prop loaded...");
 			checkFaceProps();
 		}
 		

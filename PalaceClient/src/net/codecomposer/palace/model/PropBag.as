@@ -23,10 +23,12 @@ package net.codecomposer.palace.model
 		public function PropBag() {
 			try {
 				so = SharedObject.getLocal("OpenPalace");
-				loadPropBag();
 			}
 			catch (error:Error) {
 				trace("Unable to allocate local storage: " + error.toString());
+			}
+			if (so != null) {
+				loadPropBag();
 			}
 		}
 		
@@ -63,6 +65,9 @@ package net.codecomposer.palace.model
 		}
 		
 		public function saveCurrentAvatar():void {
+			if (!palace.connected) {
+				return;
+			}
 			var currentUser:PalaceUser = palace.currentUser;
 			var avatar:Array = [];
 			for each (var prop:PalaceProp in currentUser.props) {
@@ -97,18 +102,30 @@ package net.codecomposer.palace.model
 		
 		public function addProp(prop:PalaceProp):void {
 			props.addItem(prop);
+			savePropBag();
+		}
+		
+		public function deleteProp(prop:PalaceProp):void {
+			var propIndex:int = props.source.indexOf(prop);
+			if (propIndex != -1) {
+				props.removeItemAt(propIndex);
+			}
+			savePropBag();
 		}
 		
 		public function toggleProp(prop:PalaceProp):void {
-			palace.currentUser.toggleProp(prop);
-			palace.currentUser.syncPropIdsToProps();
-			palace.updateUserProps();
+			if (palace.connected) {
+				palace.currentUser.toggleProp(prop);
+				palace.currentUser.syncPropIdsToProps();
+				palace.updateUserProps();
+			}
 		}
 		
 		public function naked():void {
-			palace.currentUser.props.removeAll();
-			palace.currentUser.syncPropIdsToProps();
-			palace.updateUserProps();
+			if (palace.connected) {
+				palace.currentUser.naked();
+				palace.updateUserProps();
+			}
 		}
 
 	}

@@ -1129,7 +1129,7 @@ package net.codecomposer.palace.rpc
 		
 		private function handleReceiveAsset(size:int, referenceId:int):void {
 			var assetType:int = socket.readInt();
-			var assetId:uint = socket.readUnsignedInt();
+			var assetId:int = socket.readInt();
 			var assetCrc:uint = socket.readUnsignedInt();
 			var blockSize:int = socket.readInt();
 			var blockOffset:int = socket.readInt();
