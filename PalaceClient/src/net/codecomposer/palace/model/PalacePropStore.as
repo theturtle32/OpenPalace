@@ -33,6 +33,7 @@ package net.codecomposer.palace.model
 		
 		private var props:Object = new Object();
 		
+		CONTEXT::desktop
 		private var _propsDirectory:File;
 		
 		private var client:PalaceClient = PalaceClient.getInstance();
@@ -60,13 +61,13 @@ package net.codecomposer.palace.model
 		public function getProp(assetId:int, assetCrc:int=0):PalaceProp {
 			var prop:PalaceProp = props[assetId];
 			if (prop == null) {
-				if (Security.sandboxType == Security.APPLICATION) {
+				CONTEXT::desktop {
 					// if we're an Air application, attempt to load from disk
 					var bucketNumber:uint = uint(assetId) % 256;
 					var dir:File = propsDirectory.resolvePath(String(bucketNumber));
 					dir.createDirectory();				
 
-					var propDescriptionFile:File = dir.resolvePath(uint(assetId) + ".prop");
+					var propDescriptionFile:File = dir.resolvePath(uint(assetId) + "-" + uint(assetCrc) + ".prop");
 					if (propDescriptionFile.exists) {
 						var fileStream:FileStream = new FileStream();
 						fileStream.open(propDescriptionFile, FileMode.READ);
@@ -81,7 +82,7 @@ package net.codecomposer.palace.model
 						prop = props[assetId] = new PalaceProp(assetId, assetCrc);
 					}
 				}
-				else {
+				CONTEXT::web {
 					// otherwise we make a new prop					
 					prop = props[assetId] = new PalaceProp(assetId, assetCrc);
 				}
@@ -93,14 +94,14 @@ package net.codecomposer.palace.model
 		}
 		
 		public function loadImage(prop:PalaceProp):void {
-			if (Security.sandboxType == Security.APPLICATION) {
+			CONTEXT::desktop {
 				// try loading the image off disk
 				if (!prop.loadImageFromCache()) {
 					// if we fail, request it from the server
 					requestAsset(prop);
 				}
 			}
-			else {
+			CONTEXT::web {
 				// If we're not an Air application we don't have a prop cache.
 				requestAsset(prop);
 			}
@@ -110,6 +111,7 @@ package net.codecomposer.palace.model
 			client.requestAsset(AssetManager.ASSET_TYPE_PROP, prop.asset.id, prop.asset.crc);
 		}
 		
+		CONTEXT::desktop
 		private function get propsDirectory():File {
 			if (_propsDirectory == null) {
 				_propsDirectory = File.applicationStorageDirectory.resolvePath('prop_cache');
@@ -119,13 +121,13 @@ package net.codecomposer.palace.model
 		}
 		
 		private function handlePropLoaded(event:PropEvent):void {
-			if (Security.sandboxType == Security.APPLICATION) {
+			CONTEXT::desktop {
 				// If we're an air application, cache the prop data to disk.
 				
 				var bucketNumber:uint = uint(event.prop.asset.id) % 256;
 				var dir:File = propsDirectory.resolvePath(String(bucketNumber));
 				dir.createDirectory();				
-				var file:File = dir.resolvePath(uint(event.prop.asset.id) + ".prop");
+				var file:File = dir.resolvePath(uint(event.prop.asset.id) + "-" + uint(event.prop.asset.crc) + ".prop");
 				var fileStream:FileStream = new FileStream();
 				
 				fileStream.open(file, FileMode.WRITE);

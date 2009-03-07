@@ -63,6 +63,7 @@ package net.codecomposer.palace.model
 		public var bounce:Boolean = false;
 		public var propFormat:uint = 0x00;
 		
+		CONTEXT::desktop
 		private var _propImageDirectory:File;
 		
 		public static const HEAD_FLAG:uint = 0x02;
@@ -139,6 +140,7 @@ package net.codecomposer.palace.model
 			}
 		}
 		
+		CONTEXT::desktop
 		private function get propImageDirectory():File {
 			if (_propImageDirectory == null) {
 				_propImageDirectory = File.applicationStorageDirectory.resolvePath('prop_images_cache');
@@ -148,11 +150,11 @@ package net.codecomposer.palace.model
 		} 
 		
 		public function loadImageFromCache():Boolean {
-			if (Security.sandboxType == Security.APPLICATION) {
+			CONTEXT::desktop {
 				var bucketNumber:uint = uint(asset.id) % 256;
 				var dir:File = propImageDirectory.resolvePath(String(bucketNumber));
 				dir.createDirectory();
-				var file:File = dir.resolvePath(uint(asset.id) + ".png");
+				var file:File = dir.resolvePath(uint(asset.id) + "-" + uint(asset.crc) + ".png");
 				if (file.exists) {
 					var req:URLRequest = new URLRequest(file.url);
 					var loader:Loader = new Loader();
@@ -165,7 +167,7 @@ package net.codecomposer.palace.model
 					return false;
 				}
 			}
-			else {
+			CONTEXT::web {
 				return false;
 			}
 		}
@@ -181,13 +183,13 @@ package net.codecomposer.palace.model
 		}
 		
 		public function cacheImage():void {
-			if (Security.sandboxType == Security.APPLICATION) {
+			CONTEXT::desktop {
 				var png:ByteArray = pngData;
 				if (png) {
 					var bucketNumber:uint = uint(asset.id) % 256;
 					var dir:File = propImageDirectory.resolvePath(String(bucketNumber));
 					dir.createDirectory();
-					var file:File = dir.resolvePath(uint(asset.id) + ".png");
+					var file:File = dir.resolvePath(uint(asset.id) + "-" + uint(asset.crc) + ".png");
 					var fileStream:FileStream = new FileStream();
 					fileStream.open(file, FileMode.WRITE);
 					fileStream.writeBytes(png, 0, png.length);
