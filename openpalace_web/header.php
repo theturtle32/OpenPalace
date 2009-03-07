@@ -13,13 +13,13 @@
         <h1>OpenPalace</h1>
         <h2>Catchy tagline goes here.</h2>
         <ul id="navigation">
-          <li><a href="/comingsoon.html">Get OpenPalace</a></li>
-          <li><a href="/comingsoon.html">Get the Source</a></li>
+          <li><a href="/comingsoon.php">Get OpenPalace</a></li>
+          <li><a href="/comingsoon.php">Get the Source</a></li>
           <li><a href="/trac/newticket">Report Bug</a></li>
-          <li><a href="/comingsoon.html">Documentation</a></li>
-          <li><a href="/comingsoon.html">Contribute</a></li>
-          <li><a href="/comingsoon.html">Contact</a></li>
-          <li><a href="/comingsoon.html">About</a></li>
+          <li><a href="/comingsoon.php">Documentation</a></li>
+          <li><a href="/comingsoon.php">Contribute</a></li>
+          <li><a href="/comingsoon.php">Contact</a></li>
+          <li><a href="/comingsoon.php">About</a></li>
         </ul>
       </div>
     </div>
