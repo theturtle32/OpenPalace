@@ -20,9 +20,6 @@ package net.codecomposer.palace.model
 	import flash.filesystem.File;
 	import flash.filesystem.FileMode;
 	import flash.filesystem.FileStream;
-	import flash.system.Security;
-	import flash.utils.ByteArray;
-	import flash.utils.Endian;
 	
 	import net.codecomposer.palace.event.PropEvent;
 	import net.codecomposer.palace.rpc.PalaceClient;
@@ -58,8 +55,9 @@ package net.codecomposer.palace.model
 			prop.decodeProp();
 		}
 		
-		public function getProp(assetId:int, assetCrc:int=0):PalaceProp {
+		public function getProp(assetId:int, assetCrc:int=0, downloadIfNotAvailable:Boolean = true):PalaceProp {
 			var prop:PalaceProp = props[assetId];
+			var generatedNewProp:Boolean = false;
 			if (prop == null) {
 				CONTEXT::desktop {
 					// if we're an Air application, attempt to load from disk
@@ -80,6 +78,7 @@ package net.codecomposer.palace.model
 					else {
 						// make a new prop if we don't have one on disk.
 						prop = props[assetId] = new PalaceProp(assetId, assetCrc);
+						generatedNewProp = true;
 					}
 				}
 				CONTEXT::web {
@@ -88,15 +87,20 @@ package net.codecomposer.palace.model
 				}
 				
 				prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
-				loadImage(prop);
+				loadImage(prop, downloadIfNotAvailable);
 			}
-			return prop;
+			if (!downloadIfNotAvailable && generatedNewProp) {
+				return null;
+			}
+			else {
+				return prop;
+			}
 		}
 		
-		public function loadImage(prop:PalaceProp):void {
+		public function loadImage(prop:PalaceProp, downloadIfNotAvailable:Boolean = true):void {
 			CONTEXT::desktop {
 				// try loading the image off disk
-				if (!prop.loadImageFromCache()) {
+				if (!prop.loadImageFromCache() && downloadIfNotAvailable) {
 					// if we fail, request it from the server
 					requestAsset(prop);
 				}

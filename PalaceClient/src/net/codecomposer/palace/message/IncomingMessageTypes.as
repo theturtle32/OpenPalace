@@ -70,9 +70,12 @@ package net.codecomposer.palace.message
 		public static const PROP_DELETE:int = 1682993776;
 		public static const PROP_NEW:int = 1850765936;
 		
+		// Assets
+		public static const ASSET_QUERY:int = 1900114804;
+		
 		// Status...
 		public static const NAV_ERROR:int = 1933931122;
-		
+		public static const SERVER_DOWN:int = 1685026670;
 		
 	}
 }

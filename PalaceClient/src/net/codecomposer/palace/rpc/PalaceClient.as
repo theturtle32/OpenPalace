@@ -45,6 +45,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceProp;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceRoom;
+	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
 	
 	
@@ -81,6 +82,8 @@ package net.codecomposer.palace.rpc
 		public var connected:Boolean = false;
 		[Bindable]
 		public var serverName:String = "No Server";
+		[Bindable]
+		public var serverInfo:PalaceServerInfo = new PalaceServerInfo();
 		[Bindable]
 		public var userName:String;
 		[Bindable]
@@ -349,7 +352,7 @@ package net.codecomposer.palace.rpc
 			connected = false;
 			resetState();
 			trace("Disconnected");
-			Alert.show("Connection to server lost.");
+			//Alert.show("Connection to server lost.");
 		}
 		
 		private function onSocketData(event:ProgressEvent=null):void {
@@ -388,6 +391,10 @@ package net.codecomposer.palace.rpc
 							case IncomingMessageTypes.ALTERNATE_LOGON_REPLY:
 								trace("Alternate Logon Reply");
 								alternateLogon(size, p);
+								break;
+								
+							case IncomingMessageTypes.SERVER_DOWN:
+								handleServerDown(size, p);
 								break;
 							
 							case IncomingMessageTypes.SERVER_VERSION:
@@ -458,6 +465,10 @@ package net.codecomposer.palace.rpc
 							case IncomingMessageTypes.ASSET_INCOMING:
 								handleReceiveAsset(size, p);
 								break;
+								
+							case IncomingMessageTypes.ASSET_QUERY:
+								handleAssetQuery(size, p);
+								break;
 							
 							case IncomingMessageTypes.MOVEMENT:
 								handleMovement(size, p);
@@ -505,7 +516,6 @@ package net.codecomposer.palace.rpc
 							case IncomingMessageTypes.PROP_NEW:
 								handlePropNew(size, p);
 								break;
-							
 								
 	//						case IncomingMessage.CONNECTION_DIED:
 	//							handleConnectionDied(size, p);
@@ -675,9 +685,16 @@ package net.codecomposer.palace.rpc
 		}
 		
 		private function handleReceiveServerInfo(a:int, b:int):void {
-			var unknown:int = socket.readInt();
-			var size:int = socket.readByte();
-			serverName = socket.readMultiByte(size, 'iso-8859-1');
+			serverInfo = new PalaceServerInfo();
+			serverInfo.permissions = socket.readInt();
+			var size:int = Math.abs(socket.readByte());
+			serverName = serverInfo.name = socket.readMultiByte(size, 'iso-8859-1');
+
+			// Weird -- this message is supposed to include options,
+			// and upload/download capabilities, but doesn't.
+//			serverInfo.options = socket.readUnsignedInt();
+//			serverInfo.uploadCapabilities = socket.readUnsignedInt();
+//			serverInfo.downloadCapabilities = socket.readUnsignedInt();
 			trace("Server name: " + serverName);
 		}
 		
@@ -1127,6 +1144,17 @@ package net.codecomposer.palace.rpc
 			trace("User " + b + " logged off");
 		}
 		
+		private function handleAssetQuery(size:int, referenceId:int):void {
+			var type:int = socket.readInt();
+			var assetId:int = socket.readInt();
+			var assetCrc:uint = socket.readUnsignedInt();
+			trace("Got asset request for type: " + type + ", assetId: " + assetId + ", assetCrc: " + assetCrc);
+			var prop:PalaceProp = PalacePropStore.getInstance().getProp(assetId, assetCrc, false);
+			if (prop != null) {
+				trace("Have prop to send...");
+			}
+		}
+		
 		private function handleReceiveAsset(size:int, referenceId:int):void {
 			var assetType:int = socket.readInt();
 			var assetId:int = socket.readInt();
@@ -1230,6 +1258,59 @@ package net.codecomposer.palace.rpc
 			prop.x = socket.readShort();
 			prop.loadProp();
 			currentRoom.looseProps.addItemAt(prop, 0);
+		}
+
+		private function handleServerDown(size:int, referenceId:int):void {
+			var reason:String = "The connection to the server has been lost.";
+
+			switch (referenceId) {
+	            case 4:
+	            case 7:
+	            	reason = "You have been killed.";
+	            	break;
+	            case 13:
+	                reason = "You have been kicked off this site.";
+	                break;
+	            case 11:
+	            	reason = "Your death penalty is still active.";
+	            	break;
+	            case 12:
+	                reason = "You are not currently allowed on this site.";
+	                break;
+	            case 6:
+	                reason = "Your connection was terminated due to inactivity.";
+	                break;
+	            case 3:
+	                reason = "Your connection was terminated due to flooding";
+	                break;
+	            case 8:
+	                reason = "This Palace is currently full - try again later.";
+	                break;
+	            case 14:
+	                reason = "Guests are not currently allowed on this site.";
+	                break;
+	            case 5:
+	                reason = "This Palace was shut down by its operator.  Try again later.";
+	                break;
+	            case 9:
+	                reason = "You have an invalid serial number.";
+	                break;
+	            case 10:
+	                reason = "There is another user using your serial number.";
+	                break;
+	            case 15:
+	                reason = "Your Free Demo has expired.";
+	                break;
+	            case 16:
+                    reason = socket.readMultiByte(size, 'iso-8859-1');
+	                break;
+	            case 2:
+	            	reason = "There has been a communications error.";
+	            	break;
+	            default:
+	                break;
+			}
+			Alert.show(reason, "Connection Dropped");
 		}
 		
 		private function _throwAwayData(a:int, b:int):void {
