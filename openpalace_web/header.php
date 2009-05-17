@@ -10,15 +10,15 @@
     
     <div id="header">
       <div class="widthConstraint">
-        <h1>OpenPalace</h1>
-        <h2>Catchy tagline goes here.</h2>
+        <h1 style="cursor:pointer;" onclick="window.location.href='http://www.openpalace.org/';">OpenPalace</h1>
+        <h2>Re-imagining the past.</h2>
         <ul id="navigation">
           <li><a href="/comingsoon.php">Get OpenPalace</a></li>
-          <li><a href="/comingsoon.php">Get the Source</a></li>
+          <li><a href="/source.php">Get the Source</a></li>
           <li><a href="/trac/newticket">Report Bug</a></li>
-          <li><a href="/comingsoon.php">Documentation</a></li>
+          <li><a href="/trac/wiki">Documentation</a></li>
           <li><a href="/comingsoon.php">Contribute</a></li>
-          <li><a href="/comingsoon.php">Contact</a></li>
+          <li><a href="/contact.php">Contact</a></li>
           <li><a href="/comingsoon.php">About</a></li>
         </ul>
       </div>
