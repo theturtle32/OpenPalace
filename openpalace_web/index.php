@@ -1,5 +1,34 @@
 <?php include("header.php") ?>
 
+<style type="text/css">
+<!--
+#AIRDownloadMessageTable {
+	width: 217px;
+	height: 180px;
+	border: 1px solid #999;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 14px;
+}
+#AIRDownloadMessageRuntime {
+	font-size: 12px;
+	color: #333;
+}
+-->
+</style>
+<script language="JavaScript" type="text/javascript">
+<!--
+// -----------------------------------------------------------------------------
+// Globals
+// Major version of Flash required
+var requiredMajorVersion = 9;
+// Minor version of Flash required
+var requiredMinorVersion = 0;
+// Minor version of Flash required
+var requiredRevision = 115;		// This is Flash Player 9 Update 3
+// -----------------------------------------------------------------------------
+// -->
+</script>
+
         <div class="article">
           <h1>Source Code now Public</h1>
           <p>
@@ -16,8 +45,62 @@
           <p style="text-align:center;">
             Current Version: 0.956<br/>
             <a href="changelog.php">Changelog</a><br/>
-            <a href="/trac/newticket">Report a Bug</a>
+            <a href="/trac/newticket">Report a Bug</a><br/>
           </p>
+        </div>
+        <div class="tryItNow">
+          <p>Adobe Air Version:</p>
+            <script src="AC_RunActiveContent.js" type="text/javascript"></script>
+            <script language="JavaScript" type="text/javascript">
+            <!--
+            // Version check based upon the values entered above in "Globals"
+            var hasReqestedVersion = DetectFlashVer(requiredMajorVersion, requiredMinorVersion, requiredRevision);
+
+            // Check to see if the version meets the requirements for playback
+            if (hasReqestedVersion) {
+            	// if we've detected an acceptable version
+            	// embed the Flash Content SWF when all tests are passed
+
+            	AC_FL_RunContent(
+            		'codebase','http://fpdownload.macromedia.com/pub/shockwave/cabs/flash/swflash.cab',
+            		'width','217',
+            		'height','180',
+            		'id','badge',
+            		'align','middle',
+            		'src','badge',
+            		'quality','high',
+            		'bgcolor','#bbff72',
+            		'name','badge',
+            		'allowscriptaccess','all',
+            		'pluginspage','http://www.macromedia.com/go/getflashplayer',
+            		'flashvars','appname=AirPalace&appurl=http://openpalace.org/airpalace-0.953.air&airversion=1.0',
+            		'movie','badge' ); //end AC code
+
+            } else {  // Flash Player is too old or we can't detect the plugin
+            	document.write('<table id="AIRDownloadMessageTable"><tr><td>Download <a href="http://openpalace.org/airpalace-0.953.air">AirPalace</a> now.<br /><br /><span id="AIRDownloadMessageRuntime">This application requires the <a href="');
+
+            	var platform = 'unknown';
+            	if (typeof(window.navigator.platform) != undefined)
+            	{
+            		platform = window.navigator.platform.toLowerCase();
+            		if (platform.indexOf('win') != -1)
+            			platform = 'win';
+            		else if (platform.indexOf('mac') != -1)
+            			platform = 'mac';
+            	}
+
+            	if (platform == 'win')
+            		document.write('http://airdownload.adobe.com/air/win/download/latest/AdobeAIRInstaller.exe');
+            	else if (platform == 'mac')
+            		document.write('http://airdownload.adobe.com/air/mac/download/latest/AdobeAIR.dmg');
+            	else
+            	document.write('http://www.adobe.com/go/getair/');
+
+
+            	document.write('">Adobe&#174;&nbsp;AIR&#8482; runtime</a>.</span></td></tr></table>');
+            }
+            // -->
+            </script>
         </div>
         <div class="article">
           <h1>Current Features</h1>
