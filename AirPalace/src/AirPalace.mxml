@@ -32,7 +32,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	showStatusBar="false"
 	autoLayout="true"
 	close="handleClose(event)"
-	creationComplete="handleCreationComplete()" xmlns:local="*">
+	creationComplete="handleCreationComplete()" xmlns:local="*" viewSourceURL="srcview/index.html">
 	<mx:Script>
 		<![CDATA[
 			import mx.events.AIREvent;

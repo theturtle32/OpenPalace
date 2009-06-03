@@ -48,11 +48,11 @@ var requiredRevision = 115;		// This is Flash Player 9 Update 3
             <a href="/trac/newticket">Report a Bug</a><br/>
           </p>
         </div>
+    <!--
         <div class="tryItNow">
           <p>Adobe Air Version:</p>
             <script src="AC_RunActiveContent.js" type="text/javascript"></script>
             <script language="JavaScript" type="text/javascript">
-            <!--
             // Version check based upon the values entered above in "Globals"
             var hasReqestedVersion = DetectFlashVer(requiredMajorVersion, requiredMinorVersion, requiredRevision);
 
@@ -99,9 +99,9 @@ var requiredRevision = 115;		// This is Flash Player 9 Update 3
 
             	document.write('">Adobe&#174;&nbsp;AIR&#8482; runtime</a>.</span></td></tr></table>');
             }
-            // -->
             </script>
         </div>
+    -->
         <div class="article">
           <h1>Current Features</h1>
           <ul class="bulleted">

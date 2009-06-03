@@ -17,11 +17,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.model
 {
-	import flash.filesystem.File;
-	import flash.filesystem.FileMode;
-	import flash.filesystem.FileStream;
-	
-	import net.codecomposer.palace.event.PropEvent;
 	import net.codecomposer.palace.rpc.PalaceClient;
 	
 	public class PalacePropStore
@@ -29,9 +24,6 @@ package net.codecomposer.palace.model
 		private static var _instance:PalacePropStore = null;
 		
 		private var props:Object = new Object();
-		
-		CONTEXT::desktop
-		private var _propsDirectory:File;
 		
 		private var client:PalaceClient = PalaceClient.getInstance();
 		
@@ -55,89 +47,22 @@ package net.codecomposer.palace.model
 			prop.decodeProp();
 		}
 		
-		public function getProp(assetId:int, assetCrc:int=0, downloadIfNotAvailable:Boolean = true):PalaceProp {
+		public function getProp(assetId:int, assetCrc:int=0):PalaceProp {
 			var prop:PalaceProp = props[assetId];
-			var generatedNewProp:Boolean = false;
 			if (prop == null) {
-				CONTEXT::desktop {
-					// if we're an Air application, attempt to load from disk
-					var bucketNumber:uint = uint(assetId) % 256;
-					var dir:File = propsDirectory.resolvePath(String(bucketNumber));
-					dir.createDirectory();				
-
-					var propDescriptionFile:File = dir.resolvePath(uint(assetId) + "-" + uint(assetCrc) + ".prop");
-					if (propDescriptionFile.exists) {
-						var fileStream:FileStream = new FileStream();
-						fileStream.open(propDescriptionFile, FileMode.READ);
-						
-						// Reconstitute prop from deserialized data
-						prop = props[assetId] = PalaceProp.fromObject(fileStream.readObject());
-						 
-						fileStream.close();
-					}
-					else {
-						// make a new prop if we don't have one on disk.
-						prop = props[assetId] = new PalaceProp(assetId, assetCrc);
-						generatedNewProp = true;
-					}
-				}
-				CONTEXT::web {
-					// otherwise we make a new prop					
-					prop = props[assetId] = new PalaceProp(assetId, assetCrc);
-				}
-				
-				prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
-				loadImage(prop, downloadIfNotAvailable);
+				prop = props[assetId] = new PalaceProp(assetId, assetCrc);
+				requestAsset(prop);	
 			}
-			if (!downloadIfNotAvailable && generatedNewProp) {
-				return null;
-			}
-			else {
-				return prop;
-			}
-		}
-		
-		public function loadImage(prop:PalaceProp, downloadIfNotAvailable:Boolean = true):void {
-			CONTEXT::desktop {
-				// try loading the image off disk
-				if (!prop.loadImageFromCache() && downloadIfNotAvailable) {
-					// if we fail, request it from the server
-					requestAsset(prop);
-				}
-			}
-			CONTEXT::web {
-				// If we're not an Air application we don't have a prop cache.
-				requestAsset(prop);
-			}
+			return prop;
 		}
 		
 		public function requestAsset(prop:PalaceProp):void {
 			client.requestAsset(AssetManager.ASSET_TYPE_PROP, prop.asset.id, prop.asset.crc);
 		}
 		
-		CONTEXT::desktop
-		private function get propsDirectory():File {
-			if (_propsDirectory == null) {
-				_propsDirectory = File.applicationStorageDirectory.resolvePath('prop_cache');
-				_propsDirectory.createDirectory();
-			}
-			return _propsDirectory;
+		public function loadImage(prop:PalaceProp):void {
+			requestAsset(prop);
 		}
 		
-		private function handlePropLoaded(event:PropEvent):void {
-			CONTEXT::desktop {
-				// If we're an air application, cache the prop data to disk.
-				
-				var bucketNumber:uint = uint(event.prop.asset.id) % 256;
-				var dir:File = propsDirectory.resolvePath(String(bucketNumber));
-				dir.createDirectory();				
-				var file:File = dir.resolvePath(uint(event.prop.asset.id) + "-" + uint(event.prop.asset.crc) + ".prop");
-				var fileStream:FileStream = new FileStream();
-				
-				fileStream.open(file, FileMode.WRITE);
-				fileStream.writeObject(event.prop);
-				fileStream.close();
-			}
-		}
 	}
 }

@@ -126,9 +126,6 @@ package net.codecomposer.palace.model
 					showFace = false;
 				}
 			}
-			if (props.length == 0) {
-				showFace = true;
-			}
 			this.showFace = showFace;
 		}
 

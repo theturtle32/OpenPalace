@@ -257,7 +257,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		public function requestAsset(assetType:int, assetId:uint, assetCrc:uint):void {
-			// Assets are requested in packets of up to 16 requests, separated by 200ms
+			// Assets are requested in packets of up to 20 requests, separated by 1000ms
 			// to prevent flooding the server and getting killed.
 			if (!connected) {
 				return;	
@@ -582,12 +582,12 @@ package net.codecomposer.palace.rpc
 		}
 		
 		// Server Op Handlers
-		private function logOn(a:int, b:int):void {
+		private function logOn(size:int, referenceId:int):void {
 			var i:int;
 			
-			trace("Logging on.  a: " + a + " - b: " + b);
+			trace("Logging on.  a: " + size + " - b: " + referenceId);
 			// a is validation
-			currentRoom.selfUserId = id = b;
+			currentRoom.selfUserId = id = referenceId;
 
 
 			// bk.c(eb) writes a,b,c, no flush
@@ -668,23 +668,23 @@ package net.codecomposer.palace.rpc
 		
 		// not fully implemented
 		// a bounced logon message?
-		private function alternateLogon(a:int, b:int):void {
+		private function alternateLogon(size:int, referenceId:int):void {
 			// orig logon id seems to be bullshit?
 			//id = b;
 			//	FILE * fp = fopen("altlogonrx.hex", "w+");
-			for(var i:int = 0; i < a; i++) {
+			for(var i:int = 0; i < size; i++) {
 				socket.readByte();
 			}
 			//		fputc(ReadByte(), fp);	// unknown server params
 			//	fclose(fp);
 		}
 		
-		private function handleReceiveServerVersion(a:int, b:int):void {
-			version = b;
-			trace("Server version: " + b);
+		private function handleReceiveServerVersion(size:int, referenceId:int):void {
+			version = referenceId;
+			trace("Server version: " + referenceId);
 		}
 		
-		private function handleReceiveServerInfo(a:int, b:int):void {
+		private function handleReceiveServerInfo(size:int, referenceId:int):void {
 			serverInfo = new PalaceServerInfo();
 			serverInfo.permissions = socket.readInt();
 			var size:int = Math.abs(socket.readByte());
@@ -706,13 +706,13 @@ package net.codecomposer.palace.rpc
 		}
 		
 		//class c2
-		private function handleReceiveUserLog(a:int, b:int):void {
+		private function handleReceiveUserLog(size:int, referenceId:int):void {
 			population = socket.readInt();
 			trace("Got population: " + population);
 		}
 		
-		private function handleReceiveMediaServer(a:int, b:int):void {
-			mediaServer = socket.readMultiByte(a, 'iso-8859-1');
+		private function handleReceiveMediaServer(size:int, referenceId:int):void {
+			mediaServer = socket.readMultiByte(size, 'iso-8859-1');
 			trace("Got media server: " + mediaServer);
 		}
 		
@@ -749,7 +749,7 @@ package net.codecomposer.palace.rpc
 
 		
 		// not fully implemented
-		private function handleReceiveRoomDescription(size:int, referenceNumber:int):void {
+		private function handleReceiveRoomDescription(size:int, referenceId:int):void {
 			var roomFlags:int = socket.readInt();
 			var face:int = socket.readInt();
 			var roomID:int = socket.readShort();
@@ -873,11 +873,11 @@ package net.codecomposer.palace.rpc
 		}
 		
 		// List of users in current room
-		private function handleReceiveUserList(a:int, b:int):void {
-			// b is count
+		private function handleReceiveUserList(size:int, referenceId:int):void {
+			// referenceId is count
 			currentRoom.removeAllUsers();
 			
-			for(var i:int = 0; i < b; i++){
+			for(var i:int = 0; i < referenceId; i++){
 				var userId:int = socket.readInt();
 				var y:int = socket.readShort();
 				var x:int = socket.readShort();
@@ -922,9 +922,9 @@ package net.codecomposer.palace.rpc
 			trace("Got list of users in room.  Count: " + currentRoom.users.length);
 		}
 		
-		private function handleReceiveRoomList(size:int, referenceNumber:int):void {
+		private function handleReceiveRoomList(size:int, referenceId:int):void {
 			var numAdded:int = 0;
-			var roomCount:int = referenceNumber;
+			var roomCount:int = referenceId;
 			roomList.removeAll();
 			for (var i:int = 0; i < roomCount; i++) {
 				var room:PalaceRoom = new PalaceRoom();
@@ -940,9 +940,9 @@ package net.codecomposer.palace.rpc
 			trace("There are " + roomCount + " rooms in this palace.");
 		}
 		
-		private function handleReceiveFullUserList(size:int, referenceNumber:int):void {
+		private function handleReceiveFullUserList(size:int, referenceId:int):void {
 			userList.removeAll();
-			var userCount:int = referenceNumber;
+			var userCount:int = referenceId;
 			for (var i:int = 0; i < userCount; i++) {
 				var user:PalaceUser = new PalaceUser();
 				user.id = socket.readInt();
@@ -968,11 +968,11 @@ package net.codecomposer.palace.rpc
 			trace("There are " + userList.length + " users in this palace.");
 		}
 		
-		private function handleReceiveRoomDescend(a:int, b:int):void {
+		private function handleReceiveRoomDescend(size:int, referenceId:int):void {
 			// We're done receiving room description & user list
 		}
 		
-		private function handleUserNew(a:int, b:int):void {
+		private function handleUserNew(size:int, referenceId:int):void {
 			var userId:int = socket.readInt();
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
@@ -1025,8 +1025,8 @@ package net.codecomposer.palace.rpc
 			trace("User " + user.name + " entered.");
 		}
 
-		private function handlePing(a:int, b:int):void {
-			if (b != id) {
+		private function handlePing(size:int, referenceId:int):void {
+			if (referenceId != id) {
 				trace("ID didn't match during ping, bailing");
 				return;
 			}
@@ -1039,7 +1039,7 @@ package net.codecomposer.palace.rpc
 			trace("Pinged.");
 		}
 		
-		private function handleAltReceiveChat(size:int, referenceNumber:int):void {
+		private function handleAltReceiveChat(size:int, referenceId:int):void {
 			var messageBytes:ByteArray = new ByteArray();
 			var message:String;
 			if (utf8) {
@@ -1055,7 +1055,7 @@ package net.codecomposer.palace.rpc
 			trace("Got Room Message: " + message);
 		}
 		
-		private function handleAltReceiveWhisper(size:int, referenceNumber:int):void {
+		private function handleAltReceiveWhisper(size:int, referenceId:int):void {
 			var messageBytes:ByteArray = new ByteArray();
 			var message:String;
 			if (utf8) {
@@ -1071,7 +1071,7 @@ package net.codecomposer.palace.rpc
 			trace("Got ESP: " + message);
 		}
 		
-		private function handleReceiveChat(a:int, b:int):void {
+		private function handleReceiveChat(size:int, referenceId:int):void {
 			var length:int = socket.readShort();
 			var messageBytes:ByteArray = new ByteArray();
 			socket.readBytes(messageBytes, 0, length-3);
@@ -1079,11 +1079,11 @@ package net.codecomposer.palace.rpc
 				socket.readByte();
 			}
 			var message:String = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
-			currentRoom.chat(b, message);
-			trace("Got chat from userID " + b + ": " + message);
+			currentRoom.chat(referenceId, message);
+			trace("Got chat from userID " + referenceId + ": " + message);
 		}
 		
-		private function handleReceiveWhisper(size:int, referenceNumber:int):void {
+		private function handleReceiveWhisper(size:int, referenceId:int):void {
 			var length:int = socket.readShort();
 			var messageBytes:ByteArray = new ByteArray();
 			socket.readBytes(messageBytes, 0, length-3);
@@ -1091,34 +1091,34 @@ package net.codecomposer.palace.rpc
 				socket.readByte();
 			}
 			var message:String = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
-			currentRoom.whisper(referenceNumber, message);
-			trace("Got whisper from userID " + referenceNumber + ": " + message);
+			currentRoom.whisper(referenceId, message);
+			trace("Got whisper from userID " + referenceId + ": " + message);
 		}
 		
-		private function handleMovement(a:int, b:int):void {
+		private function handleMovement(size:int, referenceId:int):void {
 			// a is four, b is userID
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
-			var user:PalaceUser = currentRoom.getUserById(b);
+			var user:PalaceUser = currentRoom.getUserById(referenceId);
 			user.x = x;
 			user.y = y;
-			trace("User " + b + " moved to " + x + "," + y);
+			trace("User " + referenceId + " moved to " + x + "," + y);
 		}
 		
-		private function handleUserColor(a:int, b:int):void {
-			var user:PalaceUser = currentRoom.getUserById(b);
+		private function handleUserColor(size:int, referenceId:int):void {
+			var user:PalaceUser = currentRoom.getUserById(referenceId);
 			user.color = socket.readShort();
-			trace("User " + b + " changed color to " + user.color); 
+			trace("User " + referenceId + " changed color to " + user.color); 
 		}
 		
-		private function handleUserFace(a:int, b:int):void {
-			var user:PalaceUser = currentRoom.getUserById(b);
+		private function handleUserFace(size:int, referenceId:int):void {
+			var user:PalaceUser = currentRoom.getUserById(referenceId);
 			user.face = socket.readShort();
-			trace("User " + b + " changed face to " + user.face);
+			trace("User " + referenceId + " changed face to " + user.face);
 		}
 		
-		private function handleUserRename(a:int, b:int):void {
-			var user:PalaceUser = currentRoom.getUserById(b);
+		private function handleUserRename(size:int, referenceId:int):void {
+			var user:PalaceUser = currentRoom.getUserById(referenceId);
 			var userNameLength:int = socket.readByte();
 			var userName:String;
 			if (utf8) {
@@ -1131,17 +1131,17 @@ package net.codecomposer.palace.rpc
 			user.name = userName;
 		}
 		
-		private function handleUserExitRoom(a:int, b:int):void {
-			currentRoom.removeUserById(b);
-			trace("User " + b + " left the room");
+		private function handleUserExitRoom(size:int, referenceId:int):void {
+			currentRoom.removeUserById(referenceId);
+			trace("User " + referenceId + " left the room");
 		}
 		
-		private function handleUserLeaving(a:int, b:int):void {
+		private function handleUserLeaving(size:int, referenceId:int):void {
 			population = socket.readInt();
-			if (currentRoom.getUserById(b) != null) {
-				currentRoom.removeUserById(b);
+			if (currentRoom.getUserById(referenceId) != null) {
+				currentRoom.removeUserById(referenceId);
 			}
-			trace("User " + b + " logged off");
+			trace("User " + referenceId + " logged off");
 		}
 		
 		private function handleAssetQuery(size:int, referenceId:int):void {
@@ -1149,7 +1149,7 @@ package net.codecomposer.palace.rpc
 			var assetId:int = socket.readInt();
 			var assetCrc:uint = socket.readUnsignedInt();
 			trace("Got asset request for type: " + type + ", assetId: " + assetId + ", assetCrc: " + assetCrc);
-			var prop:PalaceProp = PalacePropStore.getInstance().getProp(assetId, assetCrc, false);
+			var prop:PalaceProp = PalacePropStore.getInstance().getProp(assetId, assetCrc);
 			if (prop != null) {
 				trace("Have prop to send...");
 			}

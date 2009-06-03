@@ -77,6 +77,9 @@ package net.codecomposer.palace.model
 		public static const PROP_FORMAT_20BIT:uint  = 0x40;
 		public static const PROP_FORMAT_32BIT:uint  = 0x100;
 		public static const PROP_FORMAT_8BIT:uint   = 0x00;
+		
+		private static const dither20bit:Number = 255/63;
+		private static const ditherS20Bit:Number = 8.2258064516129;
 
 		private static const rect:Rectangle = new Rectangle(0,0,44,44);
 		
@@ -137,64 +140,6 @@ package net.codecomposer.palace.model
 			}
 			else {
 				return null;
-			}
-		}
-		
-		CONTEXT::desktop
-		private function get propImageDirectory():File {
-			if (_propImageDirectory == null) {
-				_propImageDirectory = File.applicationStorageDirectory.resolvePath('prop_images_cache');
-				_propImageDirectory.createDirectory();
-			}
-			return _propImageDirectory;
-		} 
-		
-		public function loadImageFromCache():Boolean {
-			CONTEXT::desktop {
-				var bucketNumber:uint = uint(asset.id) % 256;
-				var dir:File = propImageDirectory.resolvePath(String(bucketNumber));
-				dir.createDirectory();
-				var file:File = dir.resolvePath(uint(asset.id) + "-" + uint(asset.crc) + ".png");
-				if (file.exists) {
-					var req:URLRequest = new URLRequest(file.url);
-					var loader:Loader = new Loader();
-					loader.contentLoaderInfo.addEventListener(Event.COMPLETE, handleImageLoadComplete);
-		            loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, handleImageIOError);
-					loader.load(req);
-					return true;
-				}
-				else {
-					return false;
-				}
-			}
-			CONTEXT::web {
-				return false;
-			}
-		}
-		
-		private function handleImageLoadComplete(event:Event):void {
-			if (LoaderInfo(event.target).content is Bitmap) {
-				bitmap = Bitmap(LoaderInfo(event.target).content).bitmapData;
-			}
-		}
-		
-		private function handleImageIOError(event:Event):void {
-			trace(event);
-		}
-		
-		public function cacheImage():void {
-			CONTEXT::desktop {
-				var png:ByteArray = pngData;
-				if (png) {
-					var bucketNumber:uint = uint(asset.id) % 256;
-					var dir:File = propImageDirectory.resolvePath(String(bucketNumber));
-					dir.createDirectory();
-					var file:File = dir.resolvePath(uint(asset.id) + "-" + uint(asset.crc) + ".png");
-					var fileStream:FileStream = new FileStream();
-					fileStream.open(file, FileMode.WRITE);
-					fileStream.writeBytes(png, 0, png.length);
-					fileStream.close();
-				}
 			}
 		}
 		
@@ -266,8 +211,6 @@ package net.codecomposer.palace.model
             	decode8BitProp();
             }
 			
-			cacheImage();
-			
 			ready = true;
 			
 			// We need to keep the asset data around now, to be able
@@ -316,9 +259,6 @@ package net.codecomposer.palace.model
 			bd.setPixels(rect, ba);
 			bitmap = bd;
 		}
-		
-		
-		private static const dither20bit:Number = 255/63;
 		
 		private function decode20BitProp():void {
 			// Implementation thanks to Phalanx team
@@ -374,10 +314,6 @@ package net.codecomposer.palace.model
 			bitmap = bd;
 		}
 		
-		
-		// Constant for decoding s20bit props
-		private static const l:Number = 8.2258064516129;
-		
 		private function decodeS20BitProp():void {
 			// Implementation thanks to Phalanx team
 			// Translated from C++ implementation
@@ -404,12 +340,12 @@ package net.codecomposer.palace.model
 			for (X = 0; X < 968; X++) {
 				ofst = X * 5;
 				
-				colors[2] = uint(((data[ofst] >> 3) & 31) * l) & 0xFF; // << 3; //red
+				colors[2] = uint(((data[ofst] >> 3) & 31) * ditherS20Bit) & 0xFF; // << 3; //red
 				C = (data[ofst] << 8) | data[ofst+1];
-				colors[1] = uint((C >> 6 & 31) * l) & 0xFF; //<< 3; //green
-				colors[0] = uint((C >> 1 & 31) * l) & 0xFF; //<< 3; //blue
+				colors[1] = uint((C >> 6 & 31) * ditherS20Bit) & 0xFF; //<< 3; //green
+				colors[0] = uint((C >> 1 & 31) * ditherS20Bit) & 0xFF; //<< 3; //blue
 				C = (data[ofst+1] << 8) | data[ofst+2];
-				colors[3] = uint((C >> 4 & 31) * l) & 0xFF; //<< 3; //alpha
+				colors[3] = uint((C >> 4 & 31) * ditherS20Bit) & 0xFF; //<< 3; //alpha
 				
 				ba.writeByte(colors[3]);
 				ba.writeByte(colors[2]);
@@ -419,11 +355,11 @@ package net.codecomposer.palace.model
 				x++;
 				
 				C = (data[ofst+2] << 8) | data[ofst+3];
-				colors[6] = uint((C >> 7 & 31) * l) & 0xFF; // << 3; //red
-				colors[5] = uint((C >> 2 & 31) * l) & 0xFF; // << 3; //green
+				colors[6] = uint((C >> 7 & 31) * ditherS20Bit) & 0xFF; // << 3; //red
+				colors[5] = uint((C >> 2 & 31) * ditherS20Bit) & 0xFF; // << 3; //green
 				C = (data[ofst+3] << 8) | data[ofst+4];
-				colors[4] = uint((C >> 5 & 31) * l) & 0xFF; // << 3; //blue
-				colors[7] = uint((C & 31) * l) & 0xFF; // << 3; //alpha				
+				colors[4] = uint((C >> 5 & 31) * ditherS20Bit) & 0xFF; // << 3; //blue
+				colors[7] = uint((C & 31) * ditherS20Bit) & 0xFF; // << 3; //alpha				
 				
 				ba.writeByte(colors[7]);
 				ba.writeByte(colors[6]);
