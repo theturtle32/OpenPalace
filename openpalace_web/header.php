@@ -15,7 +15,7 @@
         <ul id="navigation">
           <li><a href="/comingsoon.php">Get OpenPalace</a></li>
           <li><a href="/source.php">Get the Source</a></li>
-          <li><a href="/trac/newticket">Report Bug</a></li>
+          <li><a href="http://bugz.openpalace.org/cgi-bin/bugzilla3/enter_bug.cgi">Report Bug</a></li>
           <li><a href="/trac/wiki">Documentation</a></li>
           <li><a href="/comingsoon.php">Contribute</a></li>
           <li><a href="/contact.php">Contact</a></li>
