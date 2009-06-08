@@ -2,12 +2,12 @@
 
         <div class="article">
           <h1>Get the Source</h1>
-          <p>Download the latest source page (svn revision 79) here:</p>
+          <p>Download the latest source package (svn revision 79) here:</p>
           <div class="tryItNow" style="width: 350px;">
             <a href="/source/OpenPalace_r79.zip">Get the Source!</a>
             <p style="text-align:center;">
               <a href="changelog.php">Changelog</a><br/>
-              <a href="/trac/newticket">Report a Bug</a>
+              <a href="http://bugz.openpalace.org/cgi-bin/bugzilla3/enter_bug.cgi">Report a Bug</a>
             </p>
           </div>
           <br/>
@@ -21,7 +21,7 @@
           </p>
           <br/>
           <p>
-            Or you can browse the repository via Trac online <a href="http://www.openpalace.org/trac/browser">here</a>.
+            Or you can browse the repository via Trac and view changesets as they're checked in <a href="http://www.openpalace.org/trac/browser">here</a>.
           </p>
           
         </div>
