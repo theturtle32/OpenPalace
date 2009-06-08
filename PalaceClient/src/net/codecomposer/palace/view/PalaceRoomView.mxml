@@ -31,7 +31,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			import net.codecomposer.palace.event.PalaceRoomEvent;
 			import net.codecomposer.palace.event.AvatarSelectEvent;
 			import net.codecomposer.palace.event.ChatEvent;
-			import mx.charts.HitData;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
 			import net.codecomposer.palace.rpc.PalaceClient;
 			import mx.events.PropertyChangeEvent;

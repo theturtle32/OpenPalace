@@ -24,9 +24,6 @@ package net.codecomposer.palace.model
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
-	import flash.filesystem.File;
-	import flash.filesystem.FileMode;
-	import flash.filesystem.FileStream;
 	import flash.geom.Rectangle;
 	import flash.net.URLRequest;
 	import flash.system.Security;
@@ -62,9 +59,6 @@ package net.codecomposer.palace.model
 		public var palindrome:Boolean = false;
 		public var bounce:Boolean = false;
 		public var propFormat:uint = 0x00;
-		
-		CONTEXT::desktop
-		private var _propImageDirectory:File;
 		
 		public static const HEAD_FLAG:uint = 0x02;
 		public static const GHOST_FLAG:uint = 0x04;
