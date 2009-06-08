@@ -21,6 +21,10 @@
           </p>
           <br/>
           <p>
+            If you're a developer and wish to discuss the ongoing development efforts and contribute to the project, you should join the <a href="http://groups.google.com/group/openpalace-developers">OpenPalace Developers list at Google Groups</a>.
+          </p>
+          <br/>
+          <p>
             Or you can browse the repository via Trac and view changesets as they're checked in <a href="http://www.openpalace.org/trac/browser">here</a>.
           </p>
           
