@@ -26,6 +26,7 @@ package net.codecomposer.palace.event
 		public var prop:PalaceProp;
 		
 		public static const PROP_LOADED:String = "propLoaded";
+		public static const PROP_DECODED:String = "propDecoded";
 		
 		public function PropEvent(type:String, prop:PalaceProp)
 		{

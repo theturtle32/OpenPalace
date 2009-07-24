@@ -25,6 +25,7 @@ package net.codecomposer.palace.model
 		public var nextOffset:int;
 		public var id:uint;
 		public var crc:uint;
+		public var guid:String;
 		public var flags:uint;
 		public var x:int;
 		public var y:int;
@@ -55,7 +56,7 @@ package net.codecomposer.palace.model
 		}
 		
 		public function loadProp():void {
-			prop = propStore.getProp(id, crc);
+			prop = propStore.getProp(guid, id, crc);
 		}
 
 	}

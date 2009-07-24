@@ -20,13 +20,11 @@ package net.codecomposer.palace.model
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Loader;
-	import flash.display.LoaderInfo;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.IOErrorEvent;
 	import flash.geom.Rectangle;
 	import flash.net.URLRequest;
-	import flash.system.Security;
+	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
 	import flash.utils.setTimeout;
 	
@@ -85,16 +83,19 @@ package net.codecomposer.palace.model
 		
 		private static var itemsToRender:int = 0;
 		
-		public function PalaceProp(assetId:uint, assetCrc:uint)
+		private var loader:Loader;
+		
+		public function PalaceProp(guid:String, assetId:uint, assetCrc:uint)
 		{
 			asset = new PalaceAsset();
 			asset.id = assetId;
 			asset.crc = assetCrc;
+			asset.guid = guid;
 			//BindingUtils.bindProperty(this, "source", this, "bitmap")
 		}
 		
 		public static function fromObject(source:Object):PalaceProp {
-			var prop:PalaceProp = new PalaceProp(source.asset.id, source.asset.crc);
+			var prop:PalaceProp = new PalaceProp(source.asset.guid, source.asset.id, source.asset.crc);
 			prop.animate = source.animate;
 			prop.width = source.width;
 			prop.height = source.height;
@@ -152,6 +153,27 @@ package net.codecomposer.palace.model
 			setTimeout(renderBitmap, 200+40*(++itemsToRender));
 		}
 		
+		public function loadBitmapFromURL(url:String = null):void {
+			if (url == null) {
+				url = asset.imageDataURL;
+			}
+			loader = new Loader();
+			var request:URLRequest = new URLRequest(url);
+			
+			var context:LoaderContext = new LoaderContext(true);
+			
+			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, handleBitmapLoadedFromURLComplete);
+			loader.load(request, context);
+		}
+		
+		private function handleBitmapLoadedFromURLComplete(event:Event):void {
+			if (loader.content && loader.content is Bitmap) {
+				bitmap = Bitmap(loader.content).bitmapData;
+				ready = true;
+				dispatchEvent(new PropEvent(PropEvent.PROP_LOADED, this));
+			}
+		}
+		
 		private function renderBitmap():void {
 			--itemsToRender;
 
@@ -205,7 +227,10 @@ package net.codecomposer.palace.model
             	decode8BitProp();
             }
 			
-			ready = true;
+			if (!badProp) {
+				ready = true;
+				dispatchEvent(new PropEvent(PropEvent.PROP_DECODED, this));
+			}
 			
 			// We need to keep the asset data around now, to be able
 			// to upload it to other servers.

@@ -23,6 +23,9 @@ package net.codecomposer.palace.model
 	{
 		public var id:int;
 		public var crc:uint;
+		public var guid:String;
+		public var temporaryIdentifier:String;
+		public var imageDataURL:String;
 		public var type:int;
 		public var name:String;
 		public var flags:uint;

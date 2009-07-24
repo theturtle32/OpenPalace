@@ -1149,7 +1149,7 @@ package net.codecomposer.palace.rpc
 			var assetId:int = socket.readInt();
 			var assetCrc:uint = socket.readUnsignedInt();
 			trace("Got asset request for type: " + type + ", assetId: " + assetId + ", assetCrc: " + assetCrc);
-			var prop:PalaceProp = PalacePropStore.getInstance().getProp(assetId, assetCrc);
+			var prop:PalaceProp = PalacePropStore.getInstance().getProp(null, assetId, assetCrc);
 			if (prop != null) {
 				trace("Have prop to send...");
 			}

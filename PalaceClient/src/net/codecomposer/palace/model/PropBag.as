@@ -39,7 +39,7 @@ package net.codecomposer.palace.model
 					var id:int = propDef[0];
 					var crc:int = propDef[1];
 					trace("Got prop: " + id + " CRC: " + crc);
-					props.addItem(propStore.getProp(id, crc));
+					props.addItem(propStore.getProp(null, id, crc));
 				}
 			}
 			else {

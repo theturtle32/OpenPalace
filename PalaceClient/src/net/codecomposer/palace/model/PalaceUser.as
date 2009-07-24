@@ -105,7 +105,7 @@ package net.codecomposer.palace.model
 			}
 			props.removeAll();
 			for (i = 0; i < propCount; i ++) {
-				prop = propStore.getProp(propIds[i], propCrcs[i]);
+				prop = propStore.getProp(null, propIds[i], propCrcs[i]);
 				if (!prop.ready) {
 					prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
 				}

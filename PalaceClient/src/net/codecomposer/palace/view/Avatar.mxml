@@ -112,11 +112,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 			private var colors:Object = {};
 			
-			private var brightnessAdjust:Object = {
-				3: 30,
-				4: 50
-			};
-			
 			private var hue:HueColorMatrixFilter = new HueColorMatrixFilter();				
 						
 			private function updateFace(event:PropertyChangeEvent=null):void {
