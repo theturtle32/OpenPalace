@@ -68,13 +68,11 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		]]>
 	</mx:Script>
 	
-	<mx:Style source="css/skinPreview.css" />
-	
 	<mx:ApplicationControlBar id="controlBar" horizontalAlign="left" dock="true">
-		<mx:Label color="#CCCCCC" text="{palace.currentRoom.users.length}/{palace.population}" />
+		<mx:Label text="{palace.currentRoom.users.length}/{palace.population}" />
 		<mx:Spacer width="100%" />
-		<mx:Button styleName="buttonOfficial" label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
-		<mx:Button styleName="buttonOfficial" label="Connect" click="showConnectWindow()" />
+		<mx:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
+		<mx:Button label="Connect" click="showConnectWindow()" />
 		<mx:CheckBox label="UTF-8 (Extended Characters)" id="useUTF8" selected="false" color="#CCCCCC"/>
 	</mx:ApplicationControlBar>
 
@@ -86,20 +84,20 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		<mx:HDividedBox width="100%" minHeight="{chatWindow.height}" resizeToContent="true">
 			<local:ChatWindow id="chatWindow" />
 			<mx:Canvas minWidth="250" height="100%">
-				<mx:Accordion right="0" width="300" height="100%">
+				<mx:Accordion right="0" width="300" height="100%" creationPolicy="all">
 					<mx:VBox label="Room List" width="100%" height="100%">
 						<view:RoomListGrid resizableColumns="false" id="roomList"
 							height="100%" width="100%"
 							roomSelected="PalaceClient.getInstance().gotoRoom(roomList.selectedRoomId);"/>
 						<mx:HBox width="100%" horizontalAlign="right" paddingBottom="5" paddingRight="5">
-							<mx:Button styleName="buttonNoOfficial" label="Refresh" click="showRoomList()" />
+							<mx:Button label="Refresh" click="showRoomList()" />
 						</mx:HBox>		
 					</mx:VBox>
 					<mx:VBox label="User List" width="100%" height="100%">
 						<view:UserListGrid resizableColumns="false" id="userList" height="100%" width="100%" />
 						<mx:HBox width="100%" horizontalAlign="right" paddingBottom="5" paddingRight="5">
-							<mx:Button styleName="buttonNoOfficial" label="Refresh" click="showUserList()" />
-							<mx:Button styleName="buttonNoOfficial" label="Go To Room" click="if (userList.selectedRoomId != -1) { PalaceClient.getInstance().gotoRoom(userList.selectedRoomId); }"/>	
+							<mx:Button label="Refresh" click="showUserList()" />
+							<mx:Button label="Go To Room" click="if (userList.selectedRoomId != -1) { PalaceClient.getInstance().gotoRoom(userList.selectedRoomId); }"/>	
 						</mx:HBox>
 					</mx:VBox>
 				</mx:Accordion>
