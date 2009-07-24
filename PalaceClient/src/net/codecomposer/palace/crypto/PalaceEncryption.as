@@ -40,7 +40,7 @@ package net.codecomposer.palace.crypto
 				bytesIn.writeUTFBytes(message);
 			}
 			else {
-				bytesIn.writeMultiByte(message, 'iso-8859-1');
+				bytesIn.writeMultiByte(message, 'Windows-1252');
 			}
 			if (bytesIn.length > byteLimit) {
 				var temp:ByteArray = bytesIn;
@@ -99,7 +99,7 @@ package net.codecomposer.palace.crypto
 				return bytesOut.readUTFBytes(bytesOut.length);
 			}
 			else {
-				return bytesOut.readMultiByte(bytesOut.length, 'iso-8859-1');
+				return bytesOut.readMultiByte(bytesOut.length, 'Windows-1252');
 			}
 		}
 		

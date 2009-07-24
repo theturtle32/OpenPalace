@@ -598,9 +598,9 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(0x5905f923);// b[0]
 			socket.writeInt(0xcf07309c);// b[1]
 
-			// Username has to be ISO-8859-1
+			// Username has to be Windows-1252
 			var userNameBA:ByteArray = new ByteArray();
-			userNameBA.writeMultiByte(userName, 'iso-8859-1');
+			userNameBA.writeMultiByte(userName, 'Windows-1252');
 			userNameBA.position = 0;
 			socket.writeByte(userNameBA.bytesAvailable);
 			socket.writeBytes(userNameBA); //? name  or super.a?
@@ -640,7 +640,7 @@ package net.codecomposer.palace.rpc
 	        WriteBytes((unsigned char *)"J2.0", 4); 
 			WriteByte(0);
 			WriteByte(0); */
-			socket.writeMultiByte("350211", "iso-8859-1");
+			socket.writeMultiByte("350211", "Windows-1252");
 	
 	        socket.writeInt(0);
 
@@ -688,7 +688,7 @@ package net.codecomposer.palace.rpc
 			serverInfo = new PalaceServerInfo();
 			serverInfo.permissions = socket.readInt();
 			var size:int = Math.abs(socket.readByte());
-			serverName = serverInfo.name = socket.readMultiByte(size, 'iso-8859-1');
+			serverName = serverInfo.name = socket.readMultiByte(size, 'Windows-1252');
 
 			// Weird -- this message is supposed to include options,
 			// and upload/download capabilities, but doesn't.
@@ -701,7 +701,7 @@ package net.codecomposer.palace.rpc
 		// not fully implemented
 		private function handleReceiveUserStatus(a:int, b:int):void {
 			// a is length? b is client id
-			var data:String = socket.readMultiByte(a, 'iso-8859-1');
+			var data:String = socket.readMultiByte(a, 'Windows-1252');
 			trace("User status?  Data: \n" + data); 			
 		}
 		
@@ -712,7 +712,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		private function handleReceiveMediaServer(size:int, referenceId:int):void {
-			mediaServer = socket.readMultiByte(size, 'iso-8859-1');
+			mediaServer = socket.readMultiByte(size, 'Windows-1252');
 			trace("Got media server: " + mediaServer);
 		}
 		
@@ -793,7 +793,7 @@ package net.codecomposer.palace.rpc
 				ba.writeByte(byte);
 			}
 			ba.position = 0;
-			roomName = ba.readUTFBytes(roomNameLength);
+			roomName = ba.readMultiByte(roomNameLength, 'Windows-1252');
 			
 			// Image Name
 			var imageNameLength:int = roomBytes[imageNameOffset];
@@ -902,8 +902,8 @@ package net.codecomposer.palace.rpc
 					propIds[propnum] = propCrcs[propnum] = 0;
 				}
 				var userNameLength:int = socket.readByte();
-				var userName:String = socket.readMultiByte(userNameLength, 'iso-8859-1'); // Length = 32
-				socket.readMultiByte(31-userNameLength, 'iso-8859-1');
+				var userName:String = socket.readMultiByte(userNameLength, 'Windows-1252'); // Length = 32
+				socket.readMultiByte(31-userNameLength, 'Windows-1252');
 
 				var user:PalaceUser = new PalaceUser();
 				user.id = userId;
@@ -933,7 +933,7 @@ package net.codecomposer.palace.rpc
 				room.userCount = socket.readShort();
 				var length:int = socket.readByte();
 				var paddedLength:int = (length + (4 - (length & 3))) - 1;
-				room.name = socket.readUTFBytes(paddedLength);
+				room.name = socket.readMultiByte(paddedLength, 'Windows-1252');
 				roomList.addItem(room);
 				roomById[room.id] = room;
 			}
@@ -956,12 +956,13 @@ package net.codecomposer.palace.rpc
 				}
 				var userNameLength:int = socket.readByte();
 				var userNamePaddedLength:int = (userNameLength + (4 - (userNameLength & 3))) - 1;
-				if (utf8) {
-					user.name = socket.readUTFBytes(userNamePaddedLength);
-				}
-				else {
-					user.name = socket.readMultiByte(userNamePaddedLength, 'iso-8859-1');
-				}
+// Can't support UTF-8 usernames yet				
+//				if (utf8) {
+//					user.name = socket.readUTFBytes(userNamePaddedLength);
+//				}
+//				else {
+					user.name = socket.readMultiByte(userNamePaddedLength, 'Windows-1252');
+//				}
 				//trace("User List - got user: " + user.name);
 				userList.addItem(user);
 			}
@@ -998,13 +999,14 @@ package net.codecomposer.palace.rpc
 			
 			var userNameLength:int = socket.readByte();
 			var userName:String;
-			if (utf8) {
-				userName = socket.readUTFBytes(userNameLength); // Length = 32
-			}
-			else {
-				userName = socket.readMultiByte(userNameLength, 'iso-8859-1'); // Length = 32
-			}
-			socket.readMultiByte(31-userNameLength, 'iso-8859-1');
+// Can't support UTF-8 usernames yet.
+//			if (utf8) {
+//				userName = socket.readUTFBytes(userNameLength); // Length = 32
+//			}
+//			else {
+				userName = socket.readMultiByte(userNameLength, 'Windows-1252'); // Length = 32
+//			}
+			socket.readMultiByte(31-userNameLength, 'Windows-1252');
 			//userName = userName.substring(1);
 
 			var user:PalaceUser = new PalaceUser();
@@ -1046,7 +1048,7 @@ package net.codecomposer.palace.rpc
 				message = socket.readUTFBytes(size-1);
 			}
 			else {
-				message = socket.readMultiByte(size-1, 'iso-8859-1');
+				message = socket.readMultiByte(size-1, 'Windows-1252');
 			}
 			if (socket.bytesAvailable > 0) {
 				socket.readByte();
@@ -1062,7 +1064,7 @@ package net.codecomposer.palace.rpc
 				message = socket.readUTFBytes(size-1);
 			}
 			else {
-				message = socket.readMultiByte(size-1, 'iso-8859-1');
+				message = socket.readMultiByte(size-1, 'Windows-1252');
 			}
 			if (socket.bytesAvailable > 0) {
 				socket.readByte();
@@ -1121,12 +1123,13 @@ package net.codecomposer.palace.rpc
 			var user:PalaceUser = currentRoom.getUserById(referenceId);
 			var userNameLength:int = socket.readByte();
 			var userName:String;
-			if (utf8) {
-				userName = socket.readUTFBytes(userNameLength);
-			}
-			else {
-				userName = socket.readMultiByte(userNameLength, 'iso-8859-1');
-			}
+// Can't support UTF-8 usernames yet
+//			if (utf8) {
+//				userName = socket.readUTFBytes(userNameLength);
+//			}
+//			else {
+				userName = socket.readMultiByte(userNameLength, 'Windows-1252');
+//			}
 			trace("User " + user.name + " changed their name to " + userName);
 			user.name = userName;
 		}
@@ -1171,7 +1174,7 @@ package net.codecomposer.palace.rpc
 				flags = socket.readUnsignedInt();
 				assetSize = socket.readInt();
 				var nameLength:int = socket.readByte();
-				assetName = socket.readMultiByte(nameLength, 'iso-8859-1');
+				assetName = socket.readMultiByte(nameLength, 'Windows-1252');
 				for (var j:int = 0; j < 31-nameLength; j++) {
 					socket.readByte();
 				}
@@ -1302,7 +1305,7 @@ package net.codecomposer.palace.rpc
 	                reason = "Your Free Demo has expired.";
 	                break;
 	            case 16:
-                    reason = socket.readMultiByte(size, 'iso-8859-1');
+                    reason = socket.readMultiByte(size, 'Windows-1252');
 	                break;
 	            case 2:
 	            	reason = "There has been a communications error.";

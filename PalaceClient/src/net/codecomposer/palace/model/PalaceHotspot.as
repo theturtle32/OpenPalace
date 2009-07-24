@@ -101,7 +101,7 @@ package net.codecomposer.palace.model
 					nameByteArray.writeByte(roomBytes[a]);
 				}
 				nameByteArray.position = 0;
-				name = nameByteArray.readMultiByte(nameLength, 'iso-8859-1');
+				name = nameByteArray.readMultiByte(nameLength, 'Windows-1252');
 			}
 
 			ba = new ByteArray();
