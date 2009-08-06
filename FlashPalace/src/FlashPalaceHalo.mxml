@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+This file is part of OpenPalace.
+
+OpenPalace is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+OpenPalace is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
+	xmlns:code="http://code.google.com/p/flexlib/" xmlns:local="*"
+	backgroundColor="#333333"
+	creationComplete="handleCreationComplete()" xmlns:view="net.codecomposer.palace.view.*">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.PropertyChangeEvent;
+			import mx.binding.utils.ChangeWatcher;
+			import net.codecomposer.palace.rpc.PalaceClient;
+			[Bindable]
+			public var palace:PalaceClient = PalaceClient.getInstance();
+
+			private var connectWindow:ConnectWindow;
+
+			private function handleCreationComplete():void {
+				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
+				connectWindow = new ConnectWindow();
+				mdic.windowManager.add(connectWindow);
+			}
+			
+			private function handleConnectedChange(event:PropertyChangeEvent):void {
+				if (palace.connected) {
+				}
+			}
+			
+			private function disconnect():void {
+				palace.disconnect();
+			}
+			
+			private function showConnectWindow():void {
+				if (!connectWindow) {
+					connectWindow = new ConnectWindow();
+				}
+				mdic.windowManager.addCenter(connectWindow);
+				mdic.windowManager.bringToFront(connectWindow);
+			}
+			
+			private function showLogWindow():void {
+
+			}
+			
+			private function showUserList():void {
+				palace.requestUserList();
+			}
+			
+			private function showRoomList():void {
+				palace.requestRoomList();
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:ApplicationControlBar id="controlBar" horizontalAlign="left" dock="true">
+		<mx:Label text="{palace.currentRoom.users.length}/{palace.population}" />
+		<mx:Spacer width="100%" />
+		<mx:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
+		<mx:Button label="Connect" click="showConnectWindow()" />
+		<mx:CheckBox label="UTF-8 (Extended Characters)" id="useUTF8" selected="false" color="#CCCCCC"/>
+	</mx:ApplicationControlBar>
+
+
+	<mx:Binding source="useUTF8.selected" destination="palace.utf8" />
+
+	<mx:VDividedBox top="10" bottom="10" left="10" right="10">
+
+		<mx:HDividedBox width="100%" minHeight="{chatWindow.height}" resizeToContent="true">
+			<local:ChatWindowHalo id="chatWindow" />
+			<mx:Canvas minWidth="250" height="100%">
+				<mx:Accordion right="0" width="300" height="100%" creationPolicy="all">
+					<mx:VBox label="Room List" width="100%" height="100%">
+						<view:RoomListGrid resizableColumns="false" id="roomList"
+							height="100%" width="100%"
+							roomSelected="PalaceClient.getInstance().gotoRoom(roomList.selectedRoomId);"/>
+						<mx:HBox width="100%" horizontalAlign="right" paddingBottom="5" paddingRight="5">
+							<mx:Button label="Refresh" click="showRoomList()" />
+						</mx:HBox>		
+					</mx:VBox>
+					<mx:VBox label="User List" width="100%" height="100%">
+						<view:UserListGrid resizableColumns="false" id="userList" height="100%" width="100%" />
+						<mx:HBox width="100%" horizontalAlign="right" paddingBottom="5" paddingRight="5">
+							<mx:Button label="Refresh" click="showUserList()" />
+							<mx:Button label="Go To Room" click="if (userList.selectedRoomId != -1) { PalaceClient.getInstance().gotoRoom(userList.selectedRoomId); }"/>	
+						</mx:HBox>
+					</mx:VBox>
+				</mx:Accordion>
+			</mx:Canvas>
+		</mx:HDividedBox>
+		
+		<local:LogWindow height="100%" width="100%" />
+			
+	</mx:VDividedBox>
+
+
+
+	<code:MDICanvas id="mdic" width="100%" height="100%">
+
+	</code:MDICanvas>
+
+</mx:Application>

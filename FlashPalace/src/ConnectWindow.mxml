@@ -19,7 +19,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 <MDIWindow xmlns="flexlib.mdi.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
 	title="Connect..." width="286" height="126" layout="absolute" horizontalScrollPolicy="off"
-	verticalScrollPolicy="off" showControls="false" creationComplete="handleCreationComplete()">
+	resizable="false"
+	verticalScrollPolicy="off" showControls="false" creationComplete="handleCreationComplete()" xmlns:s="library://ns.adobe.com/flex/spark">
 	<mx:Script>
 		<![CDATA[
 			import mx.events.PropertyChangeEvent;
@@ -49,14 +50,18 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 		]]>
 	</mx:Script>
+		<s:TextInput id="userName" text="OpenPalace User" left="60" top="8" />
 
-		<mx:TextInput id="userName" text="OpenPalace User" left="60" top="8"/>
 		<mx:Label text="Name:" textAlign="right" left="10" top="10"/>
 		<mx:Label text="Host:" textAlign="right" width="42" left="10" top="38"/>
-		<mx:TextInput id="hostName" text="openpalace.org" keyDown="handleConnectionKeydown(event)" left="60" top="36"/>
-		<mx:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
-		<mx:HBox x="10" y="67" width="260" horizontalAlign="right">
-			<mx:Button styleName="buttonNoOfficial" label="Cancel" click="close()"/>
-			<mx:Button styleName="buttonNoOfficial" label="Connect" click="connect()" />
-		</mx:HBox>
+
+
+		<s:TextInput id="hostName" text="openpalace.org" keyDown="handleConnectionKeydown(event)"
+			left="60" top="36" width="169"/>
+		<s:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
+		
+		<s:HGroup right="5" y="67">
+			<s:Button label="Cancel" click="close()"/>
+			<s:Button label="Connect" click="connect()" />
+		</s:HGroup>
 </MDIWindow>

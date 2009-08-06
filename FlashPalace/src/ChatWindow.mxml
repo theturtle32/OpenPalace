@@ -1,36 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!--
-This file is part of OpenPalace.
-
-OpenPalace is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-OpenPalace is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
--->
-
-<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
-	title="{palace.serverName} - {palace.currentRoom.name}"
-	layout="absolute"
-	verticalGap="0"
-	verticalScrollPolicy="off" horizontalScrollPolicy="off"
-	left="10" top="10"
-	enabled="{palace.connected}"
-	xmlns:view="net.codecomposer.palace.view.*" xmlns:code="http://code.google.com/p/flexlib/">
+<s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:view="net.codecomposer.palace.view.*" xmlns:code="http://code.google.com/p/flexlib/"
+	title="{palace.serverName} - {palace.currentRoom.name}" skinClass="FlashPalacePanelSkin">
 	
-	<mx:Script>
+	<s:layout>
+		<s:VerticalLayout gap="0"/>
+	</s:layout>
+	<fx:Script>
 		<![CDATA[
 			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
-			private var palace:PalaceClient = PalaceClient.getInstance();
+			public var palace:PalaceClient;
 						
 			private function handleChatKeyDown(event:KeyboardEvent):void {
 				if (event.keyCode == Keyboard.ENTER) {
@@ -39,19 +18,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				}
 			}
 		]]>
-	</mx:Script>
+	</fx:Script>
 	
-	<mx:VBox verticalGap="0">
-		<mx:Canvas borderColor="#111111" borderStyle="solid"
-			width="{roomView.width+2}" height="{roomView.height+2}">
-			<view:PalaceRoomView id="roomView"
-				horizontalCenter="0" verticalCenter="0"
-				room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
-		</mx:Canvas>
-		<code:PromptingTextInput prompt="Type here to chat..."
-			width="{roomView.width+2}"
-			id="chatBox" keyDown="handleChatKeyDown(event);" maxChars="254"/>
-	</mx:VBox>
-	
-	
-</mx:Panel>
+	<view:PalaceRoomView id="roomView"
+		room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
+		
+	<code:PromptingTextInput prompt="Type here to chat..."
+		width="100%"
+		id="chatBox" keyDown="handleChatKeyDown(event);" maxChars="254"/>
+</s:Panel>
