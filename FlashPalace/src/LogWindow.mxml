@@ -17,23 +17,32 @@ You should have received a copy of the GNU General Public License
 along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml" 
-	width="300" height="435" 
-	creationComplete="handleCreationComplete()"
-	left="530" top="10"
+<MDIWindow xmlns="flexlib.mdi.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
+	backgroundColor="#CACACA"
+	width="500" height="200"
 	layout="absolute"
-	title="Chat Log">
+	title="Chat Log"
+	creationComplete="handleCreationComplete()"
+	xmlns:view="net.codecomposer.palace.view.*">
 	<mx:Script>
 		<![CDATA[
 			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
 			public var palace:PalaceClient = PalaceClient.getInstance();
 			
+			private var timer:Timer = new Timer(10, 1);
+			
 			private function handleCreationComplete():void {
 				palace.currentRoom.addEventListener('chatLogUpdated', handleChatLogUpdated);
+				timer.addEventListener(TimerEvent.TIMER, scrollToBottom);
 			}
 			
 			private function handleChatLogUpdated(event:Event):void {
+				timer.reset();
+				timer.start();
+			}
+			
+			private function scrollToBottom(event:TimerEvent = null):void {
 				logViewer.verticalScrollPosition = logViewer.maxVerticalScrollPosition;
 			}
 		
@@ -43,4 +52,4 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	<mx:TextArea left="0" top="0" bottom="0" right="0" editable="false" id="logViewer"
 		htmlText="{palace.currentRoom.chatLog}"/>
 	
-</mx:Panel>
+</MDIWindow>

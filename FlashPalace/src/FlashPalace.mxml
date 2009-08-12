@@ -8,6 +8,9 @@
 
 	<fx:Script>
 		<![CDATA[
+			import flexlib.mdi.events.MDIWindowEvent;
+			import spark.components.ButtonBarButton;
+			import net.codecomposer.palace.view.UserListGrid;
 			import mx.events.PropertyChangeEvent;
 			import mx.binding.utils.ChangeWatcher;
 			import net.codecomposer.palace.rpc.PalaceClient;
@@ -15,15 +18,18 @@
 			public var palace:PalaceClient = PalaceClient.getInstance();
 
 			private var connectWindow:ConnectWindow;
+			private var roomListWindow:RoomListWindow;
+			private var userListWindow:UserListWindow;
+			private var logWindow:LogWindow;
 
 			private function handleCreationComplete():void {
 				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
-				connectWindow = new ConnectWindow();
-				mdic.windowManager.add(connectWindow);
+				showConnectWindow();
 			}
 			
 			private function handleConnectedChange(event:PropertyChangeEvent):void {
 				if (palace.connected) {
+					mdic.windowManager.remove(connectWindow);
 				}
 			}
 			
@@ -35,37 +41,94 @@
 				if (!connectWindow) {
 					connectWindow = new ConnectWindow();
 				}
-				mdic.windowManager.addCenter(connectWindow);
+				mdic.windowManager.add(connectWindow);
 				mdic.windowManager.bringToFront(connectWindow);
 			}
 			
 			private function showLogWindow():void {
-
+				logWindow = new LogWindow();
+				logWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					logButton.selected = false;
+				});
+				mdic.windowManager.add(logWindow);
+			}
+			
+			private function hideLogWindow():void {
+				mdic.windowManager.remove(logWindow);
+				logWindow = null;
+			}
+			
+			private function handleLogClick(event:MouseEvent):void {
+				if (ButtonBarButton(event.target).selected) {
+					showLogWindow();
+				}
+				else {
+					hideLogWindow();
+				}
 			}
 			
 			private function showUserList():void {
 				palace.requestUserList();
+				userListWindow = new UserListWindow();
+				userListWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					usersButton.selected = false;
+				});
+				mdic.windowManager.add(userListWindow);
 			}
 			
+			private function hideUserList():void {
+				mdic.windowManager.remove(userListWindow);
+				userListWindow = null;
+			}
+			
+			private function handleUsersClick(event:MouseEvent):void {
+				if (ButtonBarButton(event.target).selected) {
+					showUserList();
+				}
+				else {
+					hideUserList();
+				}
+			}
+						
 			private function showRoomList():void {
 				palace.requestRoomList();
+				roomListWindow = new RoomListWindow();
+				roomListWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					roomsButton.selected = false;
+				});
+				mdic.windowManager.add(roomListWindow);
 			}
+			
+			private function hideRoomList():void {
+				mdic.windowManager.remove(roomListWindow);
+				roomListWindow = null;
+			}
+			
+			private function handleRoomsClick(event:MouseEvent):void {
+				if (ButtonBarButton(event.target).selected) {
+					showRoomList();
+				}
+				else {
+					hideRoomList();
+				}
+			}
+			
 		]]>
 	</fx:Script>
 
-	<s:HGroup gap="1">
-		<s:ButtonBarButton label="Palaces" />
-		<s:ButtonBarButton label="Rooms" />
-		<s:ButtonBarButton label="Users" />	
+	<s:HGroup top="5" left="5" gap="1">
+		<!-- <s:ButtonBarButton label="Palaces" /> -->
+		<s:ButtonBarButton id="roomsButton" label="Rooms" click="handleRoomsClick(event)" />
+		<s:ButtonBarButton id="usersButton" label="Users" click="handleUsersClick(event)" />
+		<s:ButtonBarButton id="logButton" label="Log" click="handleLogClick(event)" />
 	</s:HGroup>
 			
 	
-	<s:HGroup top="5" left="5" right="5">
+	<s:HGroup top="5" right="5" verticalAlign="middle">
 		<s:SimpleText text="{palace.currentRoom.users.length}/{palace.population}" />
-		<mx:Spacer width="100%" />
 		<s:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
 		<s:Button label="Connect" click="showConnectWindow()" />
-		<s:CheckBox label="UTF-8 (Extended Characters)" id="useUTF8" selected="false" color="#CCCCCC"/>
+		<s:CheckBox label="UTF-8 (Extended Characters)" id="useUTF8" selected="false" />
 	</s:HGroup>
 
 	<local:ChatWindow palace="{palace}" top="40" left="10" />	
