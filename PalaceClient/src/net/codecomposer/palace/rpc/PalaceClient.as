@@ -17,6 +17,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.rpc
 {
+	import com.adobe.net.URI;
+	
 	import flash.events.Event;
 	import flash.events.IOErrorEvent;
 	import flash.events.ProgressEvent;
@@ -37,6 +39,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
+	import net.codecomposer.palace.model.PalaceConfig;
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.model.PalaceImageOverlay;
@@ -47,8 +50,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
-	
-	
+
 	public class PalaceClient
 	{
 		private static var instance:PalaceClient;
@@ -802,6 +804,9 @@ package net.codecomposer.palace.rpc
 				byte = roomBytes[i+imageNameOffset+1];
 				imageName += String.fromCharCode(byte);
 			}
+			if (PalaceConfig.URIEncodeImageNames) {
+				imageName = URI.escapeChars(imageName);
+			}
 
 			// Images
 			var images:Object = {};
@@ -825,6 +830,9 @@ package net.codecomposer.palace.rpc
 				for (j=0; j < picNameLength; j++) {
 					var imageNameByte:int = roomBytes[picNameOffset+j+1]; 
 					picName += String.fromCharCode(imageNameByte);
+				}
+				if (PalaceConfig.URIEncodeImageNames) {
+					picName = URI.escapeChars(picName);
 				}
 				imageOverlay.filename = picName;
 				images[imageOverlay.id] = imageOverlay; 
