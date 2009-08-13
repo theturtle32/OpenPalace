@@ -8,6 +8,11 @@
 
 	<fx:Script>
 		<![CDATA[
+			import mx.utils.URLUtil;
+			import mx.events.BrowserChangeEvent;
+			import mx.messaging.config.ServerConfig;
+			import mx.managers.BrowserManager;
+			import mx.managers.IBrowserManager;
 			import flexlib.mdi.events.MDIWindowEvent;
 			import spark.components.ButtonBarButton;
 			import net.codecomposer.palace.view.UserListGrid;
@@ -21,15 +26,60 @@
 			private var roomListWindow:RoomListWindow;
 			private var userListWindow:UserListWindow;
 			private var logWindow:LogWindow;
+			private var preferencesWindow:PreferencesWindow;
+			
+			private var preferences:Preferences = Preferences.getInstance();
+			
+			private var browserManager:IBrowserManager;
 
 			private function handleCreationComplete():void {
+				browserManager = BrowserManager.getInstance();
+				browserManager.init("", "No Connection - OpenPalace");
+				browserManager.addEventListener(BrowserChangeEvent.BROWSER_URL_CHANGE, handleBrowserURLChange);
+				handleBrowserURLChange();
+				
 				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
+				ChangeWatcher.watch(palace, ['currentRoom','name'], handleRoomChange);
 				showConnectWindow();
+			}
+			
+			private function updateTitle(serverName:String, roomName:String):void {
+				browserManager.setTitle(roomName + " - " + serverName + " - OpenPalace");
 			}
 			
 			private function handleConnectedChange(event:PropertyChangeEvent):void {
 				if (palace.connected) {
-					mdic.windowManager.remove(connectWindow);
+					if (connectWindow) {
+						mdic.windowManager.remove(connectWindow);
+						connectWindow = null;
+					}
+				}
+				else {
+					browserManager.setTitle("No Connection - OpenPalace");
+				}
+			}
+			
+			private function handleRoomChange(event:PropertyChangeEvent):void {
+				if (palace.connected) {
+					updateTitle(palace.serverName, palace.currentRoom.name);
+				}
+			}
+			
+			private function handleBrowserURLChange(event:BrowserChangeEvent=null):void {
+				trace("URL Changed: " + browserManager.fragment);
+				var parameters:Object = URLUtil.stringToObject(browserManager.fragment);
+				if (parameters.palace != null) {
+					var parts:Array = String(parameters.palace).split(':');
+					var hostName:String = parts[0];
+					var port:Number = 9998;
+					if ( parts[1] && String(parts[1]).length > 0 ) {
+						port = uint(parts[1]);
+					} 
+					trace("palace = " + hostName + " port " + port);
+					
+					if (hostName && hostName.length > 0) {
+						palace.connect(preferences.userName, hostName, port);
+					}
 				}
 			}
 			
@@ -89,6 +139,28 @@
 					hideUserList();
 				}
 			}
+			
+			private function showPreferences():void {
+				preferencesWindow = new PreferencesWindow();
+				preferencesWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					preferencesButton.selected = false;
+				});
+				mdic.windowManager.add(preferencesWindow);
+			}
+			
+			private function hidePreferences():void {
+				mdic.windowManager.remove(preferencesWindow);
+				preferencesWindow = null;
+			}
+			
+			private function handlePreferencesClick(event:MouseEvent):void {
+				if (ButtonBarButton(event.target).selected) {
+					showPreferences();
+				}
+				else {
+					hidePreferences();
+				}
+			}
 						
 			private function showRoomList():void {
 				palace.requestRoomList();
@@ -121,6 +193,7 @@
 		<s:ButtonBarButton id="roomsButton" label="Rooms" click="handleRoomsClick(event)" />
 		<s:ButtonBarButton id="usersButton" label="Users" click="handleUsersClick(event)" />
 		<s:ButtonBarButton id="logButton" label="Log" click="handleLogClick(event)" />
+		<s:ButtonBarButton id="preferencesButton" label="Preferences" click="handlePreferencesClick(event)" />
 	</s:HGroup>
 			
 	
@@ -128,7 +201,6 @@
 		<s:SimpleText text="{palace.currentRoom.users.length}/{palace.population}" />
 		<s:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
 		<s:Button label="Connect" click="showConnectWindow()" />
-		<s:CheckBox label="UTF-8 (Extended Characters)" id="useUTF8" selected="false" />
 	</s:HGroup>
 
 	<local:ChatWindow palace="{palace}" top="40" left="10" />	

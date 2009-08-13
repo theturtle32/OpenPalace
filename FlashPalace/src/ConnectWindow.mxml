@@ -23,13 +23,21 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	verticalScrollPolicy="off" showControls="false" creationComplete="handleCreationComplete()" xmlns:s="library://ns.adobe.com/flex/spark">
 	<mx:Script>
 		<![CDATA[
+			import mx.managers.BrowserManager;
+			import mx.managers.IBrowserManager;
 			import mx.events.PropertyChangeEvent;
 			import mx.binding.utils.ChangeWatcher;
 			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
 			public var palace:PalaceClient = PalaceClient.getInstance();
+			
+			[Bindable]
+			private var preferences:Preferences = Preferences.getInstance();
+			
+			private var browserManager:IBrowserManager;
 		
 			private function handleCreationComplete():void {
+				browserManager = BrowserManager.getInstance();
 				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
 			}
 			
@@ -40,7 +48,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 		
 			private function connect():void {
-				palace.connect(userName.text, hostName.text, int(port.text));
+				preferences.userName = userName.text;
+				browserManager.setFragment("palace=" + hostName.text + ":" + int(port.text).toString());
+				palace.connect(preferences.userName, hostName.text, int(port.text));
 			}
 			
 			private function handleConnectionKeydown(event:KeyboardEvent):void {
@@ -50,7 +60,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 		]]>
 	</mx:Script>
-		<s:TextInput id="userName" text="OpenPalace User" left="60" top="8" />
+		<s:TextInput id="userName" text="{preferences.userName}" left="60" top="8" />
 
 		<mx:Label text="Name:" textAlign="right" left="10" top="10"/>
 		<mx:Label text="Host:" textAlign="right" width="42" left="10" top="38"/>

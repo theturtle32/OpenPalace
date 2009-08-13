@@ -32,5 +32,6 @@ package net.codecomposer.palace.message
 		public static const REQUEST_USER_LIST:int = 0x754c7374;
 		public static const REQUEST_ASSET:int = 0x71417374;
 		public static const USER_PROP:int = 1970500176;
+		public static const CHANGE_NAME:int = 0x7573724e;
 	}
 }

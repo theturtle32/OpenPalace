@@ -20,6 +20,7 @@ package net.codecomposer.palace.rpc
 	import com.adobe.net.URI;
 	
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
 	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
@@ -51,7 +52,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
 
-	public class PalaceClient
+	public class PalaceClient extends EventDispatcher
 	{
 		private static var instance:PalaceClient;
 		
@@ -87,8 +88,6 @@ package net.codecomposer.palace.rpc
 		[Bindable]
 		public var serverInfo:PalaceServerInfo = new PalaceServerInfo();
 		[Bindable]
-		public var userName:String;
-		[Bindable]
 		public var population:int = 0;
 		[Bindable]
 		public var mediaServer:String = "";
@@ -104,6 +103,21 @@ package net.codecomposer.palace.rpc
 		private var assetRequestQueue:Array = [];
 		private var assetRequestQueueCounter:int = 0;
 		private var assetsLastRequestedAt:Date = new Date();
+		
+		private var _userName:String = "OpenPalace User";
+		
+		[Bindable(event="userNameChange")]
+		public function get userName():String {
+			return _userName;
+		}
+		
+		public function set userName(newValue:String):void {
+			if (newValue.length > 31) {
+				newValue = newValue.slice(0, 31); 
+			}
+			_userName = newValue;
+			dispatchEvent(new Event('userNameChange'));
+		}
 		
 		// States
 		public static const STATE_DISCONNECTED:int = 0;
@@ -178,6 +192,18 @@ package net.codecomposer.palace.rpc
 				socket.close();
 			}
 			resetState();
+		}
+		
+		public function changeName(newName:String):void {
+			userName = newName;
+			if (socket && socket.connected) {
+				socket.writeInt(OutgoingMessageTypes.CHANGE_NAME);
+				socket.writeInt(userName.length + 1);
+				socket.writeInt(0);
+				socket.writeByte(userName.length);
+				socket.writeMultiByte(userName, 'Windows-1252');
+				socket.flush();
+			}
 		}
 
 		public function say(message:String):void {
