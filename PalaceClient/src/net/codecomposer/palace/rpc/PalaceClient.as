@@ -36,6 +36,7 @@ package net.codecomposer.palace.rpc
 	
 	import net.codecomposer.openpalace.accountserver.rpc.AccountServerClient;
 	import net.codecomposer.palace.crypto.PalaceEncryption;
+	import net.codecomposer.palace.event.PalaceEvent;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
 	import net.codecomposer.palace.model.AssetManager;
@@ -904,6 +905,8 @@ package net.codecomposer.palace.rpc
 			currentRoom.name = roomName;
 			trace("Room name: " + currentRoom.name);
 			
+			var roomChangeEvent:PalaceEvent = new PalaceEvent(PalaceEvent.ROOM_CHANGED);
+			dispatchEvent(roomChangeEvent);
 		}
 		
 		// List of users in current room
