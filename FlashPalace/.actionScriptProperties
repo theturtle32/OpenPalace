@@ -10,8 +10,8 @@
     <sourceAttachmentPath/>
   </compiler>
   <applications>
-    <application path="FlashPalaceHalo.mxml"/>
     <application path="FlashPalace.mxml"/>
+    <application path="TestBubble.mxml"/>
   </applications>
   <modules/>
   <buildCSSFiles/>

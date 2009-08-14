@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo"
+	x.bottomRight="22"
+	x.topRight="22"
+	x.bottomLeft="{width*-1-22}"
+	x.topLeft="{width*-1-22}"
+	y.topRight="{height*-1+5}"
+	y.topLeft="{height*-1+5}"
+>
+	<fx:Metadata>
+		[HostComponent("ChatBubbleSkin")]
+	</fx:Metadata>
+	
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	
+	<s:states>
+		<mx:State name="bottomRight" />
+		<mx:State name="bottomLeft" />
+		<mx:State name="topRight" />
+		<mx:State name="topLeft" />			
+	</s:states>
+	
+	<s:Path includeIn="bottomRight" top="4">
+		<s:fill>
+			<mx:SolidColor color="0xFFFFAA" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.2" />
+		</s:stroke>
+		<s:segments>
+			<s:MoveSegment x="0" y="0" />
+			<s:LineSegment x="25" y="13" />
+			<s:LineSegment x="25" y="3" />
+			<s:LineSegment x="0" y="0" />
+		</s:segments>
+	</s:Path>
+
+	<s:Path includeIn="bottomLeft" top="4" right="0">
+		<s:fill>
+			<mx:SolidColor color="0xFFFFAA" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.4" />
+		</s:stroke>
+		<s:segments>
+			<s:MoveSegment x="25" y="0" />
+			<s:LineSegment x="0" y="13" />
+			<s:LineSegment x="0" y="3" />
+			<s:LineSegment x="25" y="0" />
+		</s:segments>
+	</s:Path>
+
+	<s:Path includeIn="topRight" bottom="3">
+		<s:fill>
+			<mx:SolidColor color="0xFFFFAA" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.2" />
+		</s:stroke>
+		<s:segments>
+			<s:MoveSegment x="0" y="0" />
+			<s:LineSegment x="25" y="-3" />
+			<s:LineSegment x="25" y="-13" />
+			<s:LineSegment x="0" y="0" />
+		</s:segments>
+	</s:Path>
+	
+	<s:Path includeIn="topLeft" bottom="3" right="0">
+		<s:fill>
+			<mx:SolidColor color="0xFFFFAA" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.2" />
+		</s:stroke>
+		<s:segments>
+			<s:MoveSegment x="25" y="0" />
+			<s:LineSegment x="0" y="-3" />
+			<s:LineSegment x="0" y="-13" />
+			<s:LineSegment x="25" y="0" />
+		</s:segments>
+	</s:Path>
+
+	
+	<s:Group
+		left.bottomRight="22"
+		left.topRight="22"
+		right.bottomLeft="22"
+		right.topLeft="22">
+		<s:Rect left="0" right="0" bottom="0" top="0" radiusX="10" radiusY="10">
+			<s:fill>
+				<mx:LinearGradient rotation="45">
+					<mx:GradientEntry color="0x000000" alpha="0.15" />
+					<mx:GradientEntry color="0x000000" alpha="0.4" />
+				</mx:LinearGradient>
+			</s:fill>
+		</s:Rect>
+		
+		<s:Rect
+			radiusX="10" radiusY="10"
+			left="1"
+			right="1"
+			bottom="1"
+			top="1"
+			>
+			<s:fill>
+				<mx:LinearGradient rotation="80">
+					<mx:GradientEntry color="0xFFFFAA" alpha="0.9" />
+					<mx:GradientEntry color="0xEEEE88" alpha="0.9" />
+				</mx:LinearGradient>
+			</s:fill>
+			
+			<s:filters>
+				<mx:BevelFilter
+					angle="45"
+					distance="3"
+					strength="1"
+					blurX="4"
+					blurY="4"
+					type="inner"
+					quality="3"
+					highlightColor="0xFFFFFF"
+					highlightAlpha="1"
+					shadowColor="0x000000"
+					shadowAlpha="0.20"
+					knockout="false">
+				</mx:BevelFilter>
+			</s:filters>
+			
+		</s:Rect>
+		
+		<s:SimpleText id="textElement"
+			maxWidth="150"
+			maxHeight="300"
+			textAlign="left"
+			verticalAlign="top"
+			lineBreak="toFit"
+			truncation="0"
+			left="10"
+			top="10"
+			bottom="10"
+			right="10"		
+		/>
+	</s:Group>
+	
+</s:SparkSkin>

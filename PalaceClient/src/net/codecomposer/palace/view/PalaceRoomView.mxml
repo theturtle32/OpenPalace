@@ -115,13 +115,14 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function handleChat(event:ChatEvent):void {
 				var chatBubble:ChatBubble = new ChatBubble();
+				chatBubble.setStyle('skinClass', Class(net.codecomposer.palace.view.ChatBubbleSkin));
 				chatBubble.text = event.chatText;
-				chatBubble.x = event.user.x + 25;
-				chatBubble.y = event.user.y - 20;
+				chatBubble.x = event.user.x;
+				chatBubble.y = event.user.y;
 				textCanvas.addChild(chatBubble)
 				setTimeout(function():void {
 					textCanvas.removeChild(chatBubble);
-				}, 1500 + (event.chatText.length * 150));
+				}, 1400 + (event.chatText.length * 45));
 			}
 			
 			private function handleUserEntered(event:PalaceRoomEvent):void {

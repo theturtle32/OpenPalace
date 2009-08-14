@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" minWidth="1024" minHeight="768" xmlns:local="*" xmlns:view="net.codecomposer.palace.view.*"
+	backgroundColor="0xCCCCCC"
+	creationComplete="handleCreationComplete()">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import net.codecomposer.palace.view.ChatBubbleSkin;
+			import net.codecomposer.palace.model.PalaceUser;
+			[Bindable]
+			private var user:PalaceUser = new PalaceUser();
+			private function handleCreationComplete():void {
+				user.x = 400;
+				user.y = 350;
+				user.name = "Test User";
+			}
+		]]>
+	</fx:Script>
+	
+	<s:TextArea
+		left="10" top="10"
+		width="300"
+		id="textInput"
+		text="Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi commodo, ipsum sed pharetra gravida, orci magna rhoncus neque, id pulvinar odio lorem non turpis. Nullam sit amet enim." />
+
+	<view:Avatar user="{user}" />
+
+	<view:ChatBubble id="chatBubble" skinClass="{ChatBubbleSkin}" x="400" y="350" text="{textInput.text}"
+		click="trace('Click');" />
+	
+	
+	<s:Button bottom="10" left="10" label="Try Next Position" 
+		click="chatBubble.tryNextPosition()" />
+	
+</s:Application>

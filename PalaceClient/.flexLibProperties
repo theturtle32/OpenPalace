@@ -33,7 +33,7 @@
     <classEntry path="net.codecomposer.palace.crypto.PalaceEncryption"/>
     <classEntry path="net.codecomposer.palace.model.PalacePropStore"/>
     <classEntry path="net.codecomposer.palace.model.PalaceServerInfo"/>
-    <classEntry path="net.codecomposer.palace.view.ChatBubble"/>
+    <classEntry path="net.codecomposer.palace.view.OldChatBubble"/>
     <classEntry path="net.codecomposer.palace.event.PropEvent"/>
     <classEntry path="com.deviant.HueColorMatrixFilter"/>
     <classEntry path="net.codecomposer.palace.model.FlexPoint"/>
