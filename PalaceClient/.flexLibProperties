@@ -40,6 +40,7 @@
     <classEntry path="net.codecomposer.palace.rpc.webservice.OPWSEvent"/>
     <classEntry path="net.codecomposer.palace.view.PalaceRoomView"/>
     <classEntry path="net.codecomposer.palace.event.ChatEvent"/>
+    <classEntry path="net.codecomposer.palace.event.PalaceEvent"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
