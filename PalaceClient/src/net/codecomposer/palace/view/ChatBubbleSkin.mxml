@@ -1,15 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo"
-	x.bottomRight="22"
-	x.topRight="22"
-	x.bottomLeft="{width*-1-22}"
-	x.topLeft="{width*-1-22}"
+	x.bottomRight="20"
+	x.topRight="20"
+	x.bottomLeft="{width*-1-20}"
+	x.topLeft="{width*-1-20}"
 	y.topRight="{height*-1+5}"
 	y.topLeft="{height*-1+5}"
 >
 	<fx:Metadata>
-		[HostComponent("ChatBubbleSkin")]
+		[HostComponent("ChatBubble")]
 	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			private var _tintColor:uint = 0xFFFFAA;
+
+			[Bindable('tintColorChanged')]
+			public function get tintColor():uint {
+				return _tintColor;
+			}
+
+			public function set tintColor(newValue:uint):void {
+				_tintColor = newValue;
+				dispatchEvent(new Event('tintColorChanged'));
+			}
+		]]>
+	</fx:Script>
 	
 	<s:layout>
 		<s:BasicLayout/>
@@ -24,70 +40,70 @@
 	
 	<s:Path includeIn="bottomRight" top="4">
 		<s:fill>
-			<mx:SolidColor color="0xFFFFAA" alpha="0.9" />
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
 		</s:fill>
 		<s:stroke>
 			<mx:Stroke color="0x000000" alpha="0.2" />
 		</s:stroke>
 		<s:segments>
 			<s:MoveSegment x="0" y="0" />
-			<s:LineSegment x="25" y="13" />
-			<s:LineSegment x="25" y="3" />
+			<s:LineSegment x="20" y="10" />
+			<s:LineSegment x="20" y="3" />
 			<s:LineSegment x="0" y="0" />
 		</s:segments>
 	</s:Path>
 
 	<s:Path includeIn="bottomLeft" top="4" right="0">
 		<s:fill>
-			<mx:SolidColor color="0xFFFFAA" alpha="0.9" />
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
 		</s:fill>
 		<s:stroke>
 			<mx:Stroke color="0x000000" alpha="0.4" />
 		</s:stroke>
 		<s:segments>
-			<s:MoveSegment x="25" y="0" />
-			<s:LineSegment x="0" y="13" />
+			<s:MoveSegment x="20" y="0" />
+			<s:LineSegment x="0" y="10" />
 			<s:LineSegment x="0" y="3" />
-			<s:LineSegment x="25" y="0" />
+			<s:LineSegment x="20" y="0" />
 		</s:segments>
 	</s:Path>
 
 	<s:Path includeIn="topRight" bottom="3">
 		<s:fill>
-			<mx:SolidColor color="0xFFFFAA" alpha="0.9" />
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
 		</s:fill>
 		<s:stroke>
 			<mx:Stroke color="0x000000" alpha="0.2" />
 		</s:stroke>
 		<s:segments>
 			<s:MoveSegment x="0" y="0" />
-			<s:LineSegment x="25" y="-3" />
-			<s:LineSegment x="25" y="-13" />
+			<s:LineSegment x="20" y="-3" />
+			<s:LineSegment x="20" y="-10" />
 			<s:LineSegment x="0" y="0" />
 		</s:segments>
 	</s:Path>
 	
 	<s:Path includeIn="topLeft" bottom="3" right="0">
 		<s:fill>
-			<mx:SolidColor color="0xFFFFAA" alpha="0.9" />
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
 		</s:fill>
 		<s:stroke>
 			<mx:Stroke color="0x000000" alpha="0.2" />
 		</s:stroke>
 		<s:segments>
-			<s:MoveSegment x="25" y="0" />
+			<s:MoveSegment x="20" y="0" />
 			<s:LineSegment x="0" y="-3" />
-			<s:LineSegment x="0" y="-13" />
-			<s:LineSegment x="25" y="0" />
+			<s:LineSegment x="0" y="-10" />
+			<s:LineSegment x="20" y="0" />
 		</s:segments>
 	</s:Path>
 
 	
 	<s:Group
-		left.bottomRight="22"
-		left.topRight="22"
-		right.bottomLeft="22"
-		right.topLeft="22">
+		left.bottomRight="18"
+		left.topRight="18"
+		right.bottomLeft="18"
+		right.topLeft="18">
 		<s:Rect left="0" right="0" bottom="0" top="0" radiusX="10" radiusY="10">
 			<s:fill>
 				<mx:LinearGradient rotation="45">
@@ -98,6 +114,7 @@
 		</s:Rect>
 		
 		<s:Rect
+			id="backgroundElement"
 			radiusX="10" radiusY="10"
 			left="1"
 			right="1"
@@ -105,10 +122,7 @@
 			top="1"
 			>
 			<s:fill>
-				<mx:LinearGradient rotation="80">
-					<mx:GradientEntry color="0xFFFFAA" alpha="0.9" />
-					<mx:GradientEntry color="0xEEEE88" alpha="0.9" />
-				</mx:LinearGradient>
+				<mx:SolidColor color="{tintColor}" alpha="0.9" />
 			</s:fill>
 			
 			<s:filters>
@@ -128,6 +142,20 @@
 				</mx:BevelFilter>
 			</s:filters>
 			
+		</s:Rect>
+		
+		<s:Rect
+			radiusX="10" radiusY="10"
+			left="1"
+			right="1"
+			bottom="1"
+			top="1">
+			<s:fill>
+				<mx:LinearGradient rotation="65">
+					<mx:GradientEntry ratio="0.3" color="0x000000" alpha="0" />
+					<mx:GradientEntry color="0x000000" alpha="0.1" />
+				</mx:LinearGradient>
+			</s:fill>
 		</s:Rect>
 		
 		<s:SimpleText id="textElement"

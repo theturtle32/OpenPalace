@@ -3,6 +3,7 @@ package net.codecomposer.palace.view
 	import flash.events.Event;
 	
 	import spark.components.supportClasses.SkinnableComponent;
+	import spark.primitives.supportClasses.GraphicElement;
 	import spark.primitives.supportClasses.TextGraphicElement;
 
 	[SkinState("bottomRight")]
@@ -16,8 +17,11 @@ package net.codecomposer.palace.view
 		[SkinPart(required="true")]
 		public var textElement:TextGraphicElement;
 		
+		[SkinPart(required="false")]
+		public var backgroundElement:GraphicElement;
+		
 		private var _text:String;
-	
+			
 		private var currentPosition:int = 0;
 		private static const positions:Array = [
 			"bottomRight",
@@ -25,6 +29,20 @@ package net.codecomposer.palace.view
 			"topRight",
 			"topLeft"
 		];
+		
+		private var _tintColor:uint = 0xFFFFAA;
+			
+		[Bindable('tintColorChanged')]
+		public function set tintColor(newValue:uint):void {
+			_tintColor = newValue;
+			if (skin && skin is ChatBubbleSkin)
+				ChatBubbleSkin(skin).tintColor = _tintColor;
+			dispatchEvent(new Event('tintColorChanged'));
+		}
+		
+		public function get tintColor():uint {
+			return _tintColor;
+		}
 		
 		[Bindable(event="textChanged")]
 		public function set text(newValue:String):void {
@@ -43,6 +61,9 @@ package net.codecomposer.palace.view
 		{
 			if (_text !== null && instance == textElement) {
 				textElement.text = _text;
+			}
+			if ( instance == backgroundElement ) {
+				ChatBubbleSkin(skin).tintColor = _tintColor;
 			}
 		}
 		

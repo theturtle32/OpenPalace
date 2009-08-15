@@ -29,6 +29,7 @@
 	<view:Avatar user="{user}" />
 
 	<view:ChatBubble id="chatBubble" skinClass="{ChatBubbleSkin}" x="400" y="350" text="{textInput.text}"
+		tintColor="0xCCCCFF"
 		click="trace('Click');" />
 	
 	
