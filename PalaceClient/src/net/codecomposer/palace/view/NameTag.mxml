@@ -1,35 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!--
-This file is part of OpenPalace.
-
-OpenPalace is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-OpenPalace is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
--->
-
-<mx:Label color="#FFFFFF" fontWeight="bold" selectable="false" textAlign="center"
-	fontFamily="Arial" fontSize="12" text="{user.name}"
-	x="{user.x-width/2}" y="{user.y+14}"
-	xmlns:mx="http://www.adobe.com/2006/mxml" width="400" height="300" xmlns:filters="flash.filters.*">
-	<mx:Script>
+<s:SimpleText xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo"
+	x="{user.x - width/2}" textAlign="center" y="{user.y + 18}"
+	text="{user.name}" 
+	fontFamily="Arial" fontSize="12" fontWeight="bold" color="0xFFFFFF">
+	<fx:Script>
 		<![CDATA[
 			import net.codecomposer.palace.model.PalaceUser;
 			[Bindable]
-			public var user:PalaceUser;
+			public var user:PalaceUser; 
 		]]>
-	</mx:Script>
-	
-	<mx:filters>
-		<filters:GlowFilter color="#000000" alpha="1" blurX="2" blurY="2" quality="{BitmapFilterQuality.MEDIUM}" strength="5" />
-	</mx:filters>
-</mx:Label>
+	</fx:Script>
+
+	<s:filters>
+		<mx:GlowFilter color="0x000000" alpha="1" blurX="2" blurY="2" quality="2" strength="5" />
+	</s:filters>
+</s:SimpleText>

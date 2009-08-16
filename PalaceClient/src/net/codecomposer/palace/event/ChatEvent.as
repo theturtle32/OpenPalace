@@ -25,14 +25,22 @@ package net.codecomposer.palace.event
 	{
 		public var chatText:String;
 		public var user:PalaceUser;
+		public var whisper:Boolean;
+		public var logOnly:Boolean = false;
 		
 		public static const CHAT:String = "chat";
+		public static const WHISPER:String = "whisper";
+		public static const ROOM_MESSAGE:String = "roomMessage";
 		
-		public function ChatEvent(user:PalaceUser, chatText:String)
+		public function ChatEvent(type:String, chatText:String, user:PalaceUser = null)
 		{
+			if (chatText.charAt(0) == ';') {
+				logOnly = true;
+			}
 			this.chatText = chatText;
 			this.user = user;
-			super(CHAT, false, true);
+			this.whisper = Boolean(type == WHISPER);
+			super(type, false, true);
 		}
 		
 	}

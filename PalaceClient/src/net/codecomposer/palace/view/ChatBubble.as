@@ -53,6 +53,21 @@ package net.codecomposer.palace.view
 			dispatchEvent(new Event('textChanged'));
 		}
 		
+		private var _isWhisper:Boolean = false;
+		
+		[Bindable(event="whisperChanged")]
+		public function set isWhisper(newValue:Boolean):void {
+			if (_isWhisper == newValue) { return; }
+			_isWhisper = newValue;
+			if (textElement !== null) {
+				textElement.setStyle('fontStyle', _isWhisper ? 'italic' : 'normal'); 
+			}
+		}
+		
+		public function get isWhisper():Boolean {
+			return _isWhisper;
+		}
+		
 		override protected function getCurrentSkinState():String {
 			return positions[currentPosition];
 		}
@@ -61,6 +76,7 @@ package net.codecomposer.palace.view
 		{
 			if (_text !== null && instance == textElement) {
 				textElement.text = _text;
+				textElement.setStyle('fontStyle', _isWhisper ? 'italic' : 'normal');
 			}
 			if ( instance == backgroundElement ) {
 				ChatBubbleSkin(skin).tintColor = _tintColor;

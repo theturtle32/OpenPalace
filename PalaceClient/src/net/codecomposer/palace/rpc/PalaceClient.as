@@ -46,7 +46,6 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.model.PalaceImageOverlay;
 	import net.codecomposer.palace.model.PalaceLooseProp;
-	import net.codecomposer.palace.model.PalacePalette;
 	import net.codecomposer.palace.model.PalaceProp;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceRoom;
@@ -152,6 +151,7 @@ package net.codecomposer.palace.rpc
 			currentRoom.removeAllUsers();
 			currentRoom.looseProps.removeAll();
 			currentRoom.hotSpots.removeAll();
+			currentRoom.id = 0;
 			population = 0;
 			serverName = "No Server"
 			roomList.removeAll();
@@ -212,6 +212,8 @@ package net.codecomposer.palace.rpc
 				return;
 			}
 			
+			if (handleClientCommand(message)) { return; }
+			
 			var whispering:Boolean = currentRoom.selectedUser != null;
 			
 			var messageBytes:ByteArray = PalaceEncryption.getInstance().encrypt(message, utf8, 254);
@@ -231,6 +233,38 @@ package net.codecomposer.palace.rpc
 			socket.writeShort(messageBytes.length + 3);
 			socket.writeBytes(messageBytes);
 			socket.writeByte(0);
+			socket.flush();
+		}
+		
+		private function handleClientCommand(message:String):Boolean {
+			var clientCommandMatch:Array = message.match(/^~(\w+) (.*)$/);
+			if (clientCommandMatch && clientCommandMatch.length > 0) {
+				var command:String = clientCommandMatch[1];
+				var argument:String = clientCommandMatch[2];
+				switch (command) {
+					case "susr":
+						trace("You are attempting to become a superuser with password \"" +
+								argument + "\"");
+						becomeWizard(argument);
+						break;
+					default:
+						trace("Unrecognized command: " + command + " argument " + argument);
+				}
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		
+		public function becomeWizard(password:String):void {
+			var passwordBytes:ByteArray = PalaceEncryption.getInstance().encrypt(password, false);
+			passwordBytes.position = 0;
+			socket.writeInt(OutgoingMessageTypes.SUPERUSER);
+			socket.writeInt(passwordBytes.length + 1);
+			socket.writeInt(0);
+			socket.writeByte(passwordBytes.length);
+			socket.writeBytes(passwordBytes);
 			socket.flush();
 		}
 		
@@ -283,6 +317,33 @@ package net.codecomposer.palace.rpc
 			socket.flush();
 			
 			currentRoom.selectedUser = null;
+		}
+		
+		public function lockDoor(roomId:int, spotId:int):void {
+			socket.writeInt(OutgoingMessageTypes.DOOR_LOCK);
+			socket.writeInt(4);
+			socket.writeInt(0);
+			socket.writeShort(roomId);
+			socket.writeShort(spotId);
+			socket.flush();
+		}
+		
+		public function unlockDoor(roomId:int, spotId:int):void {
+			socket.writeInt(OutgoingMessageTypes.DOOR_UNLOCK);
+			socket.writeInt(4);
+			socket.writeInt(0);
+			socket.writeShort(roomId);
+			socket.writeShort(spotId);
+			socket.flush();
+		}
+		
+		public function setSpotState(roomId:int, spotId:int, spotState:int):void {
+			socket.writeInt(OutgoingMessageTypes.SPOT_STATE);
+			socket.writeInt(6);
+			socket.writeInt(0);
+			socket.writeShort(roomId);
+			socket.writeShort(spotId);
+			socket.writeShort(spotState);
 		}
 		
 		public function requestAsset(assetType:int, assetId:uint, assetCrc:uint):void {
@@ -545,7 +606,23 @@ package net.codecomposer.palace.rpc
 							case IncomingMessageTypes.PROP_NEW:
 								handlePropNew(size, p);
 								break;
+							
+							case IncomingMessageTypes.DOOR_LOCK:
+								handleDoorLock(size, p);
+								break;
+							
+							case IncomingMessageTypes.DOOR_UNLOCK:
+								handleDoorUnlock(size, p);
+								break;
 								
+							case IncomingMessageTypes.SPOT_STATE:
+								handleSpotState(size, p);
+								break;
+								
+							case IncomingMessageTypes.SPOT_MOVE:
+								handleSpotMove(size, p);
+								break;
+							
 	//						case IncomingMessage.CONNECTION_DIED:
 	//							handleConnectionDied(size, p);
 	//							break;
@@ -554,9 +631,18 @@ package net.codecomposer.palace.rpc
 	//							handleIncomingFile(size, p);
 	//							break;
 							
+							case IncomingMessageTypes.BLOWTHRU:
+								trace("Blowthru message.");
+								// fall through to default...
 							default:
-								trace("Unhandled MessageID: " + messageID.toString());
-								_throwAwayData(size, p);
+								trace("Unhandled MessageID: " + messageID.toString() + " (" + messageID.toString(16) + ") - " +
+									  "Size: " + size + " - referenceId: " + p);
+								var dataToDump:Array = [];
+								for (var i:int = 0; i < size; i++) {
+									dataToDump[i] = socket.readUnsignedByte();
+								}
+								outputHexView(dataToDump);
+								//_throwAwayData(size, p);
 								break;
 						}
 						messageID = 0;
@@ -772,7 +858,14 @@ package net.codecomposer.palace.rpc
 					(bytes[byteNum] >= 32 && bytes[byteNum] <= 126) ? String.fromCharCode(bytes[byteNum]) : " "
 				);
 			}
-			output = output.concat(outputLineHex, "      ", outputLineAscii, "\n");
+			
+			var bufferLength:int = 57 - outputLineHex.length;
+			var bufferString:String = "";
+			for (var i:int = 0; i < bufferLength; i ++) {
+				bufferString += " ";
+			}
+			
+			output = output.concat(outputLineHex, bufferString, outputLineAscii, "\n");
 			trace(output);
 		}
 
@@ -782,6 +875,7 @@ package net.codecomposer.palace.rpc
 			var roomFlags:int = socket.readInt();
 			var face:int = socket.readInt();
 			var roomID:int = socket.readShort();
+			currentRoom.id = roomID;
 			var roomNameOffset:int = socket.readShort();
 			var imageNameOffset:int = socket.readShort();
 			var artistNameOffset:int = socket.readShort();
@@ -849,8 +943,7 @@ package net.codecomposer.palace.rpc
 				imageOverlay.id = imageBA.readShort();
 				var picNameOffset:int = imageBA.readShort(); // pstring offset
 				imageOverlay.transparencyIndex = imageBA.readShort();
-				imageOverlay.transparencyColor = PalacePalette.clutARGB[imageOverlay.transparencyIndex];
-				trace("Transparency Index: " + imageOverlay.transparencyIndex + " - Transparency Color: " + imageOverlay.transparencyColor + " (" + imageOverlay.transparencyColor.toString(16) + ")");
+				trace("Transparency Index: " + imageOverlay.transparencyIndex);
 				imageBA.readShort(); // Reserved.  Padding.. field alignment
 				var picNameLength:int = roomBytes[picNameOffset];
 				var picName:String = "";
@@ -870,11 +963,13 @@ package net.codecomposer.palace.rpc
 
 			// Hotspots
 			currentRoom.hotSpots.removeAll();
+			currentRoom.hotSpotsById = {};
 			for (i=0; i < hotSpotCount; i++) {
 				var hs:PalaceHotspot = new PalaceHotspot();
 				hs.readData(socket.endian, roomBytes, hotSpotOffset);
 				hotSpotOffset += hs.size;
 				currentRoom.hotSpots.addItem(hs);
+				currentRoom.hotSpotsById[hs.id] = hs;
 			}
 			
 			// Loose Props
@@ -943,6 +1038,7 @@ package net.codecomposer.palace.rpc
 				socket.readMultiByte(31-userNameLength, 'Windows-1252');
 
 				var user:PalaceUser = new PalaceUser();
+				user.isSelf = Boolean(userId == id);
 				user.id = userId;
 				user.name = userName;
 				user.propCount = propnum;
@@ -983,6 +1079,7 @@ package net.codecomposer.palace.rpc
 			for (var i:int = 0; i < userCount; i++) {
 				var user:PalaceUser = new PalaceUser();
 				user.id = socket.readInt();
+				user.isSelf = Boolean(user.id == id);
 				user.flags = socket.readShort();
 				user.roomID = socket.readShort();
 				if (roomById[user.roomID]) {
@@ -1047,6 +1144,7 @@ package net.codecomposer.palace.rpc
 			//userName = userName.substring(1);
 
 			var user:PalaceUser = new PalaceUser();
+			user.isSelf = Boolean(userId == id);
 			user.id = userId;
 			user.x = x;
 			user.y = y;
@@ -1299,6 +1397,55 @@ package net.codecomposer.palace.rpc
 			prop.loadProp();
 			currentRoom.looseProps.addItemAt(prop, 0);
 		}
+		
+		private function handleDoorLock(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			trace("Spot id " + spotId + " in room id " + roomId + " has been locked");
+			if (roomId == currentRoom.id) {
+				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+				hs.changeState(1);
+			}
+		}
+		
+		private function handleDoorUnlock(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			trace("Spot id " + spotId + " in room id " + roomId + " has been unlocked");
+			if (roomId == currentRoom.id) {
+				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+				hs.changeState(0);
+			}
+		}
+		
+		private function handleSpotState(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			var spotState:int = socket.readUnsignedShort();
+			trace("Spot State Changed: Spot id " + spotId + " in room id " + roomId + " is now in state " + spotState);
+			if (roomId == currentRoom.id) {
+				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+				if (hs != null) {
+					hs.changeState(spotState);
+				}
+				else {
+					trace("Unable to access spot id " + spotId); 
+				}
+			}
+		}
+		
+		private function handleSpotMove(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			var y:int = socket.readShort();
+			var x:int = socket.readShort();
+			trace("Hotspot " + spotId + " in room " + roomId + " moved to " + x + "," + y);
+			if (roomId != currentRoom.id) { return; }
+			var hotSpot:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+			if (hotSpot != null) {
+				hotSpot.moveTo(x, y);
+			}
+		}
 
 		private function handleServerDown(size:int, referenceId:int):void {
 			var reason:String = "The connection to the server has been lost.";
@@ -1351,6 +1498,7 @@ package net.codecomposer.palace.rpc
 	                break;
 			}
 			Alert.show(reason, "Connection Dropped");
+			trace("Connection Dropped: " + reason + " - Code: " + referenceId);
 		}
 		
 		private function _throwAwayData(a:int, b:int):void {

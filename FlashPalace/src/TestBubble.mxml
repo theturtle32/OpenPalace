@@ -16,6 +16,7 @@
 				user.x = 400;
 				user.y = 350;
 				user.name = "Test User";
+				user.color = 10;
 			}
 		]]>
 	</fx:Script>
@@ -29,11 +30,13 @@
 	<view:Avatar user="{user}" />
 
 	<view:ChatBubble id="chatBubble" skinClass="{ChatBubbleSkin}" x="400" y="350" text="{textInput.text}"
-		tintColor="0xCCCCFF"
+		tintColor="0xBBDDFF" isWhisper="{whisperCheckbox.selected}"
 		click="trace('Click');" />
 	
 	
 	<s:Button bottom="10" left="10" label="Try Next Position" 
 		click="chatBubble.tryNextPosition()" />
+		
+	<s:CheckBox bottom="40" left="10" label="Whisper" id="whisperCheckbox" />
 	
 </s:Application>

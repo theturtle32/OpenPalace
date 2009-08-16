@@ -216,6 +216,7 @@ package net.codecomposer.palace.model
 					);
 				}
 				else {
+					trace("Got prop " + response['legacy_identifier']['id'] + " - " + response['guid'] + " from web service.");
 					var prop:PalaceProp = getProp(null, response['legacy_identifier']['id'], response['legacy_identifier']['crc']);
 					var flags:Object = response['flags'];
 					prop.width = response['size']['width'];

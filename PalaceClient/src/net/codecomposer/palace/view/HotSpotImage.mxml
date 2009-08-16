@@ -22,6 +22,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	complete="handleLoaded(event)">
 	<mx:Script>
 		<![CDATA[
+			import net.codecomposer.palace.model.PalacePalette;
 			import net.codecomposer.palace.rpc.PalaceClient;
 			import net.codecomposer.palace.model.PalaceImageOverlay;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
@@ -36,19 +37,40 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			public var state:PalaceHotspotState;
 			[Bindable]
 			public var mediaServer:String;
-			[Bindable]
-			public var transparencyColor:uint;
-			[Bindable]
-			public var transparencyIndex:int;
+			
+			private var _transparencyIndex:int = -1;
+			
+			[Bindable('transparencyChanged')]
+			public function get transparencyColor():uint {
+				// Transparency index -1 means no transparency
+				// Transparency index 0 maps to a color 0xffccdfaa
+				// instead of palette index zero's color.
+				var color:uint = 
+					(transparencyIndex == 0) ?
+						0xffccdfaa :
+						PalacePalette.clutARGB[transparencyIndex];
+				return color;
+			}
+
+			[Bindable('transparencyChanged')]			
+			public function get transparencyIndex():int {
+				return _transparencyIndex;
+			}
+			
+			public function set transparencyIndex(newValue:int):void {
+				_transparencyIndex = newValue;
+				dispatchEvent(new Event('transparencyChanged'));
+			} 
 			
 			private function handleLoaded(event:Event):void {
 				// Apply transparency value
 				if (this.content is Bitmap) {
 					var bitmap:Bitmap = Bitmap(this.content);
 					var bd:BitmapData;
-					if (!bitmap.bitmapData.transparent || transparencyIndex != 0) {
+
+					if (!bitmap.bitmapData.transparent || transparencyIndex != -1) {
 						// Process transparency only if image isn't already transparent
-						trace("PROCESSING TRANSPARENCY!");
+						trace("PROCESSING TRANSPARENCY: " + filename);
 						try {
 							bd = new BitmapData(bitmap.bitmapData.width, bitmap.bitmapData.height, true, 0x00000000);
 							bd.copyPixels(bitmap.bitmapData, bitmap.bitmapData.rect, new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y));

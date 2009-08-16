@@ -17,16 +17,24 @@ You should have received a copy of the GNU General Public License
 along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+<s:SkinnableContainer xmlns:mx="library://ns.adobe.com/flex/halo"
+	xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009"
 	x="{user.x-this.width/2}" y="{user.y-this.height/2}"
 	height="132"
-	buttonMode="true"
-	horizontalScrollPolicy="off" verticalScrollPolicy="off"
+	mouseEnabled="false"
+	buttonMode="{!user.isSelf}"
 	creationComplete="handleCreationComplete()"
 	xmlns:filters="flash.filters.*">
 	
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
+			import spark.effects.Fade;
+			import caurina.transitions.Tweener;
+			import net.codecomposer.palace.event.PropEvent;
+			import mx.core.FlexBitmap;
+			import mx.events.CollectionEventKind;
+			import mx.graphics.SolidColor;
+			import spark.primitives.Rect;
 			import mx.events.CollectionEvent;
 			import net.codecomposer.palace.model.PalaceProp;
 			import mx.binding.utils.ChangeWatcher;
@@ -113,7 +121,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private var colors:Object = {};
 			
 			private var hue:HueColorMatrixFilter = new HueColorMatrixFilter();				
-						
+			
+			private var imagesByProp:Dictionary = new Dictionary();
+			
 			private function updateFace(event:PropertyChangeEvent=null):void {
 				if (user) {
 					hue.reset();
@@ -129,32 +139,101 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					colors[i] = startColor + (interval * i);
 				}
 				
+				var hitSprite:Sprite = new Sprite();
+				hitSprite.x = 44;
+				hitSprite.y = 44;
+				hitSprite.graphics.clear();
+				hitSprite.graphics.beginFill(0x000000, 0);
+				hitSprite.graphics.drawRect(0,0,44,44);
+				hitSprite.graphics.endFill();
+				hitArea = hitSprite;
+				
 				updateFace();
 				ChangeWatcher.watch(this, ['user','face'], updateFace);
 				ChangeWatcher.watch(this, ['user','color'], updateFace);
+				user.props.addEventListener(CollectionEvent.COLLECTION_CHANGE, handlePropsChange);
+				
+				loadProps();
 			}
 			
+			private function loadProps():void {
+				var numProps:int = user.props.length;
+				for (var i:int = 0; i < numProps; i ++) {
+					addProp(PalaceProp(user.props.getItemAt(i)));
+				}
+			}
+			
+			private function addProp(prop:PalaceProp):void {
+				var image:Image;
+				prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
+				image = new Image();
+				var bitmap:FlexBitmap = FlexBitmap(prop.bitmap);
+				image.source = bitmap;
+				image.x = prop.horizontalOffset + 43;
+				image.y = prop.verticalOffset + 43;
+				image.alpha = prop.ghost ? 0.5 : 1.0;
+				imagesByProp[prop] = image;
+				propsGroup.addElement(image);
+			}
+			
+			private function handlePropsChange(event:CollectionEvent):void {
+				var prop:PalaceProp;
+				var image:Image;
+				switch (event.kind) {
+					case CollectionEventKind.ADD:
+						for each (prop in event.items) {
+							addProp(prop);
+						}
+						break;
+					case CollectionEventKind.REMOVE:
+						for each (prop in event.items) {
+							prop.removeEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
+							image = imagesByProp[prop];
+							if (image != null) {
+								propsGroup.removeElement(image);
+								delete imagesByProp[prop];
+							}
+						}
+						break;
+					case CollectionEventKind.RESET:
+						imagesByProp = new Dictionary();
+						propsGroup.removeAllElements();
+						break;
+				}
+			}
+			
+			private function handlePropLoaded(event:Event):void {
+				var prop:PalaceProp = PalaceProp(event.target);
+				var image:Image = imagesByProp[prop];
+				if (image != null) {
+					image.alpha = 0;
+					image.source = prop.bitmap;
+					image.x = prop.horizontalOffset + 43;
+					image.y = prop.verticalOffset + 43;
+					var fade:Fade = new Fade(image);
+					fade.duration = 500;
+					fade.alphaFrom = 0;
+					fade.alphaTo = prop.ghost ? 0.5 : 1.0;
+					fade.play();
+				}
+			}
+			
+			
 		]]>
-	</mx:Script>
-	<mx:Image x="44" y="44" width="44" height="44" source="{faces.getItemAt(user.face)}" visible="{user.showFace}" id="face"/>
-	<!--
-	<mx:Canvas backgroundColor="#000000" width="{nameTag.width}" height="{nameTag.height-2}" x="{nameTag.x}" y="{nameTag.y}" />
-	-->
-	<mx:Canvas id="propsCanvas" horizontalCenter="0" verticalCenter="0" width="132" height="132"
-		verticalScrollPolicy="off" horizontalScrollPolicy="off">
-		<mx:Repeater id="propRepeater" dataProvider="{user.props}">
-			<mx:Image source="{propRepeater.currentItem.bitmap}"
-				alpha="{propRepeater.currentItem.ghost ? 0.5 : 1.0}"
-				x="{propRepeater.currentItem.horizontalOffset+43}"
-				y="{propRepeater.currentItem.verticalOffset+43}" />
-		</mx:Repeater>
-	</mx:Canvas>
+	</fx:Script>
 	
-	<mx:Label color="#FFFFFF" id="nameTag" fontWeight="bold" selectable="false" 
-		text="{user.name}" textAlign="center" horizontalCenter="0" verticalCenter="24"
-		fontFamily="Arial" fontSize="12">
-		<mx:filters>
-			<filters:GlowFilter color="#000000" alpha="1" blurX="2" blurY="2" quality="{BitmapFilterQuality.MEDIUM}" strength="5" />
-		</mx:filters>
-	</mx:Label>
-</mx:Canvas>
+	<s:layout>
+		<s:BasicLayout />
+	</s:layout>
+	
+	
+	<mx:Image x="44" y="44" width="44" height="44" source="{faces.getItemAt(user.face)}" visible="{user.showFace}" id="face"/>
+
+	<s:Group id="propsGroup" x="0" y="0" width="132" height="132"
+		mouseEnabled="false">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+
+</s:SkinnableContainer>

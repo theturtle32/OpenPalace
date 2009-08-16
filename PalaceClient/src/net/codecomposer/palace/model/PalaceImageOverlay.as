@@ -23,7 +23,6 @@ package net.codecomposer.palace.model
 		public var refCon:int;
 		public var id:int;
 		public var transparencyIndex:int;
-		public var transparencyColor:uint;
 		public var name:String;
 		public var filename:String;
 		

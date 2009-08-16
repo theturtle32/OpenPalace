@@ -27,6 +27,10 @@
 		]]>
 	</fx:Script>
 	
+	<s:filters>
+		<mx:DropShadowFilter blurX="6" blurY="6" distance="3" alpha="0.5" strength="1" angle="60" />
+	</s:filters>
+	
 	<s:layout>
 		<s:BasicLayout/>
 	</s:layout>
@@ -105,12 +109,12 @@
 		right.bottomLeft="18"
 		right.topLeft="18">
 		<s:Rect left="0" right="0" bottom="0" top="0" radiusX="10" radiusY="10">
-			<s:fill>
-				<mx:LinearGradient rotation="45">
+			<s:stroke>
+				<mx:LinearGradientStroke rotation="45">
 					<mx:GradientEntry color="0x000000" alpha="0.15" />
 					<mx:GradientEntry color="0x000000" alpha="0.4" />
-				</mx:LinearGradient>
-			</s:fill>
+				</mx:LinearGradientStroke>
+			</s:stroke>
 		</s:Rect>
 		
 		<s:Rect

@@ -17,14 +17,20 @@ You should have received a copy of the GNU General Public License
 along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+<s:Group xmlns:mx="library://ns.adobe.com/flex/halo"
 	width="{backgroundImage.width}" height="{backgroundImage.height}"
 	minWidth="512" minHeight="384"
+	clipAndEnableScrolling="true"
 	xmlns:view="net.codecomposer.palace.view.*"
-	backgroundColor="#000000"
-	creationComplete="handleCreationComplete()">
-	<mx:Script>
+	creationComplete="handleCreationComplete()" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009">
+	<s:layout>
+		<s:BasicLayout />
+	</s:layout>
+
+	<fx:Script>
 		<![CDATA[
+			import mx.collections.ArrayCollection;
+			import net.codecomposer.palace.model.ChatMessage;
 			import flash.utils.setTimeout;
 			import mx.core.UIComponent;
 			import mx.binding.utils.BindingUtils;
@@ -49,32 +55,24 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private var baseBackgroundFile:String;
 			private var forcingJpeg:Boolean = false;
 			
-			private var isAir:Boolean;
-			
 			private function handleCreationComplete():void {
 				this.addEventListener(MouseEvent.CLICK, handleClick);
 				room.addEventListener(ChatEvent.CHAT, handleChat);
+				room.addEventListener(ChatEvent.ROOM_MESSAGE, handleChat);
+				room.addEventListener(ChatEvent.WHISPER, handleChat);
 				room.addEventListener(PalaceRoomEvent.ROOM_CLEARED, handleRoomCleared);
 				room.addEventListener(PalaceRoomEvent.USER_ENTERED, handleUserEntered);
 				room.addEventListener(PalaceRoomEvent.USER_LEFT, handleUserLeft);
 				ChangeWatcher.watch(room, 'backgroundFile', handleBGChange);
 			}
 			
-			private function getHitArea():UIComponent {
-				var hitArea:UIComponent = new UIComponent();
-				hitArea.visible = false;
-				hitArea.mouseEnabled = false;
-				hitArea.graphics.clear();
-				hitArea.graphics.beginFill(0x000000, 1.0);
-				hitArea.graphics.drawRect(44,44,44,44);
-				hitArea.height = hitArea.width = 44;
-				hitArea.graphics.endFill();
-				return hitArea;
-			}
-			
 			private function handleClick(event:MouseEvent):void {
 				var x:int = this.contentMouseX;
 				var y:int = this.contentMouseY;
+				if (x < 22) { x = 22; }
+				if (y < 22) { y = 22; }
+				if (x > width - 22) { x = width - 22; }
+				if (y > height - 22) { y = height - 22; }
 				trace("Movement requested x:" + x + " y:" + y);
 				var socket:PalaceClient = PalaceClient.getInstance();
 				socket.move(x, y);
@@ -84,17 +82,18 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (event.currentTarget is Avatar) {
 					var user:PalaceUser = Avatar(event.currentTarget).user;
 					trace("Clicked avatar " + user.id + " - self is " + room.selfUserId);
-					if (user.id == room.selfUserId) {
+					if (user.isSelf) {
 						room.selectedUser = null;
-					} 
+					}
 					else if (room.selectedUser != user) {
+						event.stopPropagation();
 						room.selectedUser = user;
 					}
 					else if (room.selectedUser == user) {
+						event.stopPropagation();
 						room.selectedUser = null;
 					}
 					updateAvatarTransparencies();
-					event.stopPropagation();
 				}
 			}
 			
@@ -113,16 +112,151 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				}
 			}
 			
+			private var currentlyDisplayedChatMessageByUser:Dictionary = new Dictionary();
+			private var currentlyDisplayedChatMessages:ArrayCollection = new ArrayCollection();
+			private var chatQueue:Array = [];
+			
 			private function handleChat(event:ChatEvent):void {
+				
+				if (event.logOnly) { return; }
+				
+				var message:ChatMessage = new ChatMessage();
+				message.isWhisper = event.whisper;
+				message.text = event.chatText;
+				message.tint = 0xF8F8F8;
+				message.user = event.user;
+				if (event.user) {
+					message.x = event.user.x;
+					message.y = event.user.y;
+				}
+				else {
+					message.x = 0;
+					message.y = 10;
+				}
+				
+				chatQueue.push(message);
+				
+				checkChatQueue();
+			}
+			
+			private function checkChatQueue():void {
+				var itemsInQueue:int = chatQueue.length;
+				
+				for (var i:int = 0; i < itemsInQueue; i ++) {
+					var message:ChatMessage = chatQueue.shift();
+					if (!displayChatBubble(message)) {
+						// If we're not currently able to display the chat bubble,
+						// put it back on the queue.
+						trace("Didn't successfully display message.");
+						chatQueue.push(message);
+					}
+				}
+			}
+			
+			// return true for success, false to put it back on the queue
+			private function displayChatBubble(message:ChatMessage):Boolean {
+				
+				var obj:* = currentlyDisplayedChatMessageByUser[message.user];
+				trace(obj);
+				// One message at a time per user...
+				if (currentlyDisplayedChatMessageByUser[message.user]) {
+					trace("Currently displaying chat message by this user already");
+					return false;
+				}
+				
 				var chatBubble:ChatBubble = new ChatBubble();
 				chatBubble.setStyle('skinClass', Class(net.codecomposer.palace.view.ChatBubbleSkin));
-				chatBubble.text = event.chatText;
-				chatBubble.x = event.user.x;
-				chatBubble.y = event.user.y;
-				textCanvas.addChild(chatBubble)
-				setTimeout(function():void {
-					textCanvas.removeChild(chatBubble);
-				}, 1400 + (event.chatText.length * 45));
+				chatBubble.text = message.text;
+				chatBubble.x = message.x;
+				chatBubble.y = message.y;
+				chatBubble.isWhisper = message.isWhisper;
+				chatBubble.tintColor = message.tint;
+				chatBubble.visible = true;
+				
+				var overlapped:Boolean = false;
+				
+				// Check for overlaps...
+				textGroup.addElement(chatBubble)
+				chatBubble.validateNow();
+				for (var positionNumber:int = 0; positionNumber < 4; positionNumber ++) {
+					overlapped = false;
+
+					// Check if we're running off the edge of the screen
+					//trace(chatBubble.skin.currentState);
+
+					var skinState:String = chatBubble.skin.currentState;
+					var rightCheck:int, leftCheck:int, bottomCheck:int, topCheck:int;
+					
+					
+					if (skinState.indexOf('Right') != -1) {
+						rightCheck = chatBubble.x + chatBubble.skin.x + chatBubble.skin.measuredWidth;
+						leftCheck = chatBubble.x + chatBubble.skin.x;
+					}
+					if (skinState.indexOf('Left') != -1) {
+						rightCheck = chatBubble.x + chatBubble.skin.x;
+						leftCheck = chatBubble.x + chatBubble.skin.x - chatBubble.skin.measuredWidth;
+					}
+					if (skinState.indexOf('bottom') != -1) {
+						bottomCheck = chatBubble.y + chatBubble.skin.y + chatBubble.skin.measuredHeight;
+						topCheck = chatBubble.y + chatBubble.skin.y;
+					}
+					if (skinState.indexOf('top') != -1) {
+						bottomCheck = chatBubble.y + chatBubble.skin.y;
+						topCheck = chatBubble.y + chatBubble.skin.y - chatBubble.skin.measuredHeight;
+					}
+					
+					//trace("Extremes: " + [topCheck,rightCheck,bottomCheck,leftCheck].join(','));
+					 
+					if (
+							rightCheck > width ||
+							bottomCheck > height ||
+							leftCheck < 0 ||
+							topCheck < 0
+					   ) { 
+					   	overlapped = true;
+					   	//trace("Moving to next position.");
+						chatBubble.tryNextPosition();
+						chatBubble.validateNow();
+						continue;
+					}
+					
+					innerLoop: for (var i:int = 0; i < currentlyDisplayedChatMessages.length; i ++) {
+						var m:ChatMessage = ChatMessage(currentlyDisplayedChatMessages.getItemAt(i));
+						if (m.chatBubble.hitTestObject(chatBubble)) {
+							overlapped = true;
+							chatBubble.tryNextPosition();
+							chatBubble.validateNow();
+							break innerLoop;
+						}
+					}
+					if (!overlapped) {
+						break;
+					}
+				}
+				
+				if (overlapped) {
+					//trace("unresolvable overlap detected.");
+					textGroup.removeElement(chatBubble);
+					return false;
+				}
+				
+				chatBubble.visible = true;
+				message.chatBubble = chatBubble;
+				setTimeout(removeChatBubble, 3000 + (message.text.length * 70), message);
+				currentlyDisplayedChatMessageByUser[message.user] = message;
+				currentlyDisplayedChatMessages.addItem(message);
+				return true;
+			}
+			
+			private function removeChatBubble(message:ChatMessage):void {
+				try {
+					delete currentlyDisplayedChatMessageByUser[message.user];
+					currentlyDisplayedChatMessages.removeItemAt(currentlyDisplayedChatMessages.getItemIndex(message));
+					textGroup.removeElement(message.chatBubble);
+				}
+				catch (e:Error) { /* do nothing */ }
+				
+				checkChatQueue();
 			}
 			
 			private function handleUserEntered(event:PalaceRoomEvent):void {
@@ -130,48 +264,47 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				avatar.user = event.user;
 				avatar.alpha = 1;
 				avatar.addEventListener(MouseEvent.CLICK, handleAvatarClick);
-				avatarsCanvas.addChild(avatar);
-				var hitArea:UIComponent = getHitArea();
-				avatar.addChild(hitArea);
-				avatar.hitArea = hitArea;
+				avatarsGroup.addElement(avatar);
 				avatar.validateDisplayList();
 				avatarsByUser[event.user] = avatar;
 				updateAvatarTransparencies();
 				
-//				var nameTag:NameTag = new NameTag();
-//				nameTag.user = event.user;
-//				nameTagsByUser[event.user] = nameTag;
-//				nameTagsCanvas.addChild(nameTag);
+				var nameTag:NameTag = new NameTag();
+				nameTag.user = event.user;
+				nameTagsByUser[event.user] = nameTag;
+				nameTagGroup.addElement(nameTag);
 			}
 			
 			private function handleUserLeft(event:PalaceRoomEvent):void {
 				var avatar:Avatar = avatarsByUser[event.user];
 				if (avatar != null) {
 					avatar.removeEventListener(MouseEvent.CLICK, handleAvatarClick);
-					avatarsCanvas.removeChild(avatar);
-					avatarsByUser[event.user] = null;
+					avatarsGroup.removeElement(avatar);
 					delete avatarsByUser[event.user];
 				}
 								
-//				var nameTag:NameTag = nameTagsByUser[event.user];
-//				if (nameTag != null) {
-//					nameTagsCanvas.removeChild(nameTag);
-//					nameTagsByUser[event.user] = null;
-//					delete nameTagsByUser[event.user];
-//				}
+				var nameTag:NameTag = nameTagsByUser[event.user];
+				if (nameTag != null) {
+					nameTagGroup.removeElement(nameTag);
+					delete nameTagsByUser[event.user];
+				}
 			}
 			
 			private function handleRoomCleared(event:PalaceRoomEvent):void {
 				for each (var avatar:Object in avatarsByUser) {
 					Avatar(avatar).removeEventListener(MouseEvent.CLICK, handleAvatarClick);
 				}
-				avatarsCanvas.removeAllChildren();
+				avatarsGroup.removeAllElements();
 				avatarsByUser = new Dictionary();
+
+				nameTagGroup.removeAllElements();
+				nameTagsByUser = new Dictionary();
 				
-//				for each (var nameTag:Object in nameTagsByUser) {
-//					nameTagsCanvas.removeAllChildren();
-//					nameTagsByUser = new Dictionary();
-//				}
+				currentlyDisplayedChatMessageByUser = new Dictionary();
+				currentlyDisplayedChatMessages.removeAll();
+				chatQueue = [];
+				textGroup.removeAllElements();
+				
 			}
 			
 			private function handleBGChange(event:PropertyChangeEvent):void {
@@ -202,12 +335,19 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			
 		]]>
-	</mx:Script>
+	</fx:Script>
+	
+	<s:Rect width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" />
+		</s:fill>
+	</s:Rect>
+	
 	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
 		scaleContent="false" httpStatus="handleBGHTTP(event)"
 		loaderContext="{PalaceClient.loaderContext}" 
 		visible="{room.backgroundFile != null}" />
-	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" />
 	<mx:Canvas id="loosePropsCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="0" right="0" bottom="0" left="0">
 		<mx:Repeater id="loosePropsRepeater" dataProvider="{room.looseProps}">
 			<mx:Image source="{loosePropsRepeater.currentItem.prop.bitmap}"
@@ -217,7 +357,24 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		</mx:Repeater>
 	</mx:Canvas>
 	
-	<mx:Canvas id="avatarsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+	<s:Group id="avatarsGroup" top="0" right="0" bottom="0" left="0">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+	
 <!--	<mx:Canvas id="nameTagsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off"  /> -->
-	<mx:Canvas id="textCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
-</mx:Canvas>
+
+	<s:Group id="nameTagGroup" mouseEnabled="false">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+
+	<s:Group id="textGroup" mouseEnabled="false" top="0" right="0" bottom="0" left="0">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+
+</s:Group>

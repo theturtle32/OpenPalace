@@ -34,6 +34,8 @@ package net.codecomposer.palace.model
 	import net.codecomposer.palace.event.PropEvent;
 	
 	[Event(name="propLoaded",type="net.codecomposer.palace.event.PropEvent")]
+	[Event(name="propDecoded",type="net.codecomposer.palace.event.PropEvent")]
+	
 	
 	[Bindable]
 	public class PalaceProp extends EventDispatcher

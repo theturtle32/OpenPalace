@@ -17,19 +17,25 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.model
 {
+	import flash.events.EventDispatcher;
 	import flash.geom.Point;
 	import flash.utils.ByteArray;
 	
 	import mx.collections.ArrayCollection;
 	
+	import net.codecomposer.palace.event.HotspotEvent;
+
+	[Event(name="stateChanged",type="net.codecomposer.palace.event.HotspotEvent")]
+	[Event(name="moved",type="net.codecomposer.palace.event.HotspotEvent")]
+
 	[Bindable]
-	public class PalaceHotspot
+	public class PalaceHotspot extends EventDispatcher
 	{
 		
 		public var type:int = 0;
 		public var dest:int = 0;
 		public var id:int = 0;
-		public var flags:int = 0;
+		private var _flags:int = 0;
 		public var state:int = 0;
 		public var numStates:int = 0;
 		public var polygon:Array = []; // Array of points
@@ -43,8 +49,47 @@ package net.codecomposer.palace.model
 		public var scriptRecordOffset:int;
 		public var states:ArrayCollection = new ArrayCollection();
 		
+		[Bindable('flagsChanged')]
+		public function set flags(newValue:int):void {
+			_flags = newValue;
+			dispatchEvent(new Event('flagsChanged'));
+		}
+		public function get flags():int {
+			return _flags;
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get showName():Boolean {
+			return Boolean(flags & FLAG_SHOW_NAME) && (name != null && name.length > 0);
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get dontMoveHere():Boolean {
+			return Boolean(flags & FLAG_DONT_MOVE_HERE);
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get draggable():Boolean {
+			return Boolean(flags & FLAG_DRAGGABLE);
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get drawFrame():Boolean {
+			return Boolean(flags & FLAG_DRAW_FRAME);
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get shadow():Boolean {
+			return Boolean(flags & FLAG_SHADOW);
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get fill():Boolean {
+			return Boolean(flags & FLAG_FILL);
+		}
+		
 		public static const TYPE_NORMAL:int = 0;
-		public static const TYPE_DOOR:int = 1;
+		public static const TYPE_PASSAGE:int = 1;
 		public static const TYPE_SHUTABLE_DOOR:int = 2;
 		public static const TYPE_LOCKABLE_DOOR:int = 3;
 		public static const TYPE_BOLT:int = 4;
@@ -53,11 +98,36 @@ package net.codecomposer.palace.model
 		public static const STATE_UNLOCKED:int = 0;
 		public static const STATE_LOCKED:int = 1;
 		
+		public static const FLAG_SHOW_NAME:int = 0x08;
+		public static const FLAG_DONT_MOVE_HERE:int = 0x02;
+		public static const FLAG_DRAGGABLE:int = 0x01;
+		public static const FLAG_DRAW_FRAME:int = 0x10;
+		public static const FLAG_SHADOW:int = 0x20;
+		public static const FLAG_FILL:int = 0x40;
+		
+		
 		// Hotspot records are 48 bytes
 		public const size:int = 48;
 		
 		public function PalaceHotspot()
 		{
+		}
+		
+		public function changeState(newState:int):void {
+			trace("CHANGING STATE TO " + newState);
+			if (newState != state) {
+				state = newState;
+			}
+			var event:HotspotEvent = new HotspotEvent(HotspotEvent.STATE_CHANGED);
+			event.state = state;
+			dispatchEvent(event);
+		}
+		
+		public function moveTo(x:int, y:int):void {
+			location.x = x;
+			location.y = y;
+			var event:HotspotEvent = new HotspotEvent(HotspotEvent.MOVED);
+			dispatchEvent(event);
 		}
 
 		public function readData(endian:String, roomBytes:Array, offset:int):void {
@@ -73,6 +143,7 @@ package net.codecomposer.palace.model
 			
 			scriptEventMask = ba.readInt();
 			flags = ba.readInt();
+			trace("Hotspot Flags: 0x" + flags.toString(16));
 			secureInfo = ba.readInt();
 			refCon = ba.readInt();
 			location.y = ba.readShort();
@@ -119,7 +190,7 @@ package net.codecomposer.palace.model
 				var y:int = ba.readShort();
 				var x:int = ba.readShort();
 				// trace("----- X: " + x + " (" + uint(x).toString(16) + ")    Y: " + y + "(" + uint(y).toString(16) +")");
-				polygon.push(new Point(x + location.x, y + location.y));
+				polygon.push(new Point(x, y));
 			}
 			
 			// Get States

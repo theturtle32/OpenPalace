@@ -33,5 +33,10 @@ package net.codecomposer.palace.message
 		public static const REQUEST_ASSET:int = 0x71417374;
 		public static const USER_PROP:int = 1970500176;
 		public static const CHANGE_NAME:int = 0x7573724e;
+		public static const BLOWTHRU:int = 0x626c6f77;
+		public static const SPOT_STATE:int = 1934849121;
+		public static const DOOR_LOCK:int = 1819239275;
+		public static const DOOR_UNLOCK:int = 1970170991;
+		public static const SUPERUSER:int = 0x73757372;
 	}
 }

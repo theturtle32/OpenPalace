@@ -43,6 +43,7 @@ package net.codecomposer.palace.model
 		public var roomFlags:int;
 		public var images:Object = {};
 		public var hotSpots:ArrayCollection = new ArrayCollection();
+		public var hotSpotsById:Object = {};
 		public var looseProps:ArrayCollection = new ArrayCollection();
 		public var drawCommands:ArrayCollection = new ArrayCollection();
 		public var selectedUser:PalaceUser;
@@ -91,24 +92,30 @@ package net.codecomposer.palace.model
 			var user:PalaceUser = getUserById(userId);
 			recordChat("<b>", PalaceUtil.htmlEscape(user.name), ":</b> ", PalaceUtil.htmlEscape(message), "\n");
 			dispatchEvent(new Event('chatLogUpdated'));
-			var event:ChatEvent = new ChatEvent(user, message);
+			var event:ChatEvent = new ChatEvent(ChatEvent.CHAT, message, user);
 			dispatchEvent(event);
 		}
 		
 		public function whisper(userId:int, message:String):void {
 			var user:PalaceUser = getUserById(userId);
-			recordChat("<i><b>", PalaceUtil.htmlEscape(user.name), " (whisper):</b> ", PalaceUtil.htmlEscape(message), "</i>\n");
+			recordChat("<em><b>", PalaceUtil.htmlEscape(user.name), " (whisper):</b> ", PalaceUtil.htmlEscape(message), "</em>\n");
 			dispatchEvent(new Event('chatLogUpdated'));
+			var event:ChatEvent = new ChatEvent(ChatEvent.WHISPER, message, user);
+			dispatchEvent(event);
 		}
 		
 		public function roomMessage(message:String):void {
 			recordChat("<b>*** " + PalaceUtil.htmlEscape(message), "</b>\n");
 			dispatchEvent(new Event('chatLogUpdated'));
+			var event:ChatEvent = new ChatEvent(ChatEvent.ROOM_MESSAGE, message);
+			dispatchEvent(event);
 		}
 		
 		public function roomWhisper(message:String):void {
 			recordChat("<b><i>*** " + PalaceUtil.htmlEscape(message), "</i></b>\n");
 			dispatchEvent(new Event('chatLogUpdated'));
+			var event:ChatEvent = new ChatEvent(ChatEvent.ROOM_MESSAGE, message);
+			dispatchEvent(event);
 		}
 		
 		private function recordChat(... args):void {

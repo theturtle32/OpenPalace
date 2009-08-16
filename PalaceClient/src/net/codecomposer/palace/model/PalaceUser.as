@@ -17,13 +17,16 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.model
 {
+	import flash.events.EventDispatcher;
+	
 	import mx.collections.ArrayCollection;
 	
 	import net.codecomposer.palace.event.PropEvent;
-	
+
 	[Bindable]
-	public class PalaceUser
+	public class PalaceUser extends EventDispatcher
 	{
+		public var isSelf:Boolean = false;
 		public var id:int;
 		public var name:String = "Uninitialized User";
 		public var x:int;

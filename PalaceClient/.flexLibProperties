@@ -40,12 +40,15 @@
     <classEntry path="net.codecomposer.palace.view.ChatBubbleSkin"/>
     <classEntry path="net.codecomposer.palace.view.HotSpotImage"/>
     <classEntry path="net.codecomposer.palace.view.HotSpotSprite"/>
-    <classEntry path="net.codecomposer.palace.view.NameTag"/>
     <classEntry path="net.codecomposer.palace.view.PalaceHotspotView"/>
     <classEntry path="net.codecomposer.palace.view.PalaceRoomView"/>
     <classEntry path="net.codecomposer.palace.view.RoomListGrid"/>
     <classEntry path="net.codecomposer.palace.view.UserListGrid"/>
     <classEntry path="net.codecomposer.util.MultiPartFormBuilder"/>
+    <classEntry path="net.codecomposer.palace.event.HotspotEvent"/>
+    <classEntry path="net.codecomposer.palace.view.NameTag"/>
+    <classEntry path="net.codecomposer.palace.view.HotSpotNameTag"/>
+    <classEntry path="net.codecomposer.palace.model.ChatMessage"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
