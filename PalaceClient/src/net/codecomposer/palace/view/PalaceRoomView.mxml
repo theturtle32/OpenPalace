@@ -29,6 +29,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 	<fx:Script>
 		<![CDATA[
+			import spark.effects.Fade;
 			import mx.collections.ArrayCollection;
 			import net.codecomposer.palace.model.ChatMessage;
 			import flash.utils.setTimeout;
@@ -112,7 +113,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				}
 			}
 			
-			private var currentlyDisplayedChatMessageByUser:Dictionary = new Dictionary();
 			private var currentlyDisplayedChatMessages:ArrayCollection = new ArrayCollection();
 			private var chatQueue:Array = [];
 			
@@ -156,14 +156,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			// return true for success, false to put it back on the queue
 			private function displayChatBubble(message:ChatMessage):Boolean {
 				
-				var obj:* = currentlyDisplayedChatMessageByUser[message.user];
-				trace(obj);
-				// One message at a time per user...
-				if (currentlyDisplayedChatMessageByUser[message.user]) {
-					trace("Currently displaying chat message by this user already");
-					return false;
-				}
-				
 				var chatBubble:ChatBubble = new ChatBubble();
 				chatBubble.setStyle('skinClass', Class(net.codecomposer.palace.view.ChatBubbleSkin));
 				chatBubble.text = message.text;
@@ -204,8 +196,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 						bottomCheck = chatBubble.y + chatBubble.skin.y;
 						topCheck = chatBubble.y + chatBubble.skin.y - chatBubble.skin.measuredHeight;
 					}
-					
-					//trace("Extremes: " + [topCheck,rightCheck,bottomCheck,leftCheck].join(','));
 					 
 					if (
 							rightCheck > width ||
@@ -214,7 +204,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 							topCheck < 0
 					   ) { 
 					   	overlapped = true;
-					   	//trace("Moving to next position.");
 						chatBubble.tryNextPosition();
 						chatBubble.validateNow();
 						continue;
@@ -243,14 +232,14 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				chatBubble.visible = true;
 				message.chatBubble = chatBubble;
 				setTimeout(removeChatBubble, 3000 + (message.text.length * 70), message);
-				currentlyDisplayedChatMessageByUser[message.user] = message;
+				//currentlyDisplayedChatMessageByUser[message.user] = message;
 				currentlyDisplayedChatMessages.addItem(message);
 				return true;
 			}
 			
 			private function removeChatBubble(message:ChatMessage):void {
 				try {
-					delete currentlyDisplayedChatMessageByUser[message.user];
+					//delete currentlyDisplayedChatMessageByUser[message.user];
 					currentlyDisplayedChatMessages.removeItemAt(currentlyDisplayedChatMessages.getItemIndex(message));
 					textGroup.removeElement(message.chatBubble);
 				}
@@ -272,7 +261,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				var nameTag:NameTag = new NameTag();
 				nameTag.user = event.user;
 				nameTagsByUser[event.user] = nameTag;
+				nameTag.alpha = 0;
 				nameTagGroup.addElement(nameTag);
+				
+				var fade:Fade = new Fade(nameTag);
+				fade.duration = 700;
+				fade.startDelay = int(Math.random() * 400);
+				fade.alphaFrom = 0;
+				fade.alphaTo = 1;
+				fade.play();
 			}
 			
 			private function handleUserLeft(event:PalaceRoomEvent):void {
@@ -300,7 +297,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				nameTagGroup.removeAllElements();
 				nameTagsByUser = new Dictionary();
 				
-				currentlyDisplayedChatMessageByUser = new Dictionary();
 				currentlyDisplayedChatMessages.removeAll();
 				chatQueue = [];
 				textGroup.removeAllElements();
