@@ -29,6 +29,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 	<fx:Script>
 		<![CDATA[
+			import net.codecomposer.palace.model.PalaceConfig;
+			import net.codecomposer.palace.model.PalaceProp;
 			import spark.effects.Fade;
 			import mx.collections.ArrayCollection;
 			import net.codecomposer.palace.model.ChatMessage;
@@ -54,6 +56,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private var nameTagsByUser:Dictionary = new Dictionary();
 			
 			private var baseBackgroundFile:String;
+			private var forcingPng:Boolean = false;
 			private var forcingJpeg:Boolean = false;
 			
 			private function handleCreationComplete():void {
@@ -113,6 +116,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				}
 			}
 			
+			private var stickyMessagesByUser:Dictionary = new Dictionary();
 			private var currentlyDisplayedChatMessages:ArrayCollection = new ArrayCollection();
 			private var chatQueue:Array = [];
 			
@@ -155,6 +159,18 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			// return true for success, false to put it back on the queue
 			private function displayChatBubble(message:ChatMessage):Boolean {
+				
+				if (message.user && stickyMessagesByUser[message.user]) {
+					var oldMessage:ChatMessage = stickyMessagesByUser[message.user];
+					try {
+						delete stickyMessagesByUser[message.user];
+					}
+					catch (e:Error) { /* do nothing */ }
+					try {
+						textGroup.removeElement(oldMessage.chatBubble);
+					}
+					catch (e:Error) { /* do nothing */ }
+				}
 				
 				var chatBubble:ChatBubble = new ChatBubble();
 				chatBubble.setStyle('skinClass', Class(net.codecomposer.palace.view.ChatBubbleSkin));
@@ -231,15 +247,19 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				
 				chatBubble.visible = true;
 				message.chatBubble = chatBubble;
-				setTimeout(removeChatBubble, 3000 + (message.text.length * 70), message);
-				//currentlyDisplayedChatMessageByUser[message.user] = message;
+				
+				if (!message.isStickyBubble) {
+					setTimeout(removeChatBubble, 3000 + (message.text.length * 70), message);
+				}
+				else if (message.user) {
+					stickyMessagesByUser[message.user] = message;
+				}
 				currentlyDisplayedChatMessages.addItem(message);
 				return true;
 			}
 			
 			private function removeChatBubble(message:ChatMessage):void {
 				try {
-					//delete currentlyDisplayedChatMessageByUser[message.user];
 					currentlyDisplayedChatMessages.removeItemAt(currentlyDisplayedChatMessages.getItemIndex(message));
 					textGroup.removeElement(message.chatBubble);
 				}
@@ -285,6 +305,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					nameTagGroup.removeElement(nameTag);
 					delete nameTagsByUser[event.user];
 				}
+				
+				var chatMessage:ChatMessage = stickyMessagesByUser[event.user];
+				if (chatMessage != null) {
+					textGroup.removeElement(chatMessage.chatBubble);
+					delete stickyMessagesByUser[event.user];
+				}
 			}
 			
 			private function handleRoomCleared(event:PalaceRoomEvent):void {
@@ -303,31 +329,69 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				
 			}
 			
+			
+			
 			private function handleBGChange(event:PropertyChangeEvent):void {
+				backgroundImage.visible = false;
 				if (room.backgroundFile == null) {
 					return;
 				}
 				var match:Array = room.backgroundFile.match(/^(.*)\.gif$/i);
-				if (match != null && Security.sandboxType == Security.APPLICATION) {
-					forcingJpeg = true;
+				if (match != null) {
 					baseBackgroundFile = match[1];
-					trace("Trying to find jpeg version of background."); 
-					backgroundImage.source = mediaServer + baseBackgroundFile + ".jpg";
+					tryPngBG();
 				}
 				else {
 					backgroundImage.source = mediaServer + room.backgroundFile;
 				}
 			}
 			
-			private function handleBGHTTP(event:HTTPStatusEvent):void {
-				if (forcingJpeg && event.status == 404) {
-					trace("Unable to load " + backgroundImage.source + " - Reverting to gif.");
-					forcingJpeg = false;
-					setTimeout(function():void {
-						backgroundImage.source = mediaServer + room.backgroundFile;
-						trace("Loading: " + backgroundImage.source);
-					}, 50);
+			private function tryJpegBG():void {
+				if (baseBackgroundFile && baseBackgroundFile.length > 0) {
+					trace("Trying to find jpeg version of background.");
+					forcingJpeg = true; 
+					backgroundImage.source = mediaServer + baseBackgroundFile + ".jpg";
 				}
+			}
+			
+			private function tryPngBG():void {
+				if (baseBackgroundFile && baseBackgroundFile.length > 0) {
+					trace("Trying to find png version of background.");
+					forcingPng = true; 
+					backgroundImage.source = mediaServer + baseBackgroundFile + ".png";
+				}
+			}
+			
+			private function tryRegularBG():void {
+				trace("Unable to load preferred background images - Reverting to originally specified filename.");
+				backgroundImage.source = mediaServer + room.backgroundFile;
+			}
+			
+			private function handleBackgroundLoadComplete(event:Event):void {
+				if (PalaceConfig.fadeBackgroundImages) { 
+					backgroundImage.alpha = 0;
+					var fade:Fade = new Fade(backgroundImage);
+					fade.duration = 600;
+					fade.alphaFrom = 0;
+					fade.alphaTo = 1;
+					fade.play();
+				}
+				backgroundImage.visible = true;
+			}
+			
+			private function handleUnableToLoadBG():void {
+				if (forcingPng) {
+					forcingPng = false;
+					tryJpegBG();
+				}
+				else if (forcingJpeg) {
+					forcingJpeg = false;
+					tryRegularBG();
+				}
+			}
+			
+			private function handleBGioERROR(event:IOErrorEvent):void {
+				handleUnableToLoadBG();
 			}
 			
 		]]>
@@ -340,9 +404,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	</s:Rect>
 	
 	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
-		scaleContent="false" httpStatus="handleBGHTTP(event)"
-		loaderContext="{PalaceClient.loaderContext}" 
-		visible="{room.backgroundFile != null}" />
+		scaleContent="false" complete="handleBackgroundLoadComplete(event)"
+		loaderContext="{PalaceClient.loaderContext}" ioError="handleBGioERROR(event);"
+		visible="false" />
 	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" />
 	<mx:Canvas id="loosePropsCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="0" right="0" bottom="0" left="0">
 		<mx:Repeater id="loosePropsRepeater" dataProvider="{room.looseProps}">

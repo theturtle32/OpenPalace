@@ -14,6 +14,10 @@ package net.codecomposer.palace.model
 		
 		private static const locationRegex:RegExp = /^\@([\d]+),([\d]+)\s*(.*)$/; 
 		
+		public function get isStickyBubble():Boolean {
+			return Boolean(text.charAt(0) == "^");
+		}
+		
 		public function set text(newValue:String):void {
 			_text = newValue;
 		}

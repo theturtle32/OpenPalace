@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" minWidth="1024" minHeight="768"
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" minWidth="800" minHeight="450"
 	skinClass="FlashPalaceApplicationSkin"
+	applicationComplete="handleApplicationComplete()"
 	creationComplete="handleCreationComplete()" xmlns:code="http://code.google.com/p/flexlib/" xmlns:view="net.codecomposer.palace.view.*" xmlns:local="*">
 	<s:layout>
 		<s:BasicLayout/>
@@ -31,6 +32,21 @@
 			private var preferences:Preferences = Preferences.getInstance();
 			
 			private var browserManager:IBrowserManager;
+
+			private function handleApplicationComplete():void {
+				stage.addEventListener(KeyboardEvent.KEY_DOWN, handleStageKeyDown);
+			}
+			
+			private function handleStageKeyDown(event:KeyboardEvent):void {
+				if (palace.connected) {
+					if (event.keyCode == Keyboard.NUMPAD_ADD) {
+						palace.setColor(palace.currentUser.color+1);
+					}
+					else if (event.keyCode == Keyboard.NUMPAD_SUBTRACT) {
+						palace.setColor(palace.currentUser.color-1);
+					}
+				}
+			}
 
 			private function handleCreationComplete():void {
 				browserManager = BrowserManager.getInstance();

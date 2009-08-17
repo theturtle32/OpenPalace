@@ -58,6 +58,39 @@ package net.codecomposer.palace.rpc
 		
 		[Bindable]
 		public static var loaderContext:LoaderContext = new LoaderContext();
+
+		/* FLAGS */
+		
+		public static const AUXFLAGS_UNKNOWN_MACHINE:uint = 0;
+		public static const AUXFLAGS_MAC68K:uint = 1;
+		public static const AUXFLAGS_MACPPC:uint = 2;
+		public static const AUXFLAGS_WIN16:uint = 3;
+		public static const AUXFLAGS_WIN32:uint = 4;
+		public static const AUXFLAGS_JAVA:uint = 5;
+		
+		public static const AUXFLAGS_OSMASK:uint = 0x0000000F;
+		public static const AUXFLAGS_AUTHENTICATE:uint = 0x80000000;
+		
+		public static const ULCAPS_ASSETS_PALACE:uint = 0x00000001;
+		public static const ULCAPS_ASSETS_FTP:uint = 0x00000002;
+		public static const ULCAPS_ASSETS_HTTP:uint = 0x00000004;
+		public static const ULCAPS_ASSETS_OTHER:uint = 0x00000008;
+		public static const ULCAPS_FILES_PALACE:uint = 0x00000010;
+		public static const ULCAPS_FILES_FTP:uint = 0x00000020;
+		public static const ULCAPS_FILES_HTTP:uint = 0x00000040;
+		public static const ULCAPS_FILES_OTHER:uint = 0x00000080;
+		public static const ULCAPS_EXTEND_PKT:uint = 0x00000100;
+		
+		public static const DLCAPS_ASSETS_PALACE:uint = 0x00000001;
+		public static const DLCAPS_ASSETS_FTP:uint = 0x00000002;
+		public static const DLCAPS_ASSETS_HTTP:uint = 0x00000004;
+		public static const DLCAPS_ASSETS_OTHER:uint = 0x00000008;
+		public static const DLCAPS_FILES_PALACE:uint = 0x00000010;
+		public static const DLCAPS_FILES_FTP:uint = 0x00000020;
+		public static const DLCAPS_FILES_HTTP:uint =  0x00000040;
+		public static const DLCAPS_FILES_OTHER:uint = 0x00000080;
+		public static const DLCAPS_FILES_HTTPSRVR:uint = 0x00000100;
+		public static const DLCAPS_EXTEND_PKT:uint = 0x00000200;
 		
 		private var socket:Socket = null;
 		
@@ -290,6 +323,19 @@ package net.codecomposer.palace.rpc
 			
 			user.x = x;
 			user.y = y;
+		}
+		
+		public function setColor(color:int):void {
+			if (!connected) {
+				return;
+			}
+			socket.writeInt(OutgoingMessageTypes.USER_COLOR);
+			socket.writeInt(2);
+			socket.writeInt(id);
+			color = Math.max(color%15, 0);
+			socket.writeShort(color);
+			currentUser.color = color;
+			socket.flush();
 		}
 				
 		public function requestRoomList():void {
@@ -680,16 +726,16 @@ package net.codecomposer.palace.rpc
 			
 			switch (messageID) {
 				case IncomingMessageTypes.UNKNOWN_SERVER: //1886610802
-					trace("Untested Server Version");
+					Alert.show("Got MSG_TROPSER.  Don't know how to proceed.","Logon Error");
 					break;
-				case IncomingMessageTypes.LITTLE_ENDIAN_SERVER: //1920559476
+				case IncomingMessageTypes.LITTLE_ENDIAN_SERVER: // MSG_DIYIT
 					trace("Server is Little Endian");
 					socket.endian = Endian.LITTLE_ENDIAN;
 					size = socket.readInt();
 					p = socket.readInt();
 					logOn(size, p);
 					break;
-				case IncomingMessageTypes.BIG_ENDIAN_SERVER: //1953069426
+				case IncomingMessageTypes.BIG_ENDIAN_SERVER: // MSG_TIYID
 					trace("Server is Big Endian");
 					socket.endian = Endian.BIG_ENDIAN;
 					size = socket.readInt();
@@ -697,7 +743,7 @@ package net.codecomposer.palace.rpc
 					logOn(size, p);
 					break;
 				default:
-					trace("Unhandled MessageID: " + messageID.toString());
+					trace("Unexpected MessageID while logging on: " + messageID.toString());
 					break;
 			}
 		}
@@ -711,73 +757,82 @@ package net.codecomposer.palace.rpc
 			currentRoom.selfUserId = id = referenceId;
 
 
-			// bk.c(eb) writes a,b,c, no flush
-			socket.writeInt(1919248233);
-			socket.writeInt(128);
-			socket.writeInt(id); // client id/room number?
-			// working from id
-			socket.writeInt(0x5905f923);// b[0]
-			socket.writeInt(0xcf07309c);// b[1]
+			// LOGON
+			socket.writeInt(OutgoingMessageTypes.LOGON);
+			socket.writeInt(128); // struct AuxRegistrationRec is 128 bytes
+			socket.writeInt(0); // RefNum unused in LOGON message
 
-			// Username has to be Windows-1252
-			var userNameBA:ByteArray = new ByteArray();
-			userNameBA.writeMultiByte(userName, 'Windows-1252');
-			userNameBA.position = 0;
-			socket.writeByte(userNameBA.bytesAvailable);
-			socket.writeBytes(userNameBA); //? name  or super.a?
+			// regCode crc
+			socket.writeInt(0x5905f923);
 			
-			i = 64 - (1 + userName.length);
-			if (i < 0) { 	// padding???
-				i = 0;
+			// regCode counter
+			socket.writeInt(0xcf07309c);
+
+			// Username has to be Windows-1252 and up to 31 characters
+			if (userName.length > 31) {
+				userName = userName.slice(0,31);
 			}
+			socket.writeByte(userName.length);
+			socket.writeMultiByte(userName, 'Windows-1252');
+			i = 31 - (userName.length);
 			for(; i > 0; i--) { 
 				socket.writeByte(0);
 			}
-	
-			/*
-			socket.writeInt(5);	// 5 
-			*/
-			socket.writeInt(0x80000004);
 
-			//socket.writeInt(0);	// unset or d?
+			for (i=0; i < 32; i ++) {
+				socket.writeByte(0);
+			}			
+	
+			// auxFlags
+			socket.writeInt(AUXFLAGS_AUTHENTICATE | AUXFLAGS_WIN32);
+
+			// puidCtr
 			socket.writeInt(0xf5dc385e);
 	
-        	//socket.writeInt(0); // e?
+        	// puidCRC
 			socket.writeInt(0xc144c580);
 	
-        	//socket.writeInt(0); // f?
-			socket.writeInt(0x00002a30);
+        	// demoElapsed - no longer used
+			socket.writeInt(0);
 	
-        	//socket.writeInt(0); // g?
-			socket.writeInt(0x00021df9);
+        	// totalElapsed - no longer used
+			socket.writeInt(0);
 	
-        	//socket.writeInt(0); // h?
-			socket.writeInt(0x00002a30);
+        	// demoLimit - no longer used
+			socket.writeInt(0);
         
-			//WriteShort(1); // i? room id?
-			socket.writeShort(0); // i? room id?
+			// desired room id
+			socket.writeShort(0);
 
-			/*	// version
-	        WriteBytes((unsigned char *)"J2.0", 4); 
-			WriteByte(0);
-			WriteByte(0); */
-			socket.writeMultiByte("350211", "Windows-1252");
+			// Protocol spec lists these as reserved, and says there shouldn't
+			// be anything put in them... but the server records these 6 bytes
+			// in the log file.  So I'll exploit that.
+			socket.writeMultiByte("OPNPAL", "iso-8859-1");
 	
+			// ulRequestedProtocolVersion -- ignored on server
 	        socket.writeInt(0);
 
-	        //socket.writeInt(0);
-    	    socket.writeInt(1);
+			// ulUploadCaps
+    	    socket.writeInt(
+    	    	ULCAPS_ASSETS_PALACE
+    	    );
 
-        	//socket.writeInt(0);
-	        socket.writeInt(0x00000111);
+        	// ulDownloadCaps
+	        socket.writeInt(
+	        	DLCAPS_ASSETS_PALACE |
+	        	DLCAPS_FILES_PALACE |
+	        	DLCAPS_FILES_HTTPSRVR
+	        );
 
-        	//socket.writeInt(0);
-        	socket.writeInt(1);
-
-        	//socket.writeInt(0);
-        	socket.writeInt(1);
-
+        	// ul2DEngineCaps -- Unused
         	socket.writeInt(0);
+
+        	// ul2dGraphicsCaps -- Unused
+        	socket.writeInt(0);
+
+			// ul3DEngineCaps -- Unused
+        	socket.writeInt(0);
+        	
 			socket.flush();
 			
 			state = STATE_READY;
@@ -788,16 +843,42 @@ package net.codecomposer.palace.rpc
 		
 		
 		// not fully implemented
-		// a bounced logon message?
+		// This is only sent when the server is running in "guests-are-members" mode.
 		private function alternateLogon(size:int, referenceId:int):void {
-			// orig logon id seems to be bullshit?
-			//id = b;
-			//	FILE * fp = fopen("altlogonrx.hex", "w+");
-			for(var i:int = 0; i < size; i++) {
+			// size should be 128,
+			
+			// This is pointless... it's basically echoing back the logon packet
+			// that we sent to the server.
+			
+			for (var i:int = 0; i < size; i ++) {
 				socket.readByte();
 			}
-			//		fputc(ReadByte(), fp);	// unknown server params
-			//	fclose(fp);
+			
+//			 var crc:uint = socket.readUnsignedInt();
+//			 var counter:uint = socket.readUnsignedInt();
+//			 var userNameLength:int = socket.readUnsignedByte();
+//			 
+//			 var userName:String = socket.readMultiByte(32, 'Windows-1252');
+//			 for (var i:int = 0; i<31-userNameLength; i++) {
+//			 	socket.readByte(); // padding on the end of the username
+//			 }
+//			 for (i=0; i<32; i++) {
+//			 	socket.readByte(); // wiz password field
+//			 }
+//			 var auxFlags:uint = socket.readUnsignedInt();
+//			 var puidCtr:uint = socket.readUnsignedInt();
+//			 var puidCRC:uint = socket.readUnsignedInt();
+//			 var demoElapsed:uint = socket.readUnsignedInt();
+//			 var totalElapsed:uint = socket.readUnsignedInt();
+//			 var demoLimit:uint = socket.readUnsignedInt();
+//			 var desiredRoom:int = socket.readShort();
+//			 var reserved:String = socket.readMultiByte(6,'iso-8859-1');
+//			 var ulRequestedProtocolVersion:uint = socket.readUnsignedInt();
+//			 var ulUploadCaps:uint = socket.readUnsignedInt();
+//			 var ulDownloadCaps:uint = socket.readUnsignedInt();
+//			 var ul2DEngineCaps:uint = socket.readUnsignedInt();
+//			 var ul2DGraphicsCaps:uint = socket.readUnsignedInt();
+//			 var ul3DEngineCaps:uint = socket.readUnsignedInt();
 		}
 		
 		private function handleReceiveServerVersion(size:int, referenceId:int):void {

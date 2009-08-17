@@ -19,7 +19,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 <MDIWindow xmlns="flexlib.mdi.containers.*" xmlns:mx="http://www.adobe.com/2006/mxml"
 	backgroundColor="#CACACA"
-	width="500" height="200"
+	width="600" height="200"
 	layout="absolute"
 	title="Chat Log"
 	creationComplete="handleCreationComplete()"
@@ -30,7 +30,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			[Bindable]
 			public var palace:PalaceClient = PalaceClient.getInstance();
 			
-			private var timer:Timer = new Timer(10, 1);
+			private var timer:Timer = new Timer(50, 1);
 			
 			private function handleCreationComplete():void {
 				palace.currentRoom.addEventListener('chatLogUpdated', handleChatLogUpdated);
