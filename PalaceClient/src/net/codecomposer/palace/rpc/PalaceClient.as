@@ -166,6 +166,12 @@ package net.codecomposer.palace.rpc
 		public function connect(userName:String, host:String, port:int = 9998):void {
 			PalaceClient.loaderContext.checkPolicyFile = true;
 			
+			host = host.toLowerCase();
+			var match:Array = host.match(/^palace:\/\/(.*)$/);
+			if (match && match.length > 0) {
+				host = match[1];
+			}
+			
 			this.host = host;
 			this.port = port;
 			this.userName = userName;

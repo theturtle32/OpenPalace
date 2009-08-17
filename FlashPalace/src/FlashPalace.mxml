@@ -69,7 +69,13 @@
 				trace("URL Changed: " + browserManager.fragment);
 				var parameters:Object = URLUtil.stringToObject(browserManager.fragment);
 				if (parameters.palace != null) {
-					var parts:Array = String(parameters.palace).split(':');
+					var url:String = String(parameters.palace).toLowerCase();
+					var match:Array = url.match(/^palace:\/\/(.*)$/);
+					if (match && match.length > 0) {
+						url = match[1];
+					}
+					
+					var parts:Array = url.split(':');
 					var hostName:String = parts[0];
 					var port:Number = 9998;
 					if ( parts[1] && String(parts[1]).length > 0 ) {
