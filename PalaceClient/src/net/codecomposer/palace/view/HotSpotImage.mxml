@@ -46,8 +46,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				// Transparency index 0 maps to a color 0xffccdfaa
 				// instead of palette index zero's color.
 				var color:uint = 
-					(transparencyIndex == 0) ?
-						0xffccdfaa :
+				//	(transparencyIndex == 0) ?
+				//		0xffccdfaa :
 						PalacePalette.clutARGB[transparencyIndex];
 				return color;
 			}
