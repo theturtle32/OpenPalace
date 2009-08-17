@@ -43,6 +43,7 @@ package net.codecomposer.palace.model
 		public var location:FlexPoint;
 		public var scriptEventMask:int = 0;
 		public var numScripts:int = 0;
+		public var script:String;
 		public var secureInfo:int;
 		public var refCon:int;
 		public var groupId:int;
@@ -174,6 +175,21 @@ package net.codecomposer.palace.model
 				nameByteArray.position = 0;
 				name = nameByteArray.readMultiByte(nameLength, 'Windows-1252');
 			}
+
+			// Script...
+			if (scriptTextOffset > 0) {
+				var scriptByteArray:ByteArray = new ByteArray();
+				
+				var currentByte:int = -1;
+				var counter:int = scriptTextOffset;
+				var maxLength:int = roomBytes.length;
+				script = "";
+				while (currentByte != 0 && counter < maxLength) {
+					currentByte = roomBytes[counter++];
+					script += String.fromCharCode(currentByte);
+				}
+			}
+			trace("Script: " + script);
 
 			ba = new ByteArray();
 			var endPos:int = pointsOffset+(numPoints*4);
