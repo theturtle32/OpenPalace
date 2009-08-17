@@ -123,7 +123,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				var message:ChatMessage = new ChatMessage();
 				message.isWhisper = event.whisper;
 				message.text = event.chatText;
-				message.tint = 0xF8F8F8;
+				message.tint = event.user ? Avatar.chatBubbleTintColors[event.user.color] : 0xF9F9F9;
 				message.user = event.user;
 				if (event.user) {
 					message.x = event.user.x;
