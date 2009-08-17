@@ -336,6 +336,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (room.backgroundFile == null) {
 					return;
 				}
+				forcingJpeg = false;
+				forcingPng = false;
 				var match:Array = room.backgroundFile.match(/^(.*)\.gif$/i);
 				if (match != null) {
 					baseBackgroundFile = match[1];
