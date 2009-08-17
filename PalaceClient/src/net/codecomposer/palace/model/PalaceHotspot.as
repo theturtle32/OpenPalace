@@ -43,7 +43,7 @@ package net.codecomposer.palace.model
 		public var location:FlexPoint;
 		public var scriptEventMask:int = 0;
 		public var numScripts:int = 0;
-		public var script:String;
+		public var script:String = "";
 		public var secureInfo:int;
 		public var refCon:int;
 		public var groupId:int;

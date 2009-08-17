@@ -99,20 +99,23 @@ package net.codecomposer.palace.view
 			if (hotSpot.dontMoveHere) {
 				event.stopImmediatePropagation();
 			}
-			if (hotSpot.dest == 0) {
-				return;
-			}
 			switch (hotSpot.type) {
 				case PalaceHotspot.TYPE_NORMAL:
+					checkForPalaceLinksInScript();
 					break;
 				case PalaceHotspot.TYPE_PASSAGE:
 					event.stopPropagation();
-					client.gotoRoom(hotSpot.dest);
+					checkForPalaceLinksInScript();
+					if (hotSpot.dest != 0) {
+						client.gotoRoom(hotSpot.dest);
+					}
 					break;
 				case PalaceHotspot.TYPE_LOCKABLE_DOOR:
 					if (hotSpot.state == PalaceHotspot.STATE_UNLOCKED) {
 						event.stopPropagation();
-						client.gotoRoom(hotSpot.dest);
+						if (hotSpot.dest != 0) {
+							client.gotoRoom(hotSpot.dest);
+						}
 					}
 					else if (hotSpot.state == PalaceHotspot.STATE_LOCKED) {
 						client.currentRoom.roomMessage("Sorry, the door is locked.");
@@ -121,7 +124,9 @@ package net.codecomposer.palace.view
 				case PalaceHotspot.TYPE_SHUTABLE_DOOR:
 					if (hotSpot.state == PalaceHotspot.STATE_UNLOCKED) {
 						event.stopPropagation();
-						client.gotoRoom(hotSpot.dest);
+						if (hotSpot.dest != 0) {
+							client.gotoRoom(hotSpot.dest);
+						}
 					}
 					else if (hotSpot.state == PalaceHotspot.STATE_LOCKED) {
 						client.currentRoom.roomMessage("Sorry, the door is closed.");
@@ -144,6 +149,18 @@ package net.codecomposer.palace.view
 					break;
 			}
 		}//
+		
+		private function checkForPalaceLinksInScript():void {
+			trace("Checking for palace links in script...");
+			trace(hotSpot.script);
+			var matchParts:Array = hotSpot.script.toLowerCase().match(/on select.*\{.*["']palace:\/\/(.+?):{0,1}([0-9]*)["'].*netgoto/ms); 
+			if (matchParts && matchParts.length > 0) {
+				var port:int = int(matchParts[2]);
+				if (port < 1) { port = 9998; }
+				trace("Taking you to host: " + matchParts[1] + " port " + port);
+				client.connect(client.userName, matchParts[1], int(port));
+			}
+		}
 		
 		private function handleMouseOver(event:MouseEvent):void {
 			mouseOver = true;
