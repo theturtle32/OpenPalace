@@ -23,6 +23,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	clipAndEnableScrolling="true"
 	xmlns:view="net.codecomposer.palace.view.*"
 	creationComplete="handleCreationComplete()" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009">
+
 	<s:layout>
 		<s:BasicLayout />
 	</s:layout>
@@ -390,6 +391,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					forcingJpeg = false;
 					tryRegularBG();
 				}
+				else {
+					backgroundImage.source = null;
+				}
 			}
 			
 			private function handleBGioERROR(event:IOErrorEvent):void {
@@ -409,6 +413,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		scaleContent="false" complete="handleBackgroundLoadComplete(event)"
 		loaderContext="{PalaceClient.loaderContext}" ioError="handleBGioERROR(event);"
 		visible="false" />
+	
 	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" />
 	<mx:Canvas id="loosePropsCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="0" right="0" bottom="0" left="0">
 		<mx:Repeater id="loosePropsRepeater" dataProvider="{room.looseProps}">
@@ -438,5 +443,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			<s:BasicLayout />
 		</s:layout>
 	</s:Group>
+	
+	<mx:ProgressBar bottom="0" width="100%"
+		source="{backgroundImage}"
+		visible="{!backgroundImage.visible &amp;&amp; backgroundImage.source != null &amp;&amp; progressBar.percentComplete &lt; 100}"
+		labelPlacement="center"
+		id="progressBar"
+		label="Downloading Background... {Math.ceil(progressBar.percentComplete)}%" />
 
 </s:Group>

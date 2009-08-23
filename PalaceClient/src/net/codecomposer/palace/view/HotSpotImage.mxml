@@ -68,8 +68,11 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					var bitmap:Bitmap = Bitmap(this.content);
 					var bd:BitmapData;
 
-					if (!bitmap.bitmapData.transparent && !(transparencyIndex == -1 || transparencyIndex == 0)) {
-						// Process transparency only if image isn't already transparent
+					if (!(transparencyIndex == -1 || transparencyIndex == 0)) {
+						// Ideally I would like to only Process transparency
+						// only if the image isn't already transparent... That
+						// seems to break some images in certain palaces.
+						// Can check bitmap.bitmapData.transparent
 						trace("PROCESSING TRANSPARENCY: " + filename);
 						try {
 							bd = new BitmapData(bitmap.bitmapData.width, bitmap.bitmapData.height, true, 0x00000000);
