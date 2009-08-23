@@ -28,6 +28,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	
 	<fx:Script>
 		<![CDATA[
+			import spark.effects.Scale;
 			import spark.effects.Fade;
 			import caurina.transitions.Tweener;
 			import net.codecomposer.palace.event.PropEvent;
@@ -44,81 +45,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			import net.codecomposer.palace.model.PalaceUser;
 			[Bindable]
 			public var user:PalaceUser = new PalaceUser();
-			
-			// Faces
-			[Embed(source="../../../../assets/faces/0.gif")]
-			[Bindable]
-			public static var face0:Class;
-			
-			[Embed(source="../../../../assets/faces/1.gif")]
-			[Bindable]
-			public static var face1:Class;
-			
-			[Embed(source="../../../../assets/faces/2.gif")]
-			[Bindable]
-			public static var face2:Class;
-			
-			[Embed(source="../../../../assets/faces/3.gif")]
-			[Bindable]
-			public static var face3:Class;
-			
-			[Embed(source="../../../../assets/faces/4.gif")]
-			[Bindable]
-			public static var face4:Class;
-			
-			[Embed(source="../../../../assets/faces/5.gif")]
-			[Bindable]
-			public static var face5:Class;
-			
-			[Embed(source="../../../../assets/faces/6.gif")]
-			[Bindable]
-			public static var face6:Class;
-			
-			[Embed(source="../../../../assets/faces/7.gif")]
-			[Bindable]
-			public static var face7:Class;
-			
-			[Embed(source="../../../../assets/faces/8.gif")]
-			[Bindable]
-			public static var face8:Class;
-			
-			[Embed(source="../../../../assets/faces/9.gif")]
-			[Bindable]
-			public static var face9:Class;
-			
-			[Embed(source="../../../../assets/faces/10.gif")]
-			[Bindable]
-			public static var face10:Class;
-			
-			[Embed(source="../../../../assets/faces/11.gif")]
-			[Bindable]
-			public static var face11:Class;
-			
-			[Embed(source="../../../../assets/faces/12.gif")]
-			[Bindable]
-			public static var face12:Class;
-			
-			[Bindable]
-			private var faces:ArrayCollection = new ArrayCollection([
-				face0,
-				face1,
-				face2,
-				face3,
-				face4,
-				face5,
-				face6,
-				face7,
-				face8,
-				face9,
-				face10,
-				face11,
-				face12,
-				face0,
-				face1,
-				face2
-			]);
-
-			private var colors:Object = {};
 			
 			public static var chatBubbleTintColors:Array = [
 				0xFF9999, // 0  Red
@@ -139,24 +65,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				0xFF86B1  // 15 Rose
 			]; 
 			
-			private var hue:HueColorMatrixFilter = new HueColorMatrixFilter();				
-			
 			private var imagesByProp:Dictionary = new Dictionary();
 			
-			private function updateFace(event:PropertyChangeEvent=null):void {
-				if (user) {
-					hue.reset();
-					hue.Hue = colors[user.color];
-					face.filters = [hue.Filter];
-				}
-			}
-			
 			private function handleCreationComplete():void {
-				var startColor:int = -35;
-				var interval:int = 360/16;
-				for (var i:int = 0; i < 16; i++) {
-					colors[i] = startColor + (interval * i);
-				}
 				
 				var hitSprite:Sprite = new Sprite();
 				hitSprite.x = 44;
@@ -166,10 +77,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				hitSprite.graphics.drawRect(0,0,44,44);
 				hitSprite.graphics.endFill();
 				hitArea = hitSprite;
-				
-				updateFace();
-				ChangeWatcher.watch(this, ['user','face'], updateFace);
-				ChangeWatcher.watch(this, ['user','color'], updateFace);
+
 				user.props.addEventListener(CollectionEvent.COLLECTION_CHANGE, handlePropsChange);
 				
 				loadProps();
@@ -246,7 +154,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	</s:layout>
 	
 	
-	<mx:Image x="44" y="44" width="44" height="44" source="{faces.getItemAt(user.face)}" visible="{user.showFace}" id="face"/>
+	
+	<s:Scroller x="44" y="44" width="44" height="44" horizontalScrollPolicy="off" verticalScrollPolicy="off" visible="{user.showFace}">
+		<s:Group horizontalScrollPosition="{user.face * 45}" verticalScrollPosition="{user.color * 45}">
+			<mx:Image source="@Embed(source='assets/faces/defaultsmileys.png')" />
+		</s:Group>
+	</s:Scroller>
 
 	<s:Group id="propsGroup" x="0" y="0" width="132" height="132"
 		mouseEnabled="false">
