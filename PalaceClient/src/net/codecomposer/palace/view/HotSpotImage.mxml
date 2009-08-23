@@ -68,7 +68,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					var bitmap:Bitmap = Bitmap(this.content);
 					var bd:BitmapData;
 
-					if (!bitmap.bitmapData.transparent || transparencyIndex != -1) {
+					if (!bitmap.bitmapData.transparent && !(transparencyIndex == -1 || transparencyIndex == 0)) {
 						// Process transparency only if image isn't already transparent
 						trace("PROCESSING TRANSPARENCY: " + filename);
 						try {
