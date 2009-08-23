@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+This file is part of OpenPalace.
+
+OpenPalace is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+OpenPalace is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<mx:Window xmlns:mx="http://www.adobe.com/2006/mxml" width="286" height="96" layout="absolute"
+	creationComplete="handleCreationComplete()"
+	title="Connect..."
+	showStatusBar="false">
+	<mx:Script>
+		<![CDATA[
+			import mx.events.PropertyChangeEvent;
+			import mx.binding.utils.ChangeWatcher;
+			import net.codecomposer.palace.rpc.PalaceClient;
+			[Bindable]
+			public var palace:PalaceClient = PalaceClient.getInstance();
+		
+			private function handleCreationComplete():void {
+				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
+			}
+			
+			private function handleConnectedChange(event:PropertyChangeEvent):void {
+				if (event.newValue == true) {
+					this.close();
+				}
+			}
+		
+			private function connect():void {
+				palace.connect(userName.text, hostName.text, int(port.text));
+			}
+			
+			private function handleConnectionKeydown(event:KeyboardEvent):void {
+				if (event.keyCode == Keyboard.ENTER) {
+					connect();
+				}
+			}
+		]]>
+	</mx:Script>
+
+		<mx:TextInput id="userName" text="OpenPalace User" left="60" top="8"/>
+		<mx:Label text="Name:" textAlign="right" left="10" top="10"/>
+		<mx:Label text="Host:" textAlign="right" width="42" left="10" top="38"/>
+		<mx:TextInput id="hostName" text="avatarpalace.net" keyDown="handleConnectionKeydown(event)" left="60" top="36"/>
+		<mx:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
+		<mx:Button label="Connect" click="connect()" right="8" top="66"/>
+
+</mx:Window>
