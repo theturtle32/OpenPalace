@@ -158,7 +158,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		horizontalScrollPolicy="off" verticalScrollPolicy="off"
 		width="44" height="44"
 		visible="{user.showFace}"
-		x="44" y="44">
+		x="42" y="42">
 		<s:Group horizontalScrollPosition="{user.face * 45}" verticalScrollPosition="{user.color * 45}">
 			<mx:Image source="@Embed(source='assets/faces/defaultsmileys.png')" />
 		</s:Group>
