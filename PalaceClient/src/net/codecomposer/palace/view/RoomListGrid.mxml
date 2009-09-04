@@ -19,6 +19,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 <mx:DataGrid xmlns:mx="http://www.adobe.com/2006/mxml"
 	itemDoubleClick="handleSelection(event)"
+	itemClick="handleItemClick(event)"
 	doubleClickEnabled="true"
 	dataProvider="{palace.roomList}" draggableColumns="false">
 	<mx:Metadata>
@@ -50,6 +51,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				roomSelectedEvent.roomID = this.selectedItem.id;
 				dispatchEvent(roomSelectedEvent);
 				trace("Room " + this.selectedItem.name + " selected");
+			}
+			
+			private function handleItemClick(event:ListEvent):void {
+				if (!this.selectedItem) {
+					return;
+				}
+				selectedRoomId = this.selectedItem.id;
 			}
 		]]>
 	</mx:Script>
