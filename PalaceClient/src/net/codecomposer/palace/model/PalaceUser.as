@@ -26,6 +26,46 @@ package net.codecomposer.palace.model
 	[Bindable]
 	public class PalaceUser extends EventDispatcher
 	{
+		// wizard
+		public static const SUPERUSER:uint = 0x0001;
+		
+		// Total wizard
+		public static const GOD:uint = 0x0002;
+		
+		// Server should drop user at first opportunity
+		public static const KILL:uint = 0x0004;
+		
+		// user is a guest (no registration code)
+		public static const GUEST:uint = 0x0008;
+		
+		// Redundant with KILL.  Shouldn't be used
+		public static const BANISHED:uint = 0x0010;
+		
+		// historical artifact.  Shouldn't be used
+		public static const PENALIZED:uint = 0x0020;
+		
+		// Comm error, drop at first opportunity
+		public static const COMM_ERROR:uint = 0x0040;
+		
+		// Not allowed to speak
+		public static const GAG:uint = 0x0080;
+		
+		// Stuck in corner and not allowed to move
+		public static const PIN:uint = 0x0100;
+		
+		// Doesn't appear on user list
+		public static const HIDE:uint = 0x0200;
+		
+		// Not accepting whisper from outside room
+		public static const REJECT_ESP:uint = 0x0400;
+		
+		// Not accepting whisper from inside room
+		public static const REJECT_PRIVATE:uint = 0x0800;
+		
+		// Not allowed to wear props
+		public static const PROPGAG:uint = 0x1000;
+		
+		
 		public var isSelf:Boolean = false;
 		public var id:int;
 		public var name:String = "Uninitialized User";

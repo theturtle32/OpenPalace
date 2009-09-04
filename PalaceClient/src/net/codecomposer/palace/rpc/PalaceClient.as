@@ -139,6 +139,9 @@ package net.codecomposer.palace.rpc
 		
 		private var _userName:String = "OpenPalace User";
 		
+		private var temporaryUserFlags:int;
+		// We get the user flags before we have the current user
+		
 		[Bindable(event="userNameChange")]
 		public function get userName():String {
 			return _userName;
@@ -901,10 +904,20 @@ package net.codecomposer.palace.rpc
 		}
 		
 		// not fully implemented
-		private function handleReceiveUserStatus(a:int, b:int):void {
-			// a is length? b is client id
-			var data:String = socket.readMultiByte(a, 'Windows-1252');
-			trace("User status?  Data: \n" + data); 			
+		private function handleReceiveUserStatus(size:int, referenceId:int):void {
+			if (currentUser) {
+				currentUser.flags = socket.readShort();
+			}
+			else {
+				temporaryUserFlags = socket.readShort();
+			}
+			var array:Array = [];
+			var bytesRemaining:int = size - 2;
+			for (var i:int = 0; i < bytesRemaining; i ++) {
+				array.push(socket.readUnsignedByte());
+			}
+			trace("Interesting... there is more to the user status message than just the documented flags:");
+			outputHexView(array)
 		}
 		
 		//class c2
