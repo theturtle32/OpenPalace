@@ -122,12 +122,16 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private var chatQueue:Array = [];
 			
 			private function handleChat(event:ChatEvent):void {
+				if (event.soundName) {
+					PalaceSoundPlayer.getInstance().playSound(event.soundName);
+				}
 				
 				if (event.logOnly) { return; }
 				
 				var message:ChatMessage = new ChatMessage();
 				message.isWhisper = event.whisper;
 				message.text = event.chatText;
+				if (message.text.length < 1) { return; }
 				message.tint = event.user ? Avatar.chatBubbleTintColors[event.user.color] : 0xF9F9F9;
 				message.user = event.user;
 				if (event.user) {
@@ -380,6 +384,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					fade.play();
 				}
 				backgroundImage.visible = true;
+				backgroundImage.smoothBitmapContent = true;
 			}
 			
 			private function handleUnableToLoadBG():void {
@@ -410,6 +415,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	</s:Rect>
 	
 	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
+		smoothBitmapContent="true"
 		scaleContent="false" complete="handleBackgroundLoadComplete(event)"
 		loaderContext="{PalaceClient.loaderContext}" ioError="handleBGioERROR(event);"
 		visible="false" />
@@ -417,7 +423,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" />
 	<mx:Canvas id="loosePropsCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="0" right="0" bottom="0" left="0">
 		<mx:Repeater id="loosePropsRepeater" dataProvider="{room.looseProps}">
-			<mx:Image source="{loosePropsRepeater.currentItem.prop.bitmap}"
+			<mx:Image smoothBitmapContent="true" source="{loosePropsRepeater.currentItem.prop.bitmap}"
 				alpha="{loosePropsRepeater.currentItem.prop.ghost ? 0.5 : 1.0}"
 				x="{loosePropsRepeater.currentItem.x}"
 				y="{loosePropsRepeater.currentItem.y}" />

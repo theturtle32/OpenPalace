@@ -51,6 +51,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
+	import net.codecomposer.palace.view.PalaceSoundPlayer;
 
 	public class PalaceClient extends EventDispatcher
 	{
@@ -136,6 +137,8 @@ package net.codecomposer.palace.rpc
 		private var assetRequestQueue:Array = [];
 		private var assetRequestQueueCounter:int = 0;
 		private var assetsLastRequestedAt:Date = new Date();
+		
+		private var recentLogonUserIds:ArrayCollection = new ArrayCollection();
 		
 		private var _userName:String = "OpenPalace User";
 		
@@ -487,6 +490,7 @@ package net.codecomposer.palace.rpc
 		// ***************************************************************
 				
 		private function onConnect(event:Event):void {
+			//PalaceSoundPlayer.getInstance().playConnectionPing();
 			connected = true;
 			state = STATE_HANDSHAKING;
 			trace("Connected");
@@ -766,10 +770,10 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(0); // RefNum unused in LOGON message
 
 			// regCode crc
-			socket.writeInt(0x5905f923);
+			socket.writeInt(0x5905f923);  // Guest regCode crc
 			
 			// regCode counter
-			socket.writeInt(0xcf07309c);
+			socket.writeInt(0xcf07309c);  // Guest regCode counter
 
 			// Username has to be Windows-1252 and up to 31 characters
 			if (userName.length > 31) {
@@ -817,13 +821,15 @@ package net.codecomposer.palace.rpc
 
 			// ulUploadCaps
     	    socket.writeInt(
-    	    	ULCAPS_ASSETS_PALACE
+    	    	ULCAPS_ASSETS_PALACE  // This is a lie... for now
     	    );
 
         	// ulDownloadCaps
+        	// We have to lie about our capabilities so that servers don't
+        	// reject OpenPalace as a Hacked client.
 	        socket.writeInt(
 	        	DLCAPS_ASSETS_PALACE |
-	        	DLCAPS_FILES_PALACE |
+	        	DLCAPS_FILES_PALACE |  // This is a lie...
 	        	DLCAPS_FILES_HTTPSRVR
 	        );
 
@@ -923,7 +929,16 @@ package net.codecomposer.palace.rpc
 		//class c2
 		private function handleReceiveUserLog(size:int, referenceId:int):void {
 			population = socket.readInt();
-			trace("Got population: " + population);
+			recentLogonUserIds.addItem(referenceId);
+			var timer:Timer = new Timer(15000, 1);
+			timer.addEventListener(TimerEvent.TIMER, function(event:TimerEvent):void {
+				var index:int = recentLogonUserIds.getItemIndex(referenceId);
+				if (index != -1) {
+					recentLogonUserIds.removeItemAt(index);
+				}
+			});
+			timer.start();
+			trace("User ID: " + referenceId + " just logged on.  Population: " + population);
 		}
 		
 		private function handleReceiveMediaServer(size:int, referenceId:int):void {
@@ -1209,6 +1224,14 @@ package net.codecomposer.palace.rpc
 		
 		private function handleUserNew(size:int, referenceId:int):void {
 			var userId:int = socket.readInt();
+			if (recentLogonUserIds.getItemIndex(userId) != -1) {
+				// Recently logged on user.
+				var index:int = recentLogonUserIds.getItemIndex(userId);
+				if (index != -1) {
+					recentLogonUserIds.removeItemAt(index);
+				}
+				PalaceSoundPlayer.getInstance().playConnectionPing();
+			}
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
 			var propIds:Array = []; // Props, 9 slots
@@ -1378,6 +1401,7 @@ package net.codecomposer.palace.rpc
 			population = socket.readInt();
 			if (currentRoom.getUserById(referenceId) != null) {
 				currentRoom.removeUserById(referenceId);
+				PalaceSoundPlayer.getInstance().playConnectionPing();
 			}
 			trace("User " + referenceId + " logged off");
 		}

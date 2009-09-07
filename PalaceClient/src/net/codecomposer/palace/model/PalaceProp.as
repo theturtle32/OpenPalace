@@ -240,7 +240,7 @@ package net.codecomposer.palace.model
 			
 			dispatchEvent(new PropEvent(PropEvent.PROP_LOADED, this));
 		}
-		
+			
 		
 		private function decode32BitProp():void {
 			// Implementation thanks to Phalanx team
@@ -249,8 +249,8 @@ package net.codecomposer.palace.model
 			for (var i:int = 12; i < asset.data.length; i ++) {
 				data.writeByte(asset.data[i]);
 			}
-			data.uncompress();
 			data.position = 0;
+			data.uncompress();
 			
 			var bd:BitmapData = new BitmapData(width, height);
 			var ba:ByteArray = new ByteArray();
@@ -289,8 +289,8 @@ package net.codecomposer.palace.model
 			for (var i:int = 12; i < asset.data.length; i ++) {
 				data.writeByte(asset.data[i]);
 			}
-			data.uncompress();
 			data.position = 0;
+			data.uncompress();
 			
 			var bd:BitmapData = new BitmapData(width, height);
 			var ba:ByteArray = new ByteArray();
@@ -343,8 +343,8 @@ package net.codecomposer.palace.model
 			for (var i:int = 12; i < asset.data.length; i ++) {
 				data.writeByte(asset.data[i]);
 			}
-			data.uncompress();
 			data.position = 0;
+			data.uncompress();
 			
 			var bd:BitmapData = new BitmapData(width, height);
 			var colors:Array = new Array(9); // array of bytes
@@ -418,8 +418,8 @@ package net.codecomposer.palace.model
 			for (var i:int = 12; i < asset.data.length; i ++) {
 				data.writeByte(asset.data[i]);
 			}
-			data.uncompress();
 			data.position = 0;
+			data.uncompress();
 			
 			for (X=0; X < 1936; X++) {
 				ofst = X * 2;

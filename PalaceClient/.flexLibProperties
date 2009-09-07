@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <flexLibProperties version="1">
   <includeClasses>
     <classEntry path="com.deviant.HueColorMatrixFilter"/>
@@ -49,6 +49,7 @@
     <classEntry path="net.codecomposer.palace.view.NameTag"/>
     <classEntry path="net.codecomposer.palace.view.HotSpotNameTag"/>
     <classEntry path="net.codecomposer.palace.model.ChatMessage"/>
+    <classEntry path="net.codecomposer.palace.view.PalaceSoundPlayer"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

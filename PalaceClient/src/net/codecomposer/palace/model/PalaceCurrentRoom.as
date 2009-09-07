@@ -25,7 +25,8 @@ package net.codecomposer.palace.model
 	import net.codecomposer.palace.event.ChatEvent;
 	import net.codecomposer.palace.event.PalaceRoomEvent;
 	import net.codecomposer.palace.util.PalaceUtil;
-	
+	import net.codecomposer.palace.view.PalaceSoundPlayer;
+
 	[Event(name="chatLogUpdated")]
 	[Event(name="chat",type="net.codecomposer.palace.event.ChatEvent")]
 	[Event(name="userEntered",type="net.codecomposer.palace.event.PalaceRoomEvent")]

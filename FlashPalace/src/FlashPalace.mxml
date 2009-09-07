@@ -207,15 +207,24 @@
 				}
 			}
 			
+
+			protected function handleZoomChange(event:Event):void
+			{
+				chatWindow.scaleX = chatWindow.scaleY = zoomSlider.value;
+			}
+
 		]]>
 	</fx:Script>
 
-	<s:HGroup top="5" left="5" gap="1">
+	<s:HGroup top="5" left="5" gap="1" verticalAlign="middle">
 		<!-- <s:ButtonBarButton label="Palaces" /> -->
 		<s:ButtonBarButton id="roomsButton" label="Rooms" click="handleRoomsClick(event)" />
 		<s:ButtonBarButton id="usersButton" label="Users" click="handleUsersClick(event)" />
 		<s:ButtonBarButton id="logButton" label="Log" click="handleLogClick(event)" />
 		<s:ButtonBarButton id="preferencesButton" label="Preferences" click="handlePreferencesClick(event)" />
+		<mx:Spacer width="15" />
+		<s:SimpleText text="Zoom:" />
+		<s:HSlider id="zoomSlider" width="75" minimum="1" maximum="1.5" valueInterval="0.01" liveDragging="true" change="handleZoomChange(event)" />
 	</s:HGroup>
 			
 	
@@ -225,7 +234,7 @@
 		<s:Button label="Connect" click="showConnectWindow()" />
 	</s:HGroup>
 
-	<local:ChatWindow palace="{palace}" top="40" left="10" />	
+	<local:ChatWindow id="chatWindow" palace="{palace}" top="40" left="10" />	
 	
 	<code:MDICanvas id="mdic" width="100%" height="100%" >
 	</code:MDICanvas>

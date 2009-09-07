@@ -119,6 +119,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function handleHotspotStateChanged(event:HotspotEvent):void {
 				var hotspot:PalaceHotspot = PalaceHotspot(event.target);
+				if (hotspot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
+				    hotspot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR) {
+			    	if (hotspot.state == PalaceHotspot.STATE_LOCKED) {
+			    		PalaceSoundPlayer.getInstance().playDoorLock();
+			    	}
+			    	if (hotspot.state == PalaceHotspot.STATE_UNLOCKED) {
+			    		PalaceSoundPlayer.getInstance().playDoorUnlock();
+			    	}
+			    }
 				for (var i:int = 0; i < hotspot.states.length; i++) {
 					var hotspotState:PalaceHotspotState = PalaceHotspotState(hotspot.states.getItemAt(i));
 					if (hotspotState.hotspotImage != null) {

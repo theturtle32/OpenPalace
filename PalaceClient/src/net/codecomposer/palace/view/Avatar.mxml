@@ -133,6 +133,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private function handlePropLoaded(event:Event):void {
 				var prop:PalaceProp = PalaceProp(event.target);
 				var image:Image = imagesByProp[prop];
+				image.smoothBitmapContent = true;
 				if (image != null) {
 					image.alpha = 0;
 					image.source = prop.bitmap;
@@ -160,7 +161,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		visible="{user.showFace}"
 		x="42" y="42">
 		<s:Group horizontalScrollPosition="{user.face * 45}" verticalScrollPosition="{user.color * 45}">
-			<mx:Image source="@Embed(source='assets/faces/defaultsmileys.png')" />
+			<mx:Image smoothBitmapContent="true" source="@Embed(source='assets/faces/defaultsmileys.png')" />
 		</s:Group>
 	</s:Scroller>
 	
