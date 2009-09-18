@@ -43,6 +43,7 @@ package net.codecomposer.palace.model
 		public var usersHash:Object = {};
 		public var roomFlags:int;
 		public var images:Object = {};
+		public var hotspotBitmapCache:Object = {};
 		public var hotSpots:ArrayCollection = new ArrayCollection();
 		public var hotSpotsById:Object = {};
 		public var looseProps:ArrayCollection = new ArrayCollection();

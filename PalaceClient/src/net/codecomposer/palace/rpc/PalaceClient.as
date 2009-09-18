@@ -1051,6 +1051,7 @@ package net.codecomposer.palace.rpc
 
 			// Images
 			var images:Object = {};
+			currentRoom.hotspotBitmapCache = {};
 			for (i=0; i < imageCount; i++) {
 				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
 				var imageBA:ByteArray = new ByteArray();

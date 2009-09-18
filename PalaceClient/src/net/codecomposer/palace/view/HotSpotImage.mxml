@@ -43,14 +43,18 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			[Bindable('transparencyChanged')]
 			public function get transparencyColor():uint {
-				// Transparency index -1 means no transparency
-				// Transparency index 0 maps to a color 0xffccdfaa
-				// instead of palette index zero's color.
-				var color:uint = 
-				//	(transparencyIndex == 0) ?
-				//		0xffccdfaa :
-						PalacePalette.clutARGB[transparencyIndex];
-				return color;
+				
+				if (transparencyIndex == 0 && this.content is Bitmap) {
+					try {
+						var bitmap:Bitmap = (this.content as Bitmap);
+						return bitmap.bitmapData.getPixel32(1, bitmap.height-1);
+					}
+					catch (e:Error) {
+						// do nothing
+					}
+				}
+				
+				return PalacePalette.clutARGB[transparencyIndex];
 			}
 
 			[Bindable('transparencyChanged')]			
@@ -68,30 +72,34 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (this.content is Bitmap) {
 					var bitmap:Bitmap = Bitmap(this.content);
 					var bd:BitmapData;
-
-					if (!(transparencyIndex == -1 || transparencyIndex == 0)) {
+					trace(" Transparency: " + filename + " - index color: " + transparencyIndex + " 0x" + transparencyColor.toString(16));
+					
+					if (transparencyIndex != -1) {
 						// Ideally I would like to only Process transparency
 						// only if the image isn't already transparent... That
 						// seems to break some images in certain palaces.
 						// Can check bitmap.bitmapData.transparent
-						trace("PROCESSING TRANSPARENCY: " + filename);
+						trace("Processing Transparency.");
 						try {
-							bd = new BitmapData(bitmap.bitmapData.width, bitmap.bitmapData.height, true, 0x00000000);
-							bd.copyPixels(bitmap.bitmapData, bitmap.bitmapData.rect, new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y));
+							if (!bitmap.bitmapData.transparent) {
+								bd = new BitmapData(bitmap.bitmapData.width, bitmap.bitmapData.height, true, 0x00000000);
+								bd.copyPixels(bitmap.bitmapData, bitmap.bitmapData.rect, new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y));
+								bitmap.bitmapData = bd;
+							}
+							bitmap.bitmapData.threshold(
+								bitmap.bitmapData,
+								bitmap.bitmapData.rect,
+								new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y),
+								"==",
+								transparencyColor,
+								0x00AAFF00
+							);
+							
 						}
 						catch (error:Error) {
 							trace("WARNING: Error processing transparency: " + error.toString());
 							return;
 						}
-						bitmap.bitmapData = bd;
-						bitmap.bitmapData.threshold(
-							bitmap.bitmapData,
-							bitmap.bitmapData.rect,
-							new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y),
-							"==",
-							transparencyColor,
-							0x00AAFF00
-						);
 					}
 				}
 			}
