@@ -139,6 +139,12 @@ package net.codecomposer.palace.rpc
 		private var assetRequestQueueCounter:int = 0;
 		private var assetsLastRequestedAt:Date = new Date();
 		
+		private var puidChanged:Boolean = false;
+		private var puidCounter:uint = 0xf5dc385e;
+		private var puidCRC:uint = 0xc144c580;
+		private var regCounter:uint = 0xcf07309c;
+		private var regCRC:uint = 0x5905f923;
+		
 		private var recentLogonUserIds:ArrayCollection = new ArrayCollection();
 		
 		private var _userName:String = "OpenPalace User";
@@ -199,6 +205,12 @@ package net.codecomposer.palace.rpc
 			roomList.removeAll();
 			userList.removeAll();
 			socket = null;
+			
+			if (puidChanged) {
+				trace("Server changed our puid and needs us to reconnect.");
+				puidChanged = false;
+				connect(userName, host, port);				
+			}
 		}
 		
 		// ***************************************************************
@@ -775,10 +787,10 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(0); // RefNum unused in LOGON message
 
 			// regCode crc
-			socket.writeInt(0x5905f923);  // Guest regCode crc
+			socket.writeInt(regCRC);  // Guest regCode crc
 			
 			// regCode counter
-			socket.writeInt(0xcf07309c);  // Guest regCode counter
+			socket.writeInt(regCounter);  // Guest regCode counter
 
 			// Username has to be Windows-1252 and up to 31 characters
 			if (userName.length > 31) {
@@ -799,10 +811,10 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(AUXFLAGS_AUTHENTICATE | AUXFLAGS_WIN32);
 
 			// puidCtr
-			socket.writeInt(0xf5dc385e);
+			socket.writeInt(puidCounter);
 	
         	// puidCRC
-			socket.writeInt(0xc144c580);
+			socket.writeInt(puidCRC);
 	
         	// demoElapsed - no longer used
 			socket.writeInt(0);
@@ -859,40 +871,43 @@ package net.codecomposer.palace.rpc
 		// not fully implemented
 		// This is only sent when the server is running in "guests-are-members" mode.
 		private function alternateLogon(size:int, referenceId:int):void {
-			// size should be 128,
-			
 			// This is pointless... it's basically echoing back the logon packet
 			// that we sent to the server.
+			// the only reason we support this is so that certain silly servers
+			// can change our puid and ask us to reconnect "for security
+			// reasons"
 			
-			for (var i:int = 0; i < size; i ++) {
-				socket.readByte();
-			}
-			
-//			 var crc:uint = socket.readUnsignedInt();
-//			 var counter:uint = socket.readUnsignedInt();
-//			 var userNameLength:int = socket.readUnsignedByte();
-//			 
-//			 var userName:String = socket.readMultiByte(32, 'Windows-1252');
-//			 for (var i:int = 0; i<31-userNameLength; i++) {
-//			 	socket.readByte(); // padding on the end of the username
-//			 }
-//			 for (i=0; i<32; i++) {
-//			 	socket.readByte(); // wiz password field
-//			 }
-//			 var auxFlags:uint = socket.readUnsignedInt();
-//			 var puidCtr:uint = socket.readUnsignedInt();
-//			 var puidCRC:uint = socket.readUnsignedInt();
-//			 var demoElapsed:uint = socket.readUnsignedInt();
-//			 var totalElapsed:uint = socket.readUnsignedInt();
-//			 var demoLimit:uint = socket.readUnsignedInt();
-//			 var desiredRoom:int = socket.readShort();
-//			 var reserved:String = socket.readMultiByte(6,'iso-8859-1');
-//			 var ulRequestedProtocolVersion:uint = socket.readUnsignedInt();
-//			 var ulUploadCaps:uint = socket.readUnsignedInt();
-//			 var ulDownloadCaps:uint = socket.readUnsignedInt();
-//			 var ul2DEngineCaps:uint = socket.readUnsignedInt();
-//			 var ul2DGraphicsCaps:uint = socket.readUnsignedInt();
-//			 var ul3DEngineCaps:uint = socket.readUnsignedInt();
+			 var crc:uint = socket.readUnsignedInt();
+			 var counter:uint = socket.readUnsignedInt();
+			 var userNameLength:int = socket.readUnsignedByte();
+			 
+			 var userName:String = socket.readMultiByte(userNameLength, 'Windows-1252');
+			 for (var i:int = 0; i<31-userNameLength; i++) {
+			 	socket.readByte(); // padding on the end of the username
+			 }
+			 for (i=0; i<32; i++) {
+			 	socket.readByte(); // wiz password field
+			 }
+			 var auxFlags:uint = socket.readUnsignedInt();
+			 var puidCtr:uint = socket.readUnsignedInt();
+			 var puidCRC:uint = socket.readUnsignedInt();
+			 var demoElapsed:uint = socket.readUnsignedInt();
+			 var totalElapsed:uint = socket.readUnsignedInt();
+			 var demoLimit:uint = socket.readUnsignedInt();
+			 var desiredRoom:int = socket.readShort();
+			 var reserved:String = socket.readMultiByte(6,'iso-8859-1');
+			 var ulRequestedProtocolVersion:uint = socket.readUnsignedInt();
+			 var ulUploadCaps:uint = socket.readUnsignedInt();
+			 var ulDownloadCaps:uint = socket.readUnsignedInt();
+			 var ul2DEngineCaps:uint = socket.readUnsignedInt();
+			 var ul2DGraphicsCaps:uint = socket.readUnsignedInt();
+			 var ul3DEngineCaps:uint = socket.readUnsignedInt();
+			 
+			 if (puidCtr != this.puidCounter || puidCRC != this.puidCRC) {
+			 	this.puidCRC = puidCRC;
+			 	this.puidCounter = puidCtr;
+			 	puidChanged = true;
+			 }
 		}
 		
 		private function handleReceiveServerVersion(size:int, referenceId:int):void {
