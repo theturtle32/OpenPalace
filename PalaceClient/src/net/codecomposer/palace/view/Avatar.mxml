@@ -97,8 +97,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				image = new Image();
 				var bitmap:FlexBitmap = FlexBitmap(prop.bitmap);
 				image.source = bitmap;
-				image.x = prop.horizontalOffset + 43;
-				image.y = prop.verticalOffset + 43;
+				image.x = prop.horizontalOffset + 45;
+				image.y = prop.verticalOffset + 45;
 				image.alpha = prop.ghost ? 0.5 : 1.0;
 				imagesByProp[prop] = image;
 				propsGroup.addElement(image);
@@ -137,8 +137,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (image != null) {
 					image.alpha = 0;
 					image.source = prop.bitmap;
-					image.x = prop.horizontalOffset + 43;
-					image.y = prop.verticalOffset + 43;
+					image.x = prop.horizontalOffset + 45;
+					image.y = prop.verticalOffset + 45;
 					var fade:Fade = new Fade(image);
 					fade.duration = 500;
 					fade.alphaFrom = 0;
@@ -159,7 +159,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		horizontalScrollPolicy="off" verticalScrollPolicy="off"
 		width="44" height="44"
 		visible="{user.showFace}"
-		x="42" y="42">
+		x="44" y="44">
 		<s:Group horizontalScrollPosition="{user.face * 45}" verticalScrollPosition="{user.color * 45}">
 			<mx:Image smoothBitmapContent="true" source="@Embed(source='assets/faces/defaultsmileys.png')" />
 		</s:Group>
