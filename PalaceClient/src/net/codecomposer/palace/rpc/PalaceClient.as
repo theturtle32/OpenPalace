@@ -1696,7 +1696,11 @@ package net.codecomposer.palace.rpc
 	            default:
 	                break;
 			}
-			Alert.show(reason, "Connection Dropped");
+			if (!puidChanged) {
+				// Don't show the disconnection error if the server dropped us
+				// just to change our puid and ask us to reconnect.
+				Alert.show(reason, "Connection Dropped");
+			}
 			trace("Connection Dropped: " + reason + " - Code: " + referenceId);
 		}
 		
