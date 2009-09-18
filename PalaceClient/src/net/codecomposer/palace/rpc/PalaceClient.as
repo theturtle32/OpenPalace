@@ -43,6 +43,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceAsset;
 	import net.codecomposer.palace.model.PalaceConfig;
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
+	import net.codecomposer.palace.model.PalaceDrawRecord;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.model.PalaceImageOverlay;
 	import net.codecomposer.palace.model.PalaceLooseProp;
@@ -681,7 +682,9 @@ package net.codecomposer.palace.rpc
 							case IncomingMessageTypes.SPOT_MOVE:
 								handleSpotMove(size, p);
 								break;
-							
+							case IncomingMessageTypes.DRAW_CMD:
+								handleDrawCommand(size, p);
+								break;
 	//						case IncomingMessage.CONNECTION_DIED:
 	//							handleConnectionDied(size, p);
 	//							break;
@@ -1100,14 +1103,26 @@ package net.codecomposer.palace.rpc
 			currentRoom.looseProps.source = tempPropArray;
 			
 			// Draw Commands
-//			currentRoom.drawCommands.removeAll();
-//			var drawCommandOffset:int = firstDrawCommand;
-//			for (i=0; i < drawCommandsCount; i++) {
-//				trace("Draw command at offset: " + drawCommandOffset);
-//				var drawRecord:PalaceDrawRecord = new PalaceDrawRecord();
-//				drawRecord.readData(socket.endian, roomBytes, drawCommandOffset);
-//				drawCommandOffset = drawRecord.nextOffset;
-//			}
+			currentRoom.drawFrontCommands.removeAll();
+			currentRoom.drawBackCommands.removeAll();
+			var drawCommandOffset:int = firstDrawCommand;
+			for (i=0; i < drawCommandsCount; i++) {
+			
+				var drawRecord:PalaceDrawRecord = new PalaceDrawRecord();
+				drawRecord.readData(socket.endian, roomBytes, drawCommandOffset);
+				drawCommandOffset = drawRecord.nextOffset;
+			if ((drawRecord.command & -32768) == -32768) {
+				trace("Draw front layer command at offset: " + drawCommandOffset);
+				currentRoom.drawFrontCommands.addItem(drawRecord);
+				currentRoom.lastDrawnLayer = true;
+			}
+			else{
+				trace("Draw back layer command at offset: " + drawCommandOffset);
+				currentRoom.drawBackCommands.addItem(drawRecord);
+				currentRoom.lastDrawnLayer = false;
+			}
+				
+			}
 			
 			currentRoom.backgroundFile = imageName;
 			trace("Background Image: " + currentRoom.backgroundFile);
@@ -1117,6 +1132,47 @@ package net.codecomposer.palace.rpc
 			
 			var roomChangeEvent:PalaceEvent = new PalaceEvent(PalaceEvent.ROOM_CHANGED);
 			dispatchEvent(roomChangeEvent);
+		}
+		
+		private function handleDrawCommand(size:int, referenceId:int):void {	
+			
+			var pBytes:Array = [];
+			for (var i:int = 0; i < size; i++) {
+				pBytes[i] = socket.readUnsignedByte();
+			}
+
+			var drawRecord:PalaceDrawRecord = new PalaceDrawRecord();
+			drawRecord.readData(socket.endian, pBytes, 0);
+			
+			
+			if ((drawRecord.command & 4) == 4) { //undo
+				if (currentRoom.drawFrontCommands.length==0 && currentRoom.drawBackCommands.length==0) {
+					return;
+				}
+				if (currentRoom.lastDrawnLayer == true) { //true=front ------ false=back
+					currentRoom.drawFrontCommands.removeItemAt(currentRoom.drawFrontCommands.length-1);
+				}
+				else {
+					currentRoom.drawBackCommands.removeItemAt(currentRoom.drawBackCommands.length-1);
+				}
+				return;
+			}
+			else if ((drawRecord.command & 3) == 3) { //delete all
+				currentRoom.drawFrontCommands.removeAll();
+				currentRoom.drawBackCommands.removeAll();
+				return;
+			}
+			
+			var drawCommandOffset:int = drawRecord.nextOffset;
+			
+			if ((drawRecord.command & -32768) == -32768) {
+				currentRoom.drawFrontCommands.addItem(drawRecord);
+				currentRoom.lastDrawnLayer = true;
+			}
+			else {
+				currentRoom.drawBackCommands.addItem(drawRecord);
+				currentRoom.lastDrawnLayer = false;
+			}
 		}
 		
 		// List of users in current room
@@ -1571,6 +1627,7 @@ package net.codecomposer.palace.rpc
 			}
 		}
 
+		
 		private function handleServerDown(size:int, referenceId:int):void {
 			var reason:String = "The connection to the server has been lost.";
 

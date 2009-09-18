@@ -17,7 +17,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.model
 {
+	import flash.geom.Point;
 	import flash.utils.ByteArray;
+	
+	import net.codecomposer.palace.util.DrawColorUtil;
 	
 	[Bindable]
 	public class PalaceDrawRecord
@@ -32,81 +35,77 @@ package net.codecomposer.palace.model
 		
 		public var command:int;
 		public var nextOffset:int;
+		public var pensize:int;
+		public var nbrpts:int;
+		public var pencolor:uint;
+		public var polygon:Array = []; // Array of points
+		public var useFill:Boolean;
 		
 		public function readData(endian:String, roomBytes:Array, offset:int):void {
 			var j:int;
 			
 			var ba:ByteArray = new ByteArray(); 
+			
 			for (j=offset; j < offset + 10; j++) {
 				ba.writeByte(roomBytes[j]);
 			}
 			ba.position = 0;
 			ba.endian = endian;
 			
-			trace("Draw Command: ");
-			var next:int = ba.readShort();
-			trace("LLRec nextOfst: " + next);
-			trace("LLRec reserved: " + ba.readShort());
-			command = ba.readShort();
-			trace("Command: " + command);
-			var commandLength:uint = ba.readUnsignedShort();
-			trace("CommandLength: " + commandLength);
-			trace("DataOffset: " + ba.readShort());
-						
-			nextOffset = offset + 10 + commandLength;
-			trace("ComputedNextOffset: " + nextOffset);
 			
-			nextOffset = next;
+			nextOffset = ba.readShort();
+//			trace("LLRec nextOfst: " + nextOffset);
+			ba.readShort();
+//			trace("LLRec reserved: " + ba.readShort());
+			command = ba.readShort();
+//			trace(" Draw Command: " + command);
+			var commandLength:uint = ba.readUnsignedShort();
+			var commandStart:uint = ba.readShort();
+						
+			if (commandStart == 0) { // hmm little hack for handling the draw packet, probably a better way.
+				commandStart = 10;
+			}
+			
+			if ((command & 4) == 4 || (command & 3) == 3) { //undo and delete... now go away!
+				return;
+			}
+			
 			
 			ba = new ByteArray();
-			var commandEndPosition:int = offset + 10 + commandLength;
-			for (j=offset + 10; j < commandEndPosition; j++) {
+			var commandEndPosition:int = commandStart + commandLength;
+			for (j=commandStart; j < commandEndPosition; j++) {
 				ba.writeByte(roomBytes[j]);
-				
 			}
 			ba.position = 0;
 			ba.endian = endian;
 			
-			var cmdbytes:Array = [];
-			while (ba.bytesAvailable > 0) {
-				cmdbytes.push(ba.readUnsignedByte());
+			if ((command & 256) == 256) {
+				useFill=true;
+			}
+			else{
+				useFill=false;
 			}
 			
+			pensize = ba.readShort();
+//			trace(" Pensize: " + pensize);
+			nbrpts = ba.readShort();
+//			trace(" Number of y,x points: " + nbrpts);
 			
+			// they doubled the values, i don't know why.
+			var redC:int = ba.readUnsignedByte();
+			ba.readUnsignedByte();
+			var greenC:int = ba.readUnsignedByte();
+			ba.readUnsignedByte();
+			var blueC:int = ba.readUnsignedByte();
+			ba.readUnsignedByte();
 			
-			trace(" Draw command: " + command);
-			outputHexView(cmdbytes);
-		}
+			pencolor = DrawColorUtil.ARGBtoUint(0,redC,greenC,blueC);
 		
-		private function outputHexView(bytes:Array):void {
-			var output:String = "";
-			var outputLineHex:String = "";
-			var outputLineAscii:String = "";
-			for (var byteNum:int = 0; byteNum < bytes.length; byteNum++) {
-				var hexNum:String = uint(bytes[byteNum]).toString(16).toUpperCase();
-				if (hexNum.length == 1) {
-					hexNum = "0" + hexNum;
-				}
-
-				if (byteNum % 16 == 0) {
-					output = output.concat(outputLineHex, "      ", outputLineAscii, "\n");
-					outputLineHex = "";
-					outputLineAscii = "";
-				}
-				else if (byteNum % 4 == 0) {
-					outputLineHex = outputLineHex.concat("  ");
-					outputLineAscii = outputLineAscii.concat(" ");
-				}
-				else {
-					outputLineHex = outputLineHex.concat(" ");
-				}
-				outputLineHex = outputLineHex.concat(hexNum);
-				outputLineAscii = outputLineAscii.concat(
-					(bytes[byteNum] >= 32 && bytes[byteNum] <= 126) ? String.fromCharCode(bytes[byteNum]) : " "
-				);
+			while (ba.bytesAvailable > 0) {
+				var y:int = ba.readShort();
+				var x:int = ba.readShort();
+				polygon.push(new Point(x, y));
 			}
-			output = output.concat(outputLineHex, "      ", outputLineAscii, "\n");
-			trace(output);
 		}
 	}
 }

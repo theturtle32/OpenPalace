@@ -69,7 +69,7 @@ package net.codecomposer.palace.message
 		public static const DOOR_UNLOCK:int = 1970170991;
 		public static const SPOT_STATE:int = 1934849121;
 		public static const SPOT_MOVE:int = 1668238451;
-		
+		public static const DRAW_CMD:int = 1685217655;
 		// Loose Props
 		public static const PROP_MOVE:int = 1833988720;
 		public static const PROP_DELETE:int = 1682993776;

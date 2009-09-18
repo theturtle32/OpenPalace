@@ -46,7 +46,9 @@ package net.codecomposer.palace.model
 		public var hotSpots:ArrayCollection = new ArrayCollection();
 		public var hotSpotsById:Object = {};
 		public var looseProps:ArrayCollection = new ArrayCollection();
-		public var drawCommands:ArrayCollection = new ArrayCollection();
+		public var drawFrontCommands:ArrayCollection = new ArrayCollection();
+		public var drawBackCommands:ArrayCollection = new ArrayCollection();
+		public var lastDrawnLayer:Boolean;
 		public var selectedUser:PalaceUser;
 		public var selfUserId:int = -1;
 		

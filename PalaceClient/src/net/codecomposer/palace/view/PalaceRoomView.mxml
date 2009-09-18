@@ -421,6 +421,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		visible="false" />
 	
 	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" />
+	
+	<view:PaintLayer dataProvider="{room.drawBackCommands}" />
+	
 	<mx:Canvas id="loosePropsCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="0" right="0" bottom="0" left="0">
 		<mx:Repeater id="loosePropsRepeater" dataProvider="{room.looseProps}">
 			<mx:Image smoothBitmapContent="true" source="{loosePropsRepeater.currentItem.prop.bitmap}"
@@ -444,6 +447,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		</s:layout>
 	</s:Group>
 
+	<view:PaintLayer dataProvider="{room.drawFrontCommands}" />
+	
 	<s:Group id="textGroup" mouseEnabled="false" top="0" right="0" bottom="0" left="0">
 		<s:layout>
 			<s:BasicLayout />
