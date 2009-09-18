@@ -191,6 +191,8 @@ package net.codecomposer.palace.rpc
 			currentRoom.removeAllUsers();
 			currentRoom.looseProps.removeAll();
 			currentRoom.hotSpots.removeAll();
+			currentRoom.drawBackCommands.removeAll();
+			currentRoom.drawFrontCommands.removeAll();
 			currentRoom.id = 0;
 			population = 0;
 			serverName = "No Server"
