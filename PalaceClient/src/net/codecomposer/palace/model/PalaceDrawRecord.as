@@ -21,28 +21,45 @@ package net.codecomposer.palace.model
 	import flash.utils.ByteArray;
 	
 	import net.codecomposer.palace.util.DrawColorUtil;
-	
+
 	[Bindable]
 	public class PalaceDrawRecord
 	{
 		
-		public static const CMD_PATH:int = 0;
-		public static const CMD_SHAPE:int = 1;
-		public static const CMD_TEXT:int = 2;
-		public static const CMD_DETONATE:int = 3;
-		public static const CMD_DELETE:int = 4;
-		public static const CMD_ELLIPSE:int = 5;
+		public static const CMD_PATH:uint = 0;
+		public static const CMD_SHAPE:uint = 1;
+		public static const CMD_TEXT:uint = 2;
+		public static const CMD_DETONATE:uint = 3;
+		public static const CMD_DELETE:uint = 4;
+		public static const CMD_ELLIPSE:uint = 5;
 		
-		public var command:int;
+		public static const LAYER_BACK:uint  = 0x00;
+		public static const LAYER_FRONT:uint = 0x80;
+		
+		public static const USE_FILL:uint = 0x01;
+		
+		
+		public var command:uint;
+		public var flags:uint;
 		public var nextOffset:int;
-		public var pensize:int;
-		public var nbrpts:int;
-		public var pencolor:uint;
-		public var polygon:Array = []; // Array of points
-		public var useFill:Boolean;
+		public var penSize:int;
+		public var numPoints:int;
+		public var penColor:uint;
+		public var polygon:Vector.<Point> = new Vector.<Point>();
 		
+		public function get useFill():Boolean {
+			return Boolean(flags & USE_FILL);
+		}
+		
+		public function get layer():uint {
+			return flags & LAYER_FRONT;
+		}
+				
 		public function readData(endian:String, roomBytes:Array, offset:int):void {
 			var j:int;
+			var commandLength:uint;
+			var commandStart:uint;
+			var commandEndPosition:uint;
 			
 			var ba:ByteArray = new ByteArray(); 
 			
@@ -54,54 +71,46 @@ package net.codecomposer.palace.model
 			
 			
 			nextOffset = ba.readShort();
-//			trace("LLRec nextOfst: " + nextOffset);
-			ba.readShort();
-//			trace("LLRec reserved: " + ba.readShort());
-			command = ba.readShort();
-//			trace(" Draw Command: " + command);
-			var commandLength:uint = ba.readUnsignedShort();
-			var commandStart:uint = ba.readShort();
-						
-			if (commandStart == 0) { // hmm little hack for handling the draw packet, probably a better way.
+			ba.readShort(); // reserved, unused
+			command = ba.readUnsignedByte();
+			flags = ba.readUnsignedByte();
+			commandLength = ba.readUnsignedShort();
+			commandStart = ba.readShort();
+
+			// If this is a standalone draw record inside an independent
+			// draw command, commandStart will always be 0, but the header
+			// is 10 bytes, so the first command starts at the 11th.
+			if (commandStart == 0) {
 				commandStart = 10;
 			}
+
+			commandEndPosition = commandStart + commandLength;
 			
-			if ((command & 4) == 4 || (command & 3) == 3) { //undo and delete... now go away!
+			if (command == CMD_DETONATE || command == CMD_DELETE) {
 				return;
 			}
 			
-			
 			ba = new ByteArray();
-			var commandEndPosition:int = commandStart + commandLength;
 			for (j=commandStart; j < commandEndPosition; j++) {
 				ba.writeByte(roomBytes[j]);
 			}
 			ba.position = 0;
 			ba.endian = endian;
 			
-			if ((command & 256) == 256) {
-				useFill=true;
-			}
-			else{
-				useFill=false;
-			}
-			
-			pensize = ba.readShort();
-//			trace(" Pensize: " + pensize);
-			nbrpts = ba.readShort();
-//			trace(" Number of y,x points: " + nbrpts);
+			penSize = ba.readShort();
+			numPoints = ba.readShort();
 			
 			// they doubled the values, i don't know why.
-			var redC:int = ba.readUnsignedByte();
+			var red:uint = ba.readUnsignedByte();
 			ba.readUnsignedByte();
-			var greenC:int = ba.readUnsignedByte();
+			var green:uint = ba.readUnsignedByte();
 			ba.readUnsignedByte();
-			var blueC:int = ba.readUnsignedByte();
+			var blue:uint = ba.readUnsignedByte();
 			ba.readUnsignedByte();
 			
-			pencolor = DrawColorUtil.ARGBtoUint(0,redC,greenC,blueC);
+			penColor = DrawColorUtil.ARGBtoUint(0,red,green,blue);
 		
-			while (ba.bytesAvailable > 0) {
+			for (j=0; j <= numPoints; j++) {
 				var y:int = ba.readShort();
 				var x:int = ba.readShort();
 				polygon.push(new Point(x, y));

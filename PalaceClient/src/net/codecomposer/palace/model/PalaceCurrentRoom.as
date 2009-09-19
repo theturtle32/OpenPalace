@@ -25,7 +25,6 @@ package net.codecomposer.palace.model
 	import net.codecomposer.palace.event.ChatEvent;
 	import net.codecomposer.palace.event.PalaceRoomEvent;
 	import net.codecomposer.palace.util.PalaceUtil;
-	import net.codecomposer.palace.view.PalaceSoundPlayer;
 
 	[Event(name="chatLogUpdated")]
 	[Event(name="chat",type="net.codecomposer.palace.event.ChatEvent")]
@@ -49,7 +48,7 @@ package net.codecomposer.palace.model
 		public var looseProps:ArrayCollection = new ArrayCollection();
 		public var drawFrontCommands:ArrayCollection = new ArrayCollection();
 		public var drawBackCommands:ArrayCollection = new ArrayCollection();
-		public var lastDrawnLayer:Boolean;
+		public var drawLayerHistory:Vector.<uint> = new Vector.<uint>();
 		public var selectedUser:PalaceUser;
 		public var selfUserId:int = -1;
 		

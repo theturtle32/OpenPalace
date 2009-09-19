@@ -62,33 +62,54 @@ package net.codecomposer.palace.view
 			graphics.clear();
 			if (dataProvider == null) { return; }
 			for (var i:int = 0; i < dataProvider.length; i ++) {
-				 var drawCommand:PalaceDrawRecord = PalaceDrawRecord(dataProvider.getItemAt(i));
+				var drawCommand:PalaceDrawRecord = PalaceDrawRecord(dataProvider.getItemAt(i));
 
-				var x:int = 0;
-				var y:int = 0;
+				// We have to offset by half the width of the "brush" so that
+				// the positioning of thicker lines matches the positioning of
+				// the Palace32, which positions the top-left of its square
+				// brush at the specified coordinates.
+				var x:int = drawCommand.polygon[0].x + Math.ceil(drawCommand.penSize / 2);
+				var y:int = drawCommand.polygon[0].y + Math.ceil(drawCommand.penSize / 2);
 				
-				if (drawCommand.useFill) {
-					graphics.beginFill(drawCommand.pencolor, 1);
-					graphics.lineStyle(0, drawCommand.pencolor, 1);
-					x = drawCommand.polygon[0].x;
-					y = drawCommand.polygon[0].y;
+				if (drawCommand.polygon.length == 2 &&
+						drawCommand.polygon[1].x == 0 &&
+						drawCommand.polygon[1].y == 0) {
+					// single point
+					graphics.beginFill(drawCommand.penColor);
+					graphics.drawCircle(x, y, Math.ceil(drawCommand.penSize/2));
+					graphics.endFill();
 				}
 				else {
-					graphics.lineStyle(drawCommand.pensize, drawCommand.pencolor, 1);
-					x = drawCommand.polygon[0].x + Math.ceil(drawCommand.pensize / 2);
-					y = drawCommand.polygon[0].y + Math.ceil(drawCommand.pensize / 2);
-				}
-				
-				
-				graphics.moveTo(x-0.25, y-0.25);
-				for (var j:int = 1; j < drawCommand.polygon.length; j ++) {
-					x = x + drawCommand.polygon[j].x;
-					y = y + drawCommand.polygon[j].y;
-					graphics.lineTo(x, y);
-				}
-				
-				if (drawCommand.useFill) {
-					graphics.endFill();
+					// normal line
+					
+					
+					if (drawCommand.useFill) {
+						// With filled lines, we don't correct the offset so that we
+						// can match the old buggy behavior, and drawings made by
+						// people with other clients will render consistently on
+						// OpenPalace
+						x = drawCommand.polygon[0].x;
+						y = drawCommand.polygon[0].y;
+
+						graphics.beginFill(drawCommand.penColor);
+						graphics.lineStyle(0, drawCommand.penColor);
+					}
+					else {
+						graphics.lineStyle(drawCommand.penSize, drawCommand.penColor, 1);
+					}
+					
+					graphics.moveTo(x, y);
+					
+					for (var j:int = 1; j < drawCommand.polygon.length; j ++) {
+						// each coordinate is relative to its predecessor
+						x = x + drawCommand.polygon[j].x;
+						y = y + drawCommand.polygon[j].y;
+						graphics.lineTo(x, y);
+					}
+					
+					if (drawCommand.useFill) {
+						graphics.endFill();
+					}
 				}
 			}
 		}

@@ -1125,20 +1125,19 @@ package net.codecomposer.palace.rpc
 			currentRoom.drawBackCommands.removeAll();
 			var drawCommandOffset:int = firstDrawCommand;
 			for (i=0; i < drawCommandsCount; i++) {
-			
 				var drawRecord:PalaceDrawRecord = new PalaceDrawRecord();
 				drawRecord.readData(socket.endian, roomBytes, drawCommandOffset);
 				drawCommandOffset = drawRecord.nextOffset;
-			if ((drawRecord.command & -32768) == -32768) {
-				trace("Draw front layer command at offset: " + drawCommandOffset);
-				currentRoom.drawFrontCommands.addItem(drawRecord);
-				currentRoom.lastDrawnLayer = true;
-			}
-			else{
-				trace("Draw back layer command at offset: " + drawCommandOffset);
-				currentRoom.drawBackCommands.addItem(drawRecord);
-				currentRoom.lastDrawnLayer = false;
-			}
+				if (drawRecord.layer == PalaceDrawRecord.LAYER_FRONT) {
+//					trace("Draw front layer command at offset: " + drawCommandOffset);
+					currentRoom.drawFrontCommands.addItem(drawRecord);
+					currentRoom.drawLayerHistory.push(PalaceDrawRecord.LAYER_FRONT);
+				}
+				else{
+//					trace("Draw back layer command at offset: " + drawCommandOffset);
+					currentRoom.drawBackCommands.addItem(drawRecord);
+					currentRoom.drawLayerHistory.push(PalaceDrawRecord.LAYER_BACK);
+				}
 				
 			}
 			
@@ -1163,11 +1162,13 @@ package net.codecomposer.palace.rpc
 			drawRecord.readData(socket.endian, pBytes, 0);
 			
 			
-			if ((drawRecord.command & 4) == 4) { //undo
-				if (currentRoom.drawFrontCommands.length==0 && currentRoom.drawBackCommands.length==0) {
+			if (drawRecord.command == PalaceDrawRecord.CMD_DELETE) {
+				//undo
+				if (currentRoom.drawFrontCommands.length == 0 &&
+				    currentRoom.drawBackCommands.length == 0) {
 					return;
 				}
-				if (currentRoom.lastDrawnLayer == true) { //true=front ------ false=back
+				if (currentRoom.drawLayerHistory.pop() == PalaceDrawRecord.LAYER_FRONT) {
 					currentRoom.drawFrontCommands.removeItemAt(currentRoom.drawFrontCommands.length-1);
 				}
 				else {
@@ -1175,7 +1176,8 @@ package net.codecomposer.palace.rpc
 				}
 				return;
 			}
-			else if ((drawRecord.command & 3) == 3) { //delete all
+			else if (drawRecord.command == PalaceDrawRecord.CMD_DETONATE) {
+				//delete all
 				currentRoom.drawFrontCommands.removeAll();
 				currentRoom.drawBackCommands.removeAll();
 				return;
@@ -1183,13 +1185,13 @@ package net.codecomposer.palace.rpc
 			
 			var drawCommandOffset:int = drawRecord.nextOffset;
 			
-			if ((drawRecord.command & -32768) == -32768) {
+			if (drawRecord.layer == PalaceDrawRecord.LAYER_FRONT) {
 				currentRoom.drawFrontCommands.addItem(drawRecord);
-				currentRoom.lastDrawnLayer = true;
+				currentRoom.drawLayerHistory.push(PalaceDrawRecord.LAYER_FRONT);
 			}
 			else {
 				currentRoom.drawBackCommands.addItem(drawRecord);
-				currentRoom.lastDrawnLayer = false;
+				currentRoom.drawLayerHistory.push(PalaceDrawRecord.LAYER_BACK);
 			}
 		}
 		
