@@ -72,9 +72,9 @@ package net.codecomposer.palace.view
 				var y:int = drawCommand.polygon[0].y + Math.ceil(drawCommand.penSize / 2);
 
 				if (drawCommand.isEllipse) {
-				   graphics.lineStyle(drawCommand.penSize, drawCommand.penColor, 1);
+				   graphics.lineStyle(drawCommand.penSize, drawCommand.lineColor, drawCommand.lineAlpha);
                    if (drawCommand.useFill) {
-                       graphics.beginFill(drawCommand.penColor);
+                       graphics.beginFill(drawCommand.fillColor, drawCommand.fillAlpha);
                    }
                    // since it uses the top left corner we need to correct that to center it.
                    y = drawCommand.polygon[1].y / 2 
@@ -90,8 +90,8 @@ package net.codecomposer.palace.view
 						drawCommand.polygon[1].x == 0 &&
 						drawCommand.polygon[1].y == 0) {
 					// single point
-					graphics.beginFill(drawCommand.penColor);
-					graphics.lineStyle(0,0,0);
+					graphics.beginFill(drawCommand.penColor, drawCommand.penAlpha);
+					graphics.lineStyle(drawCommand.penSize,drawCommand.penColor,drawCommand.penAlpha);
 					graphics.drawCircle(x, y, Math.ceil(drawCommand.penSize/2));
 					graphics.endFill();
 				}
@@ -107,11 +107,11 @@ package net.codecomposer.palace.view
 						x = drawCommand.polygon[0].x;
 						y = drawCommand.polygon[0].y;
 
-						graphics.beginFill(drawCommand.penColor);
+						graphics.beginFill(drawCommand.fillColor);
 						graphics.lineStyle(0, drawCommand.penColor);
 					}
 					else {
-						graphics.lineStyle(drawCommand.penSize, drawCommand.penColor, 1);
+						graphics.lineStyle(drawCommand.penSize, drawCommand.penColor, drawCommand.penAlpha);
 					}
 					
 					graphics.moveTo(x, y);

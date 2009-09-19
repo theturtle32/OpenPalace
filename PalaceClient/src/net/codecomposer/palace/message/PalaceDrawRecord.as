@@ -46,6 +46,12 @@ package net.codecomposer.palace.message
 		public var penSize:int;
 		public var numPoints:int;
 		public var penColor:uint;
+		public var penAlpha:Number;
+		public var lineColor:uint;
+		public var lineAlpha:Number;
+		public var fillColor:uint;
+		public var fillAlpha:Number;
+		
 		public var polygon:Vector.<Point> = new Vector.<Point>();
 		
 		public function get useFill():Boolean {
@@ -65,6 +71,11 @@ package net.codecomposer.palace.message
 			var commandLength:uint;
 			var commandStart:uint;
 			var commandEndPosition:uint;
+			var red:uint;
+			var green:uint;
+			var blue:uint;
+			var alphaInt:uint;
+			var alpha:Number;
 			
 			var ba:ByteArray = new ByteArray(); 
 			
@@ -108,19 +119,57 @@ package net.codecomposer.palace.message
 			numPoints = ba.readShort();
 			
 			// they doubled the values, i don't know why.
-			var red:uint = ba.readUnsignedByte();
+			red = ba.readUnsignedByte();
 			ba.readUnsignedByte();
-			var green:uint = ba.readUnsignedByte();
+			green = ba.readUnsignedByte();
 			ba.readUnsignedByte();
-			var blue:uint = ba.readUnsignedByte();
+			blue = ba.readUnsignedByte();
 			ba.readUnsignedByte();
+			alphaInt = 0xFF;
+			alpha = Number(alphaInt)/0xFF;
 			
-			penColor = DrawColorUtil.ARGBtoUint(0,red,green,blue);
+			penColor = DrawColorUtil.ARGBtoUint(alphaInt, red, green, blue);
+			penAlpha = alpha;
+			fillColor = penColor;
+			fillAlpha = penAlpha;
+			lineColor = penColor;
+			lineAlpha = penAlpha;
+			
 		
 			for (j=0; j <= numPoints; j++) {
 				var y:int = ba.readShort();
 				var x:int = ba.readShort();
 				polygon.push(new Point(x, y));
+			}
+			
+			if (isEllipse) {
+				if (ba.bytesAvailable) {
+					try {
+						alphaInt = ba.readUnsignedByte();
+						red = ba.readUnsignedByte();
+						green = ba.readUnsignedByte();
+						blue = ba.readUnsignedByte();
+						alpha = Number(alphaInt)/0xFF;
+						lineColor = DrawColorUtil.ARGBtoUint(alphaInt, red, green, blue);
+						lineAlpha = alpha;
+						
+						alphaInt = ba.readUnsignedByte();
+						red = ba.readUnsignedByte();
+						green = ba.readUnsignedByte();
+						blue = ba.readUnsignedByte();
+						alpha = Number(alphaInt)/0xFF;
+						fillColor = DrawColorUtil.ARGBtoUint(alphaInt, red, green, blue);
+						fillAlpha = alpha;
+					}
+					catch (e:Error) {
+						// If there was an error reading these colors, we will
+						// just fall back to the old behavior of using the
+						// penColor for everything, and a penSize of 0.
+						fillColor = lineColor = penColor;
+						fillAlpha = lineAlpha = penAlpha;
+						penSize = 0;
+					}
+				}
 			}
 		}
 	}
