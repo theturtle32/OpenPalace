@@ -170,6 +170,13 @@ package net.codecomposer.palace.message
 						penSize = 0;
 					}
 				}
+				else {
+					// No more bytes available, must be PalaceChat 3 style
+					// ellipse packets.
+					fillColor = lineColor = penColor;
+					fillAlpha = lineAlpha = penAlpha;
+					penSize = 0;
+				}
 			}
 		}
 	}
