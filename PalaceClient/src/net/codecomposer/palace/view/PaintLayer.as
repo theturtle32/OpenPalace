@@ -23,7 +23,7 @@ package net.codecomposer.palace.view
 	import mx.core.UIComponent;
 	import mx.events.CollectionEvent;
 	
-	import net.codecomposer.palace.model.PalaceDrawRecord;
+	import net.codecomposer.palace.message.PalaceDrawRecord;
 	
 	public class PaintLayer extends UIComponent
 	{
@@ -70,12 +70,28 @@ package net.codecomposer.palace.view
 				// brush at the specified coordinates.
 				var x:int = drawCommand.polygon[0].x + Math.ceil(drawCommand.penSize / 2);
 				var y:int = drawCommand.polygon[0].y + Math.ceil(drawCommand.penSize / 2);
-				
-				if (drawCommand.polygon.length == 2 &&
+
+				if (drawCommand.isEllipse) {
+				   graphics.lineStyle(drawCommand.penSize, drawCommand.penColor, 1);
+                   if (drawCommand.useFill) {
+                       graphics.beginFill(drawCommand.penColor);
+                   }
+                   // since it uses the top left corner we need to correct that to center it.
+                   y = drawCommand.polygon[1].y / 2 
+                   x = drawCommand.polygon[1].x / 2
+
+					// points x and y are reversed on ellipses...
+                   graphics.drawEllipse(drawCommand.polygon[0].y - y,drawCommand.polygon[0].x - x,drawCommand.polygon[1].y,drawCommand.polygon[1].x);
+                   if (drawCommand.useFill) {
+                       graphics.endFill();
+                   }
+				}
+				else if (drawCommand.polygon.length == 2 &&
 						drawCommand.polygon[1].x == 0 &&
 						drawCommand.polygon[1].y == 0) {
 					// single point
 					graphics.beginFill(drawCommand.penColor);
+					graphics.lineStyle(0,0,0);
 					graphics.drawCircle(x, y, Math.ceil(drawCommand.penSize/2));
 					graphics.endFill();
 				}

@@ -17,7 +17,7 @@
     <classEntry path="net.codecomposer.palace.model.PalaceAsset"/>
     <classEntry path="net.codecomposer.palace.model.PalaceConfig"/>
     <classEntry path="net.codecomposer.palace.model.PalaceCurrentRoom"/>
-    <classEntry path="net.codecomposer.palace.model.PalaceDrawRecord"/>
+    <classEntry path="net.codecomposer.palace.message.PalaceDrawRecord"/>
     <classEntry path="net.codecomposer.palace.model.PalaceHotspot"/>
     <classEntry path="net.codecomposer.palace.model.PalaceHotspotState"/>
     <classEntry path="net.codecomposer.palace.model.PalaceImageOverlay"/>
@@ -50,6 +50,7 @@
     <classEntry path="net.codecomposer.palace.view.HotSpotNameTag"/>
     <classEntry path="net.codecomposer.palace.model.ChatMessage"/>
     <classEntry path="net.codecomposer.palace.view.PalaceSoundPlayer"/>
+    <classEntry path="net.codecomposer.palace.message.RoomDescription"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

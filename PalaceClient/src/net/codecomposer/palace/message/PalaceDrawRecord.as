@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package net.codecomposer.palace.model
+package net.codecomposer.palace.message
 {
 	import flash.geom.Point;
 	import flash.utils.ByteArray;
@@ -37,6 +37,7 @@ package net.codecomposer.palace.model
 		public static const LAYER_FRONT:uint = 0x80;
 		
 		public static const USE_FILL:uint = 0x01;
+		public static const IS_ELLIPSE:uint = 0x40;
 		
 		
 		public var command:uint;
@@ -49,6 +50,10 @@ package net.codecomposer.palace.model
 		
 		public function get useFill():Boolean {
 			return Boolean(flags & USE_FILL);
+		}
+		
+		public function get isEllipse():Boolean { 
+			return Boolean(flags & IS_ELLIPSE);
 		}
 		
 		public function get layer():uint {

@@ -39,11 +39,11 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.event.PalaceEvent;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
+	import net.codecomposer.palace.message.PalaceDrawRecord;
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
 	import net.codecomposer.palace.model.PalaceConfig;
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
-	import net.codecomposer.palace.model.PalaceDrawRecord;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.model.PalaceImageOverlay;
 	import net.codecomposer.palace.model.PalaceLooseProp;
@@ -1008,57 +1008,61 @@ package net.codecomposer.palace.rpc
 		
 		// not fully implemented
 		private function handleReceiveRoomDescription(size:int, referenceId:int):void {
-			var roomFlags:int = socket.readInt();
-			var face:int = socket.readInt();
-			var roomID:int = socket.readShort();
+			var messageBytes:ByteArray = new ByteArray();
+			messageBytes.endian = socket.endian;
+			socket.readBytes(messageBytes, 0, size);
+			
+			var roomFlags:int = messageBytes.readInt();
+			var face:int = messageBytes.readInt();
+			var roomID:int = messageBytes.readShort();
 			currentRoom.id = roomID;
-			var roomNameOffset:int = socket.readShort();
-			var imageNameOffset:int = socket.readShort();
-			var artistNameOffset:int = socket.readShort();
-			var passwordOffset:int = socket.readShort();
-			var hotSpotCount:int = socket.readShort();
-			var hotSpotOffset:int = socket.readShort();
-			var imageCount:int = socket.readShort();
-			var imageOffset:int = socket.readShort();
-			var drawCommandsCount:int = socket.readShort();
-			var firstDrawCommand:int = socket.readShort();
-			var peopleCount:int = socket.readShort();
-			var loosePropCount:int = socket.readShort();
-			var firstLooseProp:int = socket.readShort();
-			socket.readShort();
-			var roomDataLength:int = socket.readShort();
-			var roomBytes:Array = new Array(roomDataLength);
+			var roomNameOffset:int = messageBytes.readShort();
+			var imageNameOffset:int = messageBytes.readShort();
+			var artistNameOffset:int = messageBytes.readShort();
+			var passwordOffset:int = messageBytes.readShort();
+			var hotSpotCount:int = messageBytes.readShort();
+			var hotSpotOffset:int = messageBytes.readShort();
+			var imageCount:int = messageBytes.readShort();
+			var imageOffset:int = messageBytes.readShort();
+			var drawCommandsCount:int = messageBytes.readShort();
+			var firstDrawCommand:int = messageBytes.readShort();
+			var peopleCount:int = messageBytes.readShort();
+			var loosePropCount:int = messageBytes.readShort();
+			var firstLooseProp:int = messageBytes.readShort();
+			messageBytes.readShort();
+			var roomDataLength:int = messageBytes.readShort();
+			var rb:Array = new Array(roomDataLength);
 
 			trace("Reading in room description: " + roomDataLength + " bytes to read.");
 			for (var i:int = 0; i < roomDataLength; i++) {
-				roomBytes[i] = socket.readUnsignedByte();
+				rb[i] = messageBytes.readUnsignedByte();
 			}
 			
 			//outputHexView(roomBytes);
 			
 			var padding:int = size - roomDataLength - 40;
 			for (i=0; i < padding; i++) {
-				socket.readByte();
+				messageBytes.readByte();
 			}
 			
 			var byte:int;
 			
 			// Room Name
-			var roomNameLength:int = roomBytes[roomNameOffset];
+			var roomNameLength:int = rb[roomNameOffset];
 			var roomName:String = "";
 			var ba:ByteArray = new ByteArray();
 			for (i=0; i < roomNameLength; i++) {
-				byte = roomBytes[i+roomNameOffset+1];
+				byte = rb[i+roomNameOffset+1];
 				ba.writeByte(byte);
 			}
 			ba.position = 0;
 			roomName = ba.readMultiByte(roomNameLength, 'Windows-1252');
 			
 			// Image Name
-			var imageNameLength:int = roomBytes[imageNameOffset];
+			var imageNameLength:int = rb[imageNameOffset];
 			var imageName:String = "";
 			for (i=0; i < imageNameLength; i++) {
-				byte = roomBytes[i+imageNameOffset+1];
+				byte = rb[i+imageNameOffset+1];
 				imageName += String.fromCharCode(byte);
 			}
 			if (PalaceConfig.URIEncodeImageNames) {
@@ -1072,7 +1076,7 @@ package net.codecomposer.palace.rpc
 				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
 				var imageBA:ByteArray = new ByteArray();
 				for (var j:int=imageOffset; j < imageOffset+12; j++) {
-					imageBA.writeByte(roomBytes[j]);
+					imageBA.writeByte(rb[j]);
 				}
 				imageBA.endian = socket.endian;
 				imageBA.position = 0;
@@ -1082,10 +1086,10 @@ package net.codecomposer.palace.rpc
 				imageOverlay.transparencyIndex = imageBA.readShort();
 				trace("Transparency Index: " + imageOverlay.transparencyIndex);
 				imageBA.readShort(); // Reserved.  Padding.. field alignment
-				var picNameLength:int = roomBytes[picNameOffset];
+				var picNameLength:int = rb[picNameOffset];
 				var picName:String = "";
 				for (j=0; j < picNameLength; j++) {
-					var imageNameByte:int = roomBytes[picNameOffset+j+1]; 
+					var imageNameByte:int = rb[picNameOffset+j+1]; 
 					picName += String.fromCharCode(imageNameByte);
 				}
 				if (PalaceConfig.URIEncodeImageNames) {
@@ -1103,7 +1107,7 @@ package net.codecomposer.palace.rpc
 			currentRoom.hotSpotsById = {};
 			for (i=0; i < hotSpotCount; i++) {
 				var hs:PalaceHotspot = new PalaceHotspot();
-				hs.readData(socket.endian, roomBytes, hotSpotOffset);
+				hs.readData(socket.endian, rb, hotSpotOffset);
 				hotSpotOffset += hs.size;
 				currentRoom.hotSpots.addItem(hs);
 				currentRoom.hotSpotsById[hs.id] = hs;
@@ -1115,7 +1119,7 @@ package net.codecomposer.palace.rpc
 			var propOffset:int = firstLooseProp;
 			for (i=0; i < loosePropCount; i++) {
 				var looseProp:PalaceLooseProp = new PalaceLooseProp();
-				looseProp.loadData(socket.endian, roomBytes, propOffset);
+				looseProp.loadData(socket.endian, rb, propOffset);
 				tempPropArray.push(looseProp);
 				propOffset = looseProp.nextOffset;
 			}
@@ -1127,7 +1131,7 @@ package net.codecomposer.palace.rpc
 			var drawCommandOffset:int = firstDrawCommand;
 			for (i=0; i < drawCommandsCount; i++) {
 				var drawRecord:PalaceDrawRecord = new PalaceDrawRecord();
-				drawRecord.readData(socket.endian, roomBytes, drawCommandOffset);
+				drawRecord.readData(socket.endian, rb, drawCommandOffset);
 				drawCommandOffset = drawRecord.nextOffset;
 				if (drawRecord.layer == PalaceDrawRecord.LAYER_FRONT) {
 //					trace("Draw front layer command at offset: " + drawCommandOffset);
