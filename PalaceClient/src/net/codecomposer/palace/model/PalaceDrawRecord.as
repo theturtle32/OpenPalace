@@ -72,10 +72,12 @@ package net.codecomposer.palace.model
 			
 			nextOffset = ba.readShort();
 			ba.readShort(); // reserved, unused
-			command = ba.readUnsignedByte();
-			flags = ba.readUnsignedByte();
+			command = ba.readUnsignedShort();
 			commandLength = ba.readUnsignedShort();
 			commandStart = ba.readShort();
+			
+			flags = command >> 8;
+			command = command & 0xFF;
 
 			// If this is a standalone draw record inside an independent
 			// draw command, commandStart will always be 0, but the header
