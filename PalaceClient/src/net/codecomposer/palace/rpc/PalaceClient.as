@@ -199,6 +199,7 @@ package net.codecomposer.palace.rpc
 			currentRoom.hotSpots.removeAll();
 			currentRoom.drawBackCommands.removeAll();
 			currentRoom.drawFrontCommands.removeAll();
+			currentRoom.drawLayerHistory = new Vector.<uint>();
 			currentRoom.id = 0;
 			population = 0;
 			serverName = "No Server"
@@ -1180,6 +1181,7 @@ package net.codecomposer.palace.rpc
 				//delete all
 				currentRoom.drawFrontCommands.removeAll();
 				currentRoom.drawBackCommands.removeAll();
+				currentRoom.drawLayerHistory = new Vector.<uint>();
 				return;
 			}
 			
