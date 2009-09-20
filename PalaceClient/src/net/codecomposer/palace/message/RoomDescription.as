@@ -73,6 +73,7 @@ package net.codecomposer.palace.message
 			}
 			
 			
+			
 		}
 		
 		public function write():ByteArray {

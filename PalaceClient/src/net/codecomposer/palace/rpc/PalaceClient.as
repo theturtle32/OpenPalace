@@ -39,7 +39,6 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.event.PalaceEvent;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
-	import net.codecomposer.palace.message.PalaceDrawRecord;
 	import net.codecomposer.palace.message.RoomDescription;
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
@@ -53,6 +52,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
+	import net.codecomposer.palace.record.PalaceDrawRecord;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
 
 	public class PalaceClient extends EventDispatcher

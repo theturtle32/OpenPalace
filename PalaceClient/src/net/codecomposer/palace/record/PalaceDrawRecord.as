@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package net.codecomposer.palace.message
+package net.codecomposer.palace.record
 {
 	import flash.geom.Point;
 	import flash.utils.ByteArray;

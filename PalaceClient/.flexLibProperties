@@ -17,7 +17,7 @@
     <classEntry path="net.codecomposer.palace.model.PalaceAsset"/>
     <classEntry path="net.codecomposer.palace.model.PalaceConfig"/>
     <classEntry path="net.codecomposer.palace.model.PalaceCurrentRoom"/>
-    <classEntry path="net.codecomposer.palace.message.PalaceDrawRecord"/>
+    <classEntry path="net.codecomposer.palace.record.PalaceDrawRecord"/>
     <classEntry path="net.codecomposer.palace.model.PalaceHotspot"/>
     <classEntry path="net.codecomposer.palace.model.PalaceHotspotState"/>
     <classEntry path="net.codecomposer.palace.model.PalaceImageOverlay"/>
