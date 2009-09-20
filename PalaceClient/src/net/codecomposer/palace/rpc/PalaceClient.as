@@ -40,6 +40,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
 	import net.codecomposer.palace.message.PalaceDrawRecord;
+	import net.codecomposer.palace.message.RoomDescription;
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
 	import net.codecomposer.palace.model.PalaceConfig;
@@ -1011,6 +1012,12 @@ package net.codecomposer.palace.rpc
 			var messageBytes:ByteArray = new ByteArray();
 			messageBytes.endian = socket.endian;
 			socket.readBytes(messageBytes, 0, size);
+			
+			var roomDescription:RoomDescription = new RoomDescription();
+			roomDescription.read(messageBytes, referenceId);
+			
+			
+			messageBytes.position = 0;
 			
 			var roomFlags:int = messageBytes.readInt();
 			var face:int = messageBytes.readInt();
