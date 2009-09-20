@@ -23,7 +23,7 @@ package net.codecomposer.palace.view
 	import mx.core.UIComponent;
 	import mx.events.CollectionEvent;
 	
-	import net.codecomposer.palace.message.PalaceDrawRecord;
+	import net.codecomposer.palace.record.PalaceDrawRecord;
 	
 	public class PaintLayer extends UIComponent
 	{
