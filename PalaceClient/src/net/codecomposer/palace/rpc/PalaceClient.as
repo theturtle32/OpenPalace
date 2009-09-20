@@ -691,6 +691,10 @@ package net.codecomposer.palace.rpc
 								handleDoorUnlock(size, p);
 								break;
 								
+							case IncomingMessageTypes.PICT_MOVE:
+								handlePictMove(size, p);
+								break;
+								
 							case IncomingMessageTypes.SPOT_STATE:
 								handleSpotState(size, p);
 								break;
@@ -1644,6 +1648,20 @@ package net.codecomposer.palace.rpc
 				else {
 					trace("Unable to access spot id " + spotId); 
 				}
+			}
+		}
+		
+		
+		private function handlePictMove(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			var y:int = socket.readShort();
+			var x:int = socket.readShort();
+			trace("Picture in HotSpot " + spotId + " in room " + roomId + " moved offset to " + x + "," + y);
+			if (roomId != currentRoom.id) { return; }
+			var hotSpot:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+			if (hotSpot != null) {
+				hotSpot.movePicTo(x, y);
 			}
 		}
 		
