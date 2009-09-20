@@ -51,6 +51,7 @@ package net.codecomposer.palace.view
 		override public function PaintLayer()
 		{
 			super();
+			this.mouseEnabled = false;
 		}
 		
 		override protected function updateDisplayList(width:Number, height:Number):void {
