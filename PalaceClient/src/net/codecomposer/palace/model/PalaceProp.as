@@ -152,7 +152,7 @@ package net.codecomposer.palace.model
 		
 		public function decodeProp():void {			
 			// Try not to block the UI while props are rendering.
-			setTimeout(renderBitmap, 200+40*(++itemsToRender));
+			setTimeout(renderBitmap, 200+20*(++itemsToRender));
 		}
 		
 		public function loadBitmapFromURL(url:String = null):void {
@@ -253,7 +253,7 @@ package net.codecomposer.palace.model
 			data.uncompress();
 			
 			var bd:BitmapData = new BitmapData(width, height);
-			var ba:ByteArray = new ByteArray();
+			var ba:Vector.<uint> = new Vector.<uint>(width*height, true);
 			var C:uint;
 			var x:int = 0;
 			var y:int = 0;
@@ -264,6 +264,8 @@ package net.codecomposer.palace.model
 			var G:uint = 0;
 			var B:uint = 0;
 			
+			var pos:uint = 0;
+			
 			for (X = 0; X <= 1935; X++) {
 				ofst = X * 4;
 				R = data[ofst];
@@ -271,13 +273,10 @@ package net.codecomposer.palace.model
 				B = data[ofst+2];
 				A = data[ofst+3];
 
-				ba.writeByte(A);
-				ba.writeByte(R);
-				ba.writeByte(G);
-				ba.writeByte(B);
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
+
 			}
-			ba.position = 0;
-			bd.setPixels(rect, ba);
+			bd.setVector(rect, ba);
 			bitmap = bd;
 		}
 		
@@ -293,7 +292,7 @@ package net.codecomposer.palace.model
 			data.uncompress();
 			
 			var bd:BitmapData = new BitmapData(width, height);
-			var ba:ByteArray = new ByteArray();
+			var ba:Vector.<uint> = new Vector.<uint>(width*height, true);
 			var C:uint;
 			var x:int = 0;
 			var y:int = 0;
@@ -304,6 +303,8 @@ package net.codecomposer.palace.model
 			var G:uint = 0;
 			var B:uint = 0;
 			
+			var pos:uint = 0;
+			
 			for (X = 0; X <= 967; X++) {
 				ofst = X * 5;
 				R = uint((uint(data[ofst] >> 2) & 63) * dither20bit);
@@ -313,10 +314,7 @@ package net.codecomposer.palace.model
 				B = uint(((C >> 6) & 63) * dither20bit);
 				A = (((C >> 4) & 3) * 85);
 
-				ba.writeByte(A);
-				ba.writeByte(R);
-				ba.writeByte(G);
-				ba.writeByte(B);
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
 
 				C = (data[ofst+2] << 8) | data[ofst+3];
 				R = uint(((C >> 6) & 63) * dither20bit);
@@ -325,13 +323,9 @@ package net.codecomposer.palace.model
 				B = uint(((C >> 2) & 63) * dither20bit);
 				A = ((C & 3) * 85);
 				
-				ba.writeByte(A);
-				ba.writeByte(R);
-				ba.writeByte(G);
-				ba.writeByte(B);
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
 			}
-			ba.position = 0; 
-			bd.setPixels(rect, ba);
+			bd.setVector(rect, ba);
 			bitmap = bd;
 		}
 		
@@ -347,7 +341,6 @@ package net.codecomposer.palace.model
 			data.uncompress();
 			
 			var bd:BitmapData = new BitmapData(width, height);
-			var colors:Array = new Array(9); // array of bytes
 			var C:uint;
 			var x:int = 0;
 			var y:int = 0;
@@ -356,44 +349,41 @@ package net.codecomposer.palace.model
 			
 			var color:uint;
 			
-			var ba:ByteArray = new ByteArray();
+			var ba:Vector.<uint> = new Vector.<uint>(width*height, true);
+			
+			var A:uint, R:uint, G:uint, B:uint; 
+			
+			var pos:uint = 0;
 			
 			for (X = 0; X < 968; X++) {
 				ofst = X * 5;
 				
-				colors[2] = uint(((data[ofst] >> 3) & 31) * ditherS20Bit) & 0xFF; // << 3; //red
+				R = uint(((data[ofst] >> 3) & 31) * ditherS20Bit) & 0xFF; // << 3; //red
 				C = (data[ofst] << 8) | data[ofst+1];
-				colors[1] = uint((C >> 6 & 31) * ditherS20Bit) & 0xFF; //<< 3; //green
-				colors[0] = uint((C >> 1 & 31) * ditherS20Bit) & 0xFF; //<< 3; //blue
+				G = uint((C >> 6 & 31) * ditherS20Bit) & 0xFF; //<< 3; //green
+				B = uint((C >> 1 & 31) * ditherS20Bit) & 0xFF; //<< 3; //blue
 				C = (data[ofst+1] << 8) | data[ofst+2];
-				colors[3] = uint((C >> 4 & 31) * ditherS20Bit) & 0xFF; //<< 3; //alpha
+				A = uint((C >> 4 & 31) * ditherS20Bit) & 0xFF; //<< 3; //alpha
 				
-				ba.writeByte(colors[3]);
-				ba.writeByte(colors[2]);
-				ba.writeByte(colors[1]);
-				ba.writeByte(colors[0]);
-				
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
+
 				x++;
 				
 				C = (data[ofst+2] << 8) | data[ofst+3];
-				colors[6] = uint((C >> 7 & 31) * ditherS20Bit) & 0xFF; // << 3; //red
-				colors[5] = uint((C >> 2 & 31) * ditherS20Bit) & 0xFF; // << 3; //green
+				R = uint((C >> 7 & 31) * ditherS20Bit) & 0xFF; // << 3; //red
+				G = uint((C >> 2 & 31) * ditherS20Bit) & 0xFF; // << 3; //green
 				C = (data[ofst+3] << 8) | data[ofst+4];
-				colors[4] = uint((C >> 5 & 31) * ditherS20Bit) & 0xFF; // << 3; //blue
-				colors[7] = uint((C & 31) * ditherS20Bit) & 0xFF; // << 3; //alpha				
+				B = uint((C >> 5 & 31) * ditherS20Bit) & 0xFF; // << 3; //blue
+				A = uint((C & 31) * ditherS20Bit) & 0xFF; // << 3; //alpha				
 				
-				ba.writeByte(colors[7]);
-				ba.writeByte(colors[6]);
-				ba.writeByte(colors[5]);
-				ba.writeByte(colors[4]);
-				
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
+								
 				if (x > 43) {
 					x = 0;
 					y++;
 				}
 			}
-			ba.position = 0;
-			bd.setPixels(rect, ba);
+			bd.setVector(rect, ba);
 			bitmap = bd;
 		}
 		
@@ -401,8 +391,8 @@ package net.codecomposer.palace.model
 			// Implementation thanks to Phalanx team
 			// Translated from C++ implementation
 			
-			var ba:ByteArray = new ByteArray();
-			var bd:BitmapData = new BitmapData(44,44, true);
+			var ba:Vector.<uint> = new Vector.<uint>(width*height, true);
+			var bd:BitmapData = new BitmapData(width, height, true);
 			var A:uint = 0;
 			var R:uint = 0;
 			var G:uint = 0;
@@ -421,6 +411,8 @@ package net.codecomposer.palace.model
 			data.position = 0;
 			data.uncompress();
 			
+			var pos:uint = 0;
+			
 			for (X=0; X < 1936; X++) {
 				ofst = X * 2;
 				C = data[ofst] * 256 | data[ofst + 1];
@@ -429,10 +421,7 @@ package net.codecomposer.palace.model
 				B = uint((uint(C / 2) & 31) * 255 / 31) & 0xFF;
 				A = (C & 1) * 255 & 0xFF;
 				
-				ba.writeByte(A);
-				ba.writeByte(R);
-				ba.writeByte(G);
-				ba.writeByte(B);
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
 				
 				x ++;
 				
@@ -443,15 +432,14 @@ package net.codecomposer.palace.model
 				
 			}
 			
-			ba.position = 0;
-			bd.setPixels(rect, ba);
+			bd.setVector(rect, ba);
 			bitmap = bd;
 		}
 
 		private function decode8BitProp():void {
             var counter:int = 0; 
             
-            var pixData:Array = new Array(width * (height + 1));
+            var pixData:Vector.<uint> = new Vector.<uint>(width * (height + 1), true);
             var n:int = 12;
             var index:int = width;
             for (var y:int = height - 1; y >= 0; y--)
@@ -489,15 +477,15 @@ package net.codecomposer.palace.model
             
 			// Using setPixels() now instead of setPixel() -- WAY faster.
             
-			var bitmapBytes:ByteArray = new ByteArray();
+			var bitmapBytes:Vector.<uint> = new Vector.<uint>(width*height, true);
+			var pos:uint = 0;
 			var z:int = pixData.length;
 			for (y = 44; y < z; y ++) {
-				bitmapBytes.writeUnsignedInt(pixData[y]);
+				bitmapBytes[pos++] = pixData[y];
 			}
-			bitmapBytes.position = 0;			
 
             var bitmapData:BitmapData = new BitmapData(width, height, true);
-			bitmapData.setPixels(rect, bitmapBytes);
+			bitmapData.setVector(rect, bitmapBytes);
 			
 			bitmap = bitmapData;
 		}
