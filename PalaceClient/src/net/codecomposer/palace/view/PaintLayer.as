@@ -60,6 +60,10 @@ package net.codecomposer.palace.view
 		}
 		
 		public function draw():void {
+			var originX:int;
+			var originY:int;
+			var x:int;
+			var y:int;
 			graphics.clear();
 			if (dataProvider == null) { return; }
 			for (var i:int = 0; i < dataProvider.length; i ++) {
@@ -69,8 +73,8 @@ package net.codecomposer.palace.view
 				// the positioning of thicker lines matches the positioning of
 				// the Palace32, which positions the top-left of its square
 				// brush at the specified coordinates.
-				var x:int = drawCommand.polygon[0].x + Math.ceil(drawCommand.penSize / 2);
-				var y:int = drawCommand.polygon[0].y + Math.ceil(drawCommand.penSize / 2);
+				originX = x = drawCommand.polygon[0].x + Math.ceil(drawCommand.penSize / 2);
+				originY = y = drawCommand.polygon[0].y + Math.ceil(drawCommand.penSize / 2);
 
 				if (drawCommand.isEllipse) {
 				   graphics.lineStyle(drawCommand.penSize, drawCommand.lineColor, drawCommand.lineAlpha);
@@ -78,8 +82,8 @@ package net.codecomposer.palace.view
                        graphics.beginFill(drawCommand.fillColor, drawCommand.fillAlpha);
                    }
                    // since it uses the top left corner we need to correct that to center it.
-                   y = drawCommand.polygon[1].y / 2 
-                   x = drawCommand.polygon[1].x / 2
+                   originX = x = drawCommand.polygon[1].x / 2
+                   originY = y = drawCommand.polygon[1].y / 2 
 
 					// points x and y are reversed on ellipses...
                    graphics.drawEllipse(drawCommand.polygon[0].y - y,drawCommand.polygon[0].x - x,drawCommand.polygon[1].y,drawCommand.polygon[1].x);
@@ -91,31 +95,30 @@ package net.codecomposer.palace.view
 						drawCommand.polygon[1].x == 0 &&
 						drawCommand.polygon[1].y == 0) {
 					// single point
-					graphics.beginFill(drawCommand.penColor, drawCommand.penAlpha);
-					graphics.lineStyle(drawCommand.penSize,drawCommand.penColor,drawCommand.penAlpha);
+					graphics.beginFill(drawCommand.lineColor, drawCommand.lineAlpha);
+					graphics.lineStyle(drawCommand.penSize,drawCommand.lineColor,drawCommand.lineAlpha);
 					graphics.drawCircle(x, y, Math.ceil(drawCommand.penSize/2));
 					graphics.endFill();
 				}
 				else {
 					// normal line
 					
-					
 					if (drawCommand.useFill) {
 						// With filled lines, we don't correct the offset so that we
 						// can match the old buggy behavior, and drawings made by
 						// people with other clients will render consistently on
 						// OpenPalace
-						x = drawCommand.polygon[0].x;
-						y = drawCommand.polygon[0].y;
+						originX = x = drawCommand.polygon[0].x;
+						originY = y = drawCommand.polygon[0].y;
 
-						graphics.beginFill(drawCommand.fillColor);
-						graphics.lineStyle(0, drawCommand.penColor);
+						graphics.beginFill(drawCommand.fillColor, drawCommand.fillAlpha);
+						graphics.lineStyle(drawCommand.penSize, drawCommand.lineColor, drawCommand.lineAlpha);
 					}
 					else {
-						graphics.lineStyle(drawCommand.penSize, drawCommand.penColor, drawCommand.penAlpha);
+						graphics.lineStyle(drawCommand.penSize, drawCommand.lineColor, drawCommand.lineAlpha);
 					}
 					
-					graphics.moveTo(x, y);
+					graphics.moveTo(originX, originY);
 					
 					for (var j:int = 1; j < drawCommand.polygon.length; j ++) {
 						// each coordinate is relative to its predecessor
@@ -125,6 +128,7 @@ package net.codecomposer.palace.view
 					}
 					
 					if (drawCommand.useFill) {
+						graphics.lineTo(originX, originY);
 						graphics.endFill();
 					}
 				}

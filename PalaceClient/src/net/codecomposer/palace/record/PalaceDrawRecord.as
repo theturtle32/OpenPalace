@@ -142,39 +142,39 @@ package net.codecomposer.palace.record
 				polygon.push(new Point(x, y));
 			}
 			
-			if (isEllipse) {
-				if (ba.bytesAvailable) {
-					try {
-						alphaInt = ba.readUnsignedByte();
-						red = ba.readUnsignedByte();
-						green = ba.readUnsignedByte();
-						blue = ba.readUnsignedByte();
-						alpha = Number(alphaInt)/0xFF;
-						lineColor = DrawColorUtil.ARGBtoUint(alphaInt, red, green, blue);
-						lineAlpha = alpha;
-						
-						alphaInt = ba.readUnsignedByte();
-						red = ba.readUnsignedByte();
-						green = ba.readUnsignedByte();
-						blue = ba.readUnsignedByte();
-						alpha = Number(alphaInt)/0xFF;
-						fillColor = DrawColorUtil.ARGBtoUint(alphaInt, red, green, blue);
-						fillAlpha = alpha;
-					}
-					catch (e:Error) {
-						// If there was an error reading these colors, we will
-						// just fall back to the old behavior of using the
-						// penColor for everything, and a penSize of 0.
-						fillColor = lineColor = penColor;
-						fillAlpha = lineAlpha = penAlpha;
-						penSize = 0;
-					}
+			if (ba.bytesAvailable) {
+				try {
+					alphaInt = ba.readUnsignedByte();
+					red = ba.readUnsignedByte();
+					green = ba.readUnsignedByte();
+					blue = ba.readUnsignedByte();
+					alpha = Number(alphaInt)/0xFF;
+					lineColor = DrawColorUtil.ARGBtoUint(alphaInt, red, green, blue);
+					lineAlpha = alpha;
+					
+					alphaInt = ba.readUnsignedByte();
+					red = ba.readUnsignedByte();
+					green = ba.readUnsignedByte();
+					blue = ba.readUnsignedByte();
+					alpha = Number(alphaInt)/0xFF;
+					fillColor = DrawColorUtil.ARGBtoUint(alphaInt, red, green, blue);
+					fillAlpha = alpha;
 				}
-				else {
-					// No more bytes available, must be PalaceChat 3 style
-					// ellipse packets.
+				catch (e:Error) {
+					// If there was an error reading these colors, we will
+					// just fall back to the old behavior of using the
+					// penColor for everything, and a penSize of 0.
 					fillColor = lineColor = penColor;
 					fillAlpha = lineAlpha = penAlpha;
+					penSize = 0;
+				}
+			}
+			else {
+				fillColor = lineColor = penColor;
+				fillAlpha = lineAlpha = penAlpha;
+				if (isEllipse || useFill) {
+					// No more bytes available, must be PalaceChat 3 style
+					// packets.
 					penSize = 0;
 				}
 			}
