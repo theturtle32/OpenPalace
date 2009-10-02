@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:SimpleText xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo"
-	x="{user.x - width/2}" textAlign="center" y="{user.y + 18}"
+	x="{user.x - 1 - width/2}" textAlign="center" y="{user.y + 17}"
 	text="{user.name}" 
 	fontFamily="Arial" fontSize="12" fontWeight="bold" color="0xFFFFFF">
 	<fx:Script>

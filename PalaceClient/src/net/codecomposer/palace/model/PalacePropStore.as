@@ -215,23 +215,29 @@ package net.codecomposer.palace.model
 						response['legacy_identifier']['crc']
 					);
 				}
-				else {
-					trace("Got prop " + response['legacy_identifier']['id'] + " - " + response['guid'] + " from web service.");
+				else if (response['legacy_identifier']) {
 					var prop:PalaceProp = getProp(null, response['legacy_identifier']['id'], response['legacy_identifier']['crc']);
-					var flags:Object = response['flags'];
-					prop.width = response['size']['width'];
-					prop.height = response['size']['height'];
-					prop.horizontalOffset = response['offsets']['x'];
-					prop.verticalOffset = response['offsets']['y'];
-					prop.head = flags['head'];
-					prop.ghost = flags['ghost'];
-					prop.rare = flags['rare'];
-					prop.animate = flags['animate'];
-					prop.palindrome = flags['palindrome'];
-					prop.bounce = flags['bounce'];
-					prop.asset.imageDataURL = response['image_data_url'];
-					prop.asset.name = response['name'];
-					prop.loadBitmapFromURL();
+					if (response['status'] && !response['status']['ready']) {
+						trace("Web service knows about the prop but it's not ready.  Trying again.");
+						requestAsset(prop);
+					}
+					else {
+						trace("Got prop " + response['legacy_identifier']['id'] + " - " + response['guid'] + " from web service.");
+						var flags:Object = response['flags'];
+						prop.width = response['size']['width'];
+						prop.height = response['size']['height'];
+						prop.horizontalOffset = response['offsets']['x'];
+						prop.verticalOffset = response['offsets']['y'];
+						prop.head = flags['head'];
+						prop.ghost = flags['ghost'];
+						prop.rare = flags['rare'];
+						prop.animate = flags['animate'];
+						prop.palindrome = flags['palindrome'];
+						prop.bounce = flags['bounce'];
+						prop.asset.imageDataURL = response['image_data_url'];
+						prop.asset.name = response['name'];
+						prop.loadBitmapFromURL();
+					}
 				}
 			} 	
 		}

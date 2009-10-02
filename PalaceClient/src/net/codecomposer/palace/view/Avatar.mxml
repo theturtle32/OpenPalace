@@ -19,8 +19,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 <s:SkinnableContainer xmlns:mx="library://ns.adobe.com/flex/halo"
 	xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009"
-	x="{user.x-this.width/2}" y="{user.y-this.height/2}"
-	height="132"
+	x="{user.x-22}" y="{user.y-22}"
+	height="44"
+	width="44"
 	mouseEnabled="false"
 	buttonMode="{!user.isSelf}"
 	creationComplete="handleCreationComplete()"
@@ -97,8 +98,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				image = new Image();
 				var bitmap:FlexBitmap = FlexBitmap(prop.bitmap);
 				image.source = bitmap;
-				image.x = prop.horizontalOffset + 45;
-				image.y = prop.verticalOffset + 45;
+				image.x = prop.horizontalOffset;
+				image.y = prop.verticalOffset;
 				image.alpha = prop.ghost ? 0.5 : 1.0;
 				imagesByProp[prop] = image;
 				propsGroup.addElement(image);
@@ -137,8 +138,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (image != null) {
 					image.alpha = 0;
 					image.source = prop.bitmap;
-					image.x = prop.horizontalOffset + 45;
-					image.y = prop.verticalOffset + 45;
+					image.x = prop.horizontalOffset;
+					image.y = prop.verticalOffset;
 					var fade:Fade = new Fade(image);
 					fade.duration = 500;
 					fade.alphaFrom = 0;
@@ -159,13 +160,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		horizontalScrollPolicy="off" verticalScrollPolicy="off"
 		width="44" height="44"
 		visible="{user.showFace}"
-		x="44" y="44">
+		x="-1" y="-1">
 		<s:Group horizontalScrollPosition="{user.face * 45}" verticalScrollPosition="{user.color * 45}">
 			<mx:Image smoothBitmapContent="true" source="@Embed(source='assets/faces/defaultsmileys.png')" />
 		</s:Group>
 	</s:Scroller>
 	
-	<s:Group id="propsGroup" x="0" y="0" width="132" height="132"
+	<s:Group id="propsGroup" x="0" y="0"
 		mouseEnabled="false">
 		<s:layout>
 			<s:BasicLayout />
