@@ -49,6 +49,7 @@ package net.codecomposer.palace.rpc.webservice
 			];
 			request.data = JSON.encode({
 				api_version: 1,
+				api_key: OPWSParameters.API_KEY,
 				props: requestDefs
 			});
 

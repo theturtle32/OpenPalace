@@ -51,6 +51,7 @@
     <classEntry path="net.codecomposer.palace.model.ChatMessage"/>
     <classEntry path="net.codecomposer.palace.view.PalaceSoundPlayer"/>
     <classEntry path="net.codecomposer.palace.message.RoomDescription"/>
+    <classEntry path="net.codecomposer.palace.rpc.webservice.OPWSParameters"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
