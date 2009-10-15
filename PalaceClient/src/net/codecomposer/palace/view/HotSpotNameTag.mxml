@@ -18,5 +18,5 @@
 		</s:fill>
 	</s:Rect>
 	
-	<s:SimpleText top="3" bottom="1" left="4" right="4" textAlign="center" text="{hotSpot.name}" color="0x000000" fontFamily="Arial" fontSize="11" />
+	<s:Label top="3" bottom="1" left="4" right="4" textAlign="center" text="{hotSpot.name}" color="0x000000" fontFamily="Arial" fontSize="11" />
 </s:Group>

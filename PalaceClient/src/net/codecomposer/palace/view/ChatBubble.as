@@ -2,9 +2,9 @@ package net.codecomposer.palace.view
 {
 	import flash.events.Event;
 	
+	import spark.components.RichText;
 	import spark.components.supportClasses.SkinnableComponent;
 	import spark.primitives.supportClasses.GraphicElement;
-	import spark.primitives.supportClasses.TextGraphicElement;
 
 	[SkinState("bottomRight")]
 	[SkinState("bottomLeft")]
@@ -15,7 +15,7 @@ package net.codecomposer.palace.view
 	public class ChatBubble extends SkinnableComponent
 	{
 		[SkinPart(required="true")]
-		public var textElement:TextGraphicElement;
+		public var textElement:RichText;
 		
 		[SkinPart(required="false")]
 		public var backgroundElement:GraphicElement;

@@ -21,7 +21,7 @@
 			}
 			
 			private function handleColorChange(event:ColorPickerEvent):void {
-				chatBubble.tintColor = event.color;				
+				chatBubble.tintColor = event.color;
 			}
 		]]>
 	</fx:Script>

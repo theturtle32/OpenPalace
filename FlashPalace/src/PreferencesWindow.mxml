@@ -31,7 +31,7 @@
 		<s:layout>
 			<s:HorizontalLayout gap="3" verticalAlign="middle" />
 		</s:layout>
-		<s:SimpleText text="Name:" />
+		<s:Label text="Name:" />
 		<s:TextInput id="userName" text="{preferences.userName}" />
 	</s:Group>
 	

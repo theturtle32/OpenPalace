@@ -28,7 +28,7 @@
 	</fx:Script>
 	
 	<s:filters>
-		<mx:DropShadowFilter blurX="6" blurY="6" distance="3" alpha="0.5" strength="1" angle="60" />
+		<mx:DropShadowFilter blurX="6" blurY="10" distance="2" alpha="0.5" strength="1" angle="60" />
 	</s:filters>
 	
 	<s:layout>
@@ -42,67 +42,42 @@
 		<mx:State name="topLeft" />			
 	</s:states>
 	
-	<s:Path includeIn="bottomRight" top="4">
+	<s:Path data="M 0.0 0.0 L 20.0 10.0 L 20.0 3.0 L 0.0 0.0" includeIn="bottomRight" top="4">
 		<s:fill>
 			<mx:SolidColor color="{tintColor}" alpha="0.9" />
 		</s:fill>
 		<s:stroke>
-			<mx:Stroke color="0x000000" alpha="0.2" />
+			<mx:Stroke color="0x000000" alpha="0.3" />
 		</s:stroke>
-		<s:segments>
-			<s:MoveSegment x="0" y="0" />
-			<s:LineSegment x="20" y="10" />
-			<s:LineSegment x="20" y="3" />
-			<s:LineSegment x="0" y="0" />
-		</s:segments>
 	</s:Path>
 
-	<s:Path includeIn="bottomLeft" top="4" right="0">
+	<s:Path data="M 20.0 0.0 L 0.0 10.0 L 0.0 3.0 L 20.0 0.0" includeIn="bottomLeft" top="4" right="0">
+		<s:fill>
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.3" />
+		</s:stroke>
+	</s:Path>
+
+	<s:Path data="M 0.0 0.0 L 20.0 -3.0 L 20.0 -10.0 L 0.0 0.0" includeIn="topRight" bottom="3">
+		<s:fill>
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.3" />
+		</s:stroke>
+	</s:Path>
+	
+	<s:Path data="M 20.0 0.0 L 0.0 -3.0 L 0.0 -10.0 L 20.0 0.0" includeIn="topLeft" bottom="3" right="0">
 		<s:fill>
 			<mx:SolidColor color="{tintColor}" alpha="0.9" />
 		</s:fill>
 		<s:stroke>
 			<mx:Stroke color="0x000000" alpha="0.4" />
 		</s:stroke>
-		<s:segments>
-			<s:MoveSegment x="20" y="0" />
-			<s:LineSegment x="0" y="10" />
-			<s:LineSegment x="0" y="3" />
-			<s:LineSegment x="20" y="0" />
-		</s:segments>
 	</s:Path>
 
-	<s:Path includeIn="topRight" bottom="3">
-		<s:fill>
-			<mx:SolidColor color="{tintColor}" alpha="0.9" />
-		</s:fill>
-		<s:stroke>
-			<mx:Stroke color="0x000000" alpha="0.2" />
-		</s:stroke>
-		<s:segments>
-			<s:MoveSegment x="0" y="0" />
-			<s:LineSegment x="20" y="-3" />
-			<s:LineSegment x="20" y="-10" />
-			<s:LineSegment x="0" y="0" />
-		</s:segments>
-	</s:Path>
-	
-	<s:Path includeIn="topLeft" bottom="3" right="0">
-		<s:fill>
-			<mx:SolidColor color="{tintColor}" alpha="0.9" />
-		</s:fill>
-		<s:stroke>
-			<mx:Stroke color="0x000000" alpha="0.2" />
-		</s:stroke>
-		<s:segments>
-			<s:MoveSegment x="20" y="0" />
-			<s:LineSegment x="0" y="-3" />
-			<s:LineSegment x="0" y="-10" />
-			<s:LineSegment x="20" y="0" />
-		</s:segments>
-	</s:Path>
-
-	
 	<s:Group
 		left.bottomRight="18"
 		left.topRight="18"
@@ -162,13 +137,13 @@
 			</s:fill>
 		</s:Rect>
 		
-		<s:SimpleText id="textElement"
-			maxWidth="150"
+		<s:RichText id="textElement"
+			maxWidth="125"
 			maxHeight="300"
-			textAlign="left"
+			textAlign="center"
 			verticalAlign="top"
 			lineBreak="toFit"
-			truncation="0"
+			maxDisplayedLines="0"
 			left="10"
 			top="10"
 			bottom="10"

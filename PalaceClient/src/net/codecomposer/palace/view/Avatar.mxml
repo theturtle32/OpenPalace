@@ -30,7 +30,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	<fx:Script>
 		<![CDATA[
 			import spark.effects.Fade;
-			import caurina.transitions.Tweener;
 			import net.codecomposer.palace.event.PropEvent;
 			import mx.core.FlexBitmap;
 			import mx.events.CollectionEventKind;
