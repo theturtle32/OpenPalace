@@ -60,6 +60,8 @@ package net.codecomposer.palace.model
 		public var bounce:Boolean = false;
 		public var propFormat:uint = 0x00;
 		
+		public var webServiceFormat:String;
+		
 		public static const HEAD_FLAG:uint = 0x02;
 		public static const GHOST_FLAG:uint = 0x04;
 		public static const RARE_FLAG:uint = 0x08;
@@ -114,6 +116,7 @@ package net.codecomposer.palace.model
 			prop.palindrome = source.palindrome;
 			prop.bounce = source.bounce;
 			prop.propFormat = source.propFormat;
+			prop.webServiceFormat = source.webServiceFormat;
 			prop.asset.blockCount = source.asset.blockCount;
 			prop.asset.blockNumber = source.asset.blockNumber;
 			prop.asset.blockOffset = source.asset.blockOffset;
@@ -210,22 +213,27 @@ package net.codecomposer.palace.model
             if ((flags & mask) == 0xff80) {
             	//WTF?!  Bizarre flags...
             	trace("16bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_16_BIT;
             	decode16BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_S20BIT)) {
             	trace("s20bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_S20_BIT;
             	decodeS20BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_32BIT)) {
             	trace("32bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_32_BIT;
 	       		decode32BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_20BIT)) {
             	trace("20bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_20_BIT;
 	       		decode20BitProp();
             }
             else {
             	trace("8bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_8_BIT;
             	decode8BitProp();
             }
 			

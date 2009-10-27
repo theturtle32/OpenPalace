@@ -54,7 +54,8 @@ package net.codecomposer.palace.rpc.webservice
 						animate: prop.animate,
 						palindrome: prop.palindrome,
 						bounce: prop.bounce
-					}
+					},
+					format: prop.webServiceFormat
 				};
 				requestDefs.push(requestDef);
 			}
