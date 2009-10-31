@@ -196,7 +196,7 @@ package net.codecomposer.palace.rpc
 			currentRoom.backgroundFile = null;
 			currentRoom.selectedUser = null;
 			currentRoom.removeAllUsers();
-			currentRoom.looseProps.removeAll();
+			currentRoom.clearLooseProps();
 			currentRoom.hotSpots.removeAll();
 			currentRoom.drawBackCommands.removeAll();
 			currentRoom.drawFrontCommands.removeAll();
@@ -1128,13 +1128,13 @@ package net.codecomposer.palace.rpc
 			currentRoom.looseProps.removeAll();
 			var tempPropArray:Array = []; 
 			var propOffset:int = firstLooseProp;
+			currentRoom.clearLooseProps();
 			for (i=0; i < loosePropCount; i++) {
 				var looseProp:PalaceLooseProp = new PalaceLooseProp();
 				looseProp.loadData(socket.endian, rb, propOffset);
-				tempPropArray.push(looseProp);
 				propOffset = looseProp.nextOffset;
+				currentRoom.addLooseProp(looseProp.id, looseProp.crc, looseProp.x, looseProp.y, true);
 			}
-			currentRoom.looseProps.source = tempPropArray;
 			
 			// Draw Commands
 			currentRoom.drawFrontCommands.removeAll();
@@ -1590,29 +1590,20 @@ package net.codecomposer.palace.rpc
 			var propIndex:int = socket.readInt();
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
-			var prop:PalaceLooseProp = PalaceLooseProp(currentRoom.looseProps.getItemAt(propIndex));
-			prop.x = x;
-			prop.y = y;
+			currentRoom.moveLooseProp(propIndex, x, y);
 		}
 		
 		private function handlePropDelete(size:int, referenceId:int):void {
 			var propIndex:int = socket.readInt();
-			if (propIndex == -1) {
-				currentRoom.looseProps.removeAll();
-			}
-			else {
-				currentRoom.looseProps.removeItemAt(propIndex);
-			}
+			currentRoom.removeLooseProp(propIndex);
 		}
 		
 		private function handlePropNew(size:int, referenceId:int):void {
-			var prop:PalaceLooseProp = new PalaceLooseProp();
-			prop.id = socket.readUnsignedInt();
-			prop.crc = socket.readUnsignedInt();
-			prop.y = socket.readShort();
-			prop.x = socket.readShort();
-			prop.loadProp();
-			currentRoom.looseProps.addItemAt(prop, 0);
+			var id:int = socket.readInt();
+			var crc:uint = socket.readUnsignedInt();
+			var y:int = socket.readShort();
+			var x:int = socket.readShort();
+			currentRoom.addLooseProp(id, crc, x, y);
 		}
 		
 		private function handleDoorLock(size:int, referenceId:int):void {

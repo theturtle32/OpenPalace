@@ -58,6 +58,57 @@ package net.codecomposer.palace.model
 		public function PalaceCurrentRoom()
 		{
 		}
+		
+		public function addLooseProp(id:int, crc:uint, x:int, y:int, addToFront:Boolean = false):void {
+			var prop:PalaceLooseProp = new PalaceLooseProp();
+			prop.x = x;
+			prop.y = y;
+			prop.id = id;
+			prop.crc = crc;
+			prop.loadProp();
+			if (addToFront) {
+				looseProps.addItem(prop);
+			}
+			else {
+				looseProps.addItemAt(prop, 0);
+			}
+			var event:PalaceRoomEvent = new PalaceRoomEvent(PalaceRoomEvent.LOOSE_PROP_ADDED);
+			event.looseProp = prop;
+			event.addToFront = addToFront;
+			dispatchEvent(event);
+		}
+		
+		public function removeLooseProp(index:int):void {
+			if (index == -1) {
+				clearLooseProps();
+			}
+			else {
+				looseProps.removeItemAt(index);
+				var event:PalaceRoomEvent = new PalaceRoomEvent(PalaceRoomEvent.LOOSE_PROP_REMOVED);
+				event.propIndex = index;
+				dispatchEvent(event);
+			}
+		}
+		
+		public function moveLooseProp(index:int, x:int, y:int):void {
+			trace("Moving prop index " + index);
+			var prop:PalaceLooseProp = PalaceLooseProp(looseProps.getItemAt(index));
+			prop.x = x;
+			prop.y = y;
+			var event:PalaceRoomEvent = new PalaceRoomEvent(PalaceRoomEvent.LOOSE_PROP_MOVED);
+			event.looseProp = prop;
+			dispatchEvent(event);
+		}
+		
+		public function clearLooseProps():void {
+			looseProps.removeAll();
+			var event:PalaceRoomEvent = new PalaceRoomEvent(PalaceRoomEvent.LOOSE_PROPS_CLEARED);
+			dispatchEvent(event);
+		}
+		
+		public function getLoosePropByIndex(index:int):PalaceLooseProp {
+			return PalaceLooseProp(looseProps.getItemAt(index));
+		}
 
 		public function addUser(user:PalaceUser):void {
 			usersHash[user.id] = user;

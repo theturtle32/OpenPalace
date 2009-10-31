@@ -19,15 +19,23 @@ package net.codecomposer.palace.event
 {
 	import flash.events.Event;
 	
+	import net.codecomposer.palace.model.PalaceLooseProp;
 	import net.codecomposer.palace.model.PalaceUser;
 
 	public class PalaceRoomEvent extends Event
 	{
 		public var user:PalaceUser;
+		public var propIndex:int;
+		public var looseProp:PalaceLooseProp;
+		public var addToFront:Boolean;
 		
 		public static const USER_ENTERED:String = "userEntered";
 		public static const USER_LEFT:String = "userLeft";
 		public static const ROOM_CLEARED:String = "roomCleared";
+		public static const LOOSE_PROP_ADDED:String = "loosePropAdded";
+		public static const LOOSE_PROP_REMOVED:String = "loosePropRemoved";
+		public static const LOOSE_PROP_MOVED:String = "loosePropMoved";
+		public static const LOOSE_PROPS_CLEARED:String = "loosePropsCleared";
 		
 		public function PalaceRoomEvent(type:String, user:PalaceUser = null)
 		{

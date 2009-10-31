@@ -19,6 +19,7 @@ package net.codecomposer.palace.event
 {
 	import flash.events.Event;
 	
+	import net.codecomposer.palace.model.PalaceLooseProp;
 	import net.codecomposer.palace.model.PalaceProp;
 
 	public class PropEvent extends Event
@@ -27,10 +28,13 @@ package net.codecomposer.palace.event
 		
 		public static const PROP_LOADED:String = "propLoaded";
 		public static const PROP_DECODED:String = "propDecoded";
+		public static const LOOSE_PROP_LOADED:String = "loosePropLoaded";
 		
-		public function PropEvent(type:String, prop:PalaceProp)
+		public function PropEvent(type:String, prop:PalaceProp=null)
 		{
-			this.prop = prop;
+			if (prop) {
+				this.prop = prop;
+			}
 			super(type, false, false);
 		}
 		
