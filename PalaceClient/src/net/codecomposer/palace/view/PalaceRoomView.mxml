@@ -136,6 +136,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private function handleLoosePropLoaded(event:PropEvent):void {
 				var looseProp:PalaceLooseProp = PalaceLooseProp(event.target);
 				var image:Image = imagesByLooseProp[looseProp];
+				if (image == null) { return; } 
 				image.smoothBitmapContent = true;
 				if (image != null) {
 					image.alpha = 0;
