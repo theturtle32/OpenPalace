@@ -276,6 +276,11 @@ package net.codecomposer.palace.rpc
 			
 			if (handleClientCommand(message)) { return; }
 			
+			if (message.toLocaleLowerCase() == "clean") {
+				deleteLooseProp(-1); // clear loose props
+				return;
+			}
+			
 			var whispering:Boolean = currentRoom.selectedUser != null;
 			
 			var messageBytes:ByteArray = PalaceEncryption.getInstance().encrypt(message, utf8, 254);
@@ -419,6 +424,49 @@ package net.codecomposer.palace.rpc
 			socket.writeShort(roomId);
 			socket.writeShort(spotId);
 			socket.writeShort(spotState);
+			socket.flush();
+		}
+		
+		private var lastPropMoveTime:uint;
+		private var lastPropMoveSignature:Object;
+		
+		public function moveLooseProp(propIndex:int, x:int, y:int):void {
+			lastPropMoveSignature = {
+				propIndex: propIndex,
+				x: x,
+				y: y
+			};
+			lastPropMoveTime = (new Date()).valueOf();
+			socket.writeInt(OutgoingMessageTypes.PROP_MOVE);
+			socket.writeInt(8);
+			socket.writeInt(0);
+			socket.writeInt(propIndex);
+			socket.writeShort(y);
+			socket.writeShort(x);
+			socket.flush();
+		}
+		
+		public function addLooseProp(propId:int, propCrc:uint, x:int, y:int):void {
+			socket.writeInt(OutgoingMessageTypes.PROP_NEW);
+			socket.writeInt(12);
+			socket.writeInt(0);
+			
+			socket.writeInt(propId);
+			socket.writeUnsignedInt(propCrc);
+			socket.writeShort(y);
+			socket.writeShort(x);
+			
+			socket.flush();
+		}
+		
+		public function deleteLooseProp(propIndex:int):void {
+			socket.writeInt(OutgoingMessageTypes.PROP_DELETE);
+			socket.writeInt(4);
+			socket.writeInt(0);
+			
+			socket.writeInt(propIndex);
+			
+			socket.flush();
 		}
 		
 		public function requestAsset(assetType:int, assetId:uint, assetCrc:uint):void {
@@ -1590,7 +1638,17 @@ package net.codecomposer.palace.rpc
 			var propIndex:int = socket.readInt();
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
-			currentRoom.moveLooseProp(propIndex, x, y);
+			var currentTime:uint = (new Date()).valueOf();
+			var timeSinceLastPropMove:uint = currentTime - lastPropMoveTime;
+			if (lastPropMoveSignature && timeSinceLastPropMove < 200 &&
+				lastPropMoveSignature.x == x &&
+				lastPropMoveSignature.y == y &&
+				lastPropMoveSignature.propIndex == propIndex) {
+				
+			}
+			else {
+				currentRoom.moveLooseProp(propIndex, x, y);
+			}
 		}
 		
 		private function handlePropDelete(size:int, referenceId:int):void {

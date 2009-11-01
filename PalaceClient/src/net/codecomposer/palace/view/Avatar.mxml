@@ -25,23 +25,22 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	mouseEnabled="false"
 	buttonMode="{!user.isSelf}"
 	creationComplete="handleCreationComplete()"
+	xmlns:view="net.codecomposer.palace.view.*"
 	xmlns:filters="flash.filters.*">
 	
 	<fx:Script>
 		<![CDATA[
-			import spark.effects.Fade;
-			import net.codecomposer.palace.event.PropEvent;
 			import mx.core.FlexBitmap;
-			import mx.events.CollectionEventKind;
-			import mx.graphics.SolidColor;
-			import spark.primitives.Rect;
 			import mx.events.CollectionEvent;
-			import net.codecomposer.palace.model.PalaceProp;
-			import mx.binding.utils.ChangeWatcher;
+			import mx.events.CollectionEventKind;
 			import mx.events.PropertyChangeEvent;
-			import com.deviant.HueColorMatrixFilter;
-			import mx.collections.ArrayCollection;
+			
+			import net.codecomposer.palace.event.PropEvent;
+			import net.codecomposer.palace.model.PalaceProp;
 			import net.codecomposer.palace.model.PalaceUser;
+			
+			import spark.effects.Fade;
+			import spark.layouts.BasicLayout;
 			[Bindable]
 			public var user:PalaceUser = new PalaceUser();
 			
@@ -70,15 +69,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			
 			private function handleCreationComplete():void {
-				var hitSprite:Sprite = new Sprite();
-				hitSprite.x = 44;
-				hitSprite.y = 44;
-				hitSprite.graphics.clear();
-				hitSprite.graphics.beginFill(0x000000, 0);
-				hitSprite.graphics.drawRect(0,0,44,44);
-				hitSprite.graphics.endFill();
-				hitArea = hitSprite;
-				
+//				var hitSprite:Sprite = new Sprite();
+//				hitSprite.x = 44;
+//				hitSprite.y = 44;
+//				hitSprite.graphics.clear();
+//				hitSprite.graphics.beginFill(0x000000, 0);
+//				hitSprite.graphics.drawRect(0,0,44,44);
+//				hitSprite.graphics.endFill();
+//				hitArea = hitSprite;
+//				
 				user.props.addEventListener(CollectionEvent.COLLECTION_CHANGE, handlePropsChange);
 				
 				loadProps();
@@ -92,9 +91,11 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			
 			private function addProp(prop:PalaceProp):void {
-				var image:Image;
+				var image:AlphaHitAreaImage;
 				prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
-				image = new Image();
+				image = new AlphaHitAreaImage();
+				image.addEventListener(MouseEvent.MOUSE_OVER, handlePropMouseOver);
+				image.addEventListener(MouseEvent.MOUSE_OUT, handlePropMouseOut);
 				var bitmap:FlexBitmap = FlexBitmap(prop.bitmap);
 				image.source = bitmap;
 				image.x = prop.horizontalOffset;
@@ -104,9 +105,19 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				propsGroup.addElement(image);
 			}
 			
+			private function handlePropMouseOver(event:MouseEvent):void {
+				if (!user.isSelf) {
+					Mouse.cursor = MouseCursor.BUTTON;
+				}
+			}
+			
+			private function handlePropMouseOut(event:MouseEvent):void {
+				Mouse.cursor = MouseCursor.ARROW;
+			}
+			
 			private function handlePropsChange(event:CollectionEvent):void {
 				var prop:PalaceProp;
-				var image:Image;
+				var image:AlphaHitAreaImage;
 				switch (event.kind) {
 					case CollectionEventKind.ADD:
 						for each (prop in event.items) {
@@ -132,7 +143,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function handlePropLoaded(event:Event):void {
 				var prop:PalaceProp = PalaceProp(event.target);
-				var image:Image = imagesByProp[prop];
+				var image:AlphaHitAreaImage = imagesByProp[prop];
 				image.smoothBitmapContent = true;
 				if (image != null) {
 					image.alpha = 0;
@@ -161,7 +172,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		visible="{user.showFace}"
 		x="-1" y="-1">
 		<s:Group horizontalScrollPosition="{user.face * 45}" verticalScrollPosition="{user.color * 45}">
-			<mx:Image smoothBitmapContent="true" source="@Embed(source='assets/faces/defaultsmileys.png')" />
+			<view:AlphaHitAreaImage mouseOver="handlePropMouseOver(event)" mouseOut="handlePropMouseOut(event)"
+				smoothBitmapContent="true" source="@Embed(source='assets/faces/defaultsmileys.png')" />
 		</s:Group>
 	</s:Scroller>
 	

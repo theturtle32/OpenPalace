@@ -40,5 +40,9 @@ package net.codecomposer.palace.message
 		public static const DOOR_UNLOCK:int = 1970170991;
 		public static const SUPERUSER:int = 0x73757372;
 		public static const LOGON:int = 0x72656769;
+		public static const PROP_MOVE:int = 1833988720;
+		public static const PROP_DELETE:int = 1682993776;
+		public static const PROP_NEW:int = 1850765936;
+		
 	}
 }

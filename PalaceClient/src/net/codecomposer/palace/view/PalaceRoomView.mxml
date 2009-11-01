@@ -32,9 +32,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		<![CDATA[
 			import mx.binding.utils.ChangeWatcher;
 			import mx.collections.ArrayCollection;
+			import mx.core.DragSource;
 			import mx.core.FlexBitmap;
+			import mx.core.IUIComponent;
+			import mx.core.IVisualElement;
 			import mx.effects.Fade;
+			import mx.effects.Move;
+			import mx.events.DragEvent;
 			import mx.events.PropertyChangeEvent;
+			import mx.managers.DragManager;
 			
 			import net.codecomposer.palace.event.ChatEvent;
 			import net.codecomposer.palace.event.PalaceRoomEvent;
@@ -46,9 +52,11 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			import net.codecomposer.palace.model.PalaceUser;
 			import net.codecomposer.palace.rpc.PalaceClient;
 			
+			private var loosePropContextMenu:ContextMenu;
+			
 			private var _room:PalaceCurrentRoom;
 			private var roomBackgroundWatcher:ChangeWatcher;
-			
+					
 			private var imagesByLooseProp:Dictionary = new Dictionary();
 			
 			[Bindable(event="roomChanged")]
@@ -97,15 +105,32 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private var forcingJpeg:Boolean = false;
 			
 			private function handleCreationComplete():void {
+				initializeLoosePropContextMenu();
 				this.addEventListener(MouseEvent.CLICK, handleClick);
 			}
 			
+			private function initializeLoosePropContextMenu():void {
+				loosePropContextMenu = new ContextMenu();
+				loosePropContextMenu.hideBuiltInItems();
+				var deletePropItem:ContextMenuItem = new ContextMenuItem("Delete Prop");
+				deletePropItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, handlePropDelete);
+				loosePropContextMenu.customItems.push(deletePropItem);
+			}
+		
 			private function handleLoosePropAdded(event:PalaceRoomEvent):void {
 				trace("Added loose prop " + event.looseProp.id);
 				var image:Image;
 				event.looseProp.addEventListener(PropEvent.LOOSE_PROP_LOADED, handleLoosePropLoaded);
-				image = new Image();
+				image = new AlphaHitAreaImage();
 				var bitmap:FlexBitmap = FlexBitmap(event.looseProp.prop.bitmap);
+				image.addEventListener(MouseEvent.MOUSE_DOWN, handleLoosePropMouseDown);
+				image.addEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
+				image.addEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
+				image.addEventListener(DragEvent.DRAG_OVER, handleLoosePropDragOver);
+				image.addEventListener(MouseEvent.MOUSE_OVER, handleLoosePropMouseOver);
+				image.addEventListener(MouseEvent.MOUSE_OUT, handleLoosePropMouseOut);
+				image.addEventListener(DragEvent.DRAG_COMPLETE, handleLoosePropDragComplete);
+				image.contextMenu = loosePropContextMenu;
 				image.source = bitmap;
 				image.x = event.looseProp.x;
 				image.y = event.looseProp.y;
@@ -118,24 +143,34 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					loosePropsGroup.addElementAt(image, 0);
 				}
 			}
+			
+			private function handlePropDelete(event:ContextMenuEvent):void {
+				var image:AlphaHitAreaImage = AlphaHitAreaImage(event.contextMenuOwner);
+				var propIndex:int = loosePropsGroup.getElementIndex(image);
+				PalaceClient.getInstance().deleteLooseProp(propIndex);
+			}
+			
 			private function handleLoosePropMoved(event:PalaceRoomEvent):void {
 				trace("Moved loose prop " + event.looseProp.id);
-				var image:Image = imagesByLooseProp[event.looseProp];
+				var image:AlphaHitAreaImage = imagesByLooseProp[event.looseProp];
 				image.x = event.looseProp.x;
 				image.y = event.looseProp.y;
 			}
+			
 			private function handleLoosePropRemoved(event:PalaceRoomEvent):void {
 				trace("Removed loose prop " + event.propIndex);
 				loosePropsGroup.removeElementAt(event.propIndex);
 			}
+			
 			private function handleLoosePropsCleared(event:PalaceRoomEvent):void {
 				trace("Cleared loose props");
 				imagesByLooseProp = new Dictionary();
 				loosePropsGroup.removeAllElements();
 			}
+			
 			private function handleLoosePropLoaded(event:PropEvent):void {
 				var looseProp:PalaceLooseProp = PalaceLooseProp(event.target);
-				var image:Image = imagesByLooseProp[looseProp];
+				var image:AlphaHitAreaImage = imagesByLooseProp[looseProp];
 				if (image == null) { return; } 
 				image.smoothBitmapContent = true;
 				if (image != null) {
@@ -150,6 +185,69 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					fade.play();
 				}
 			}
+			
+			private function handleLoosePropMouseOver(event:MouseEvent):void {
+				Mouse.cursor = MouseCursor.HAND;
+			}
+			
+			private function handleLoosePropMouseOut(event:MouseEvent):void {
+				Mouse.cursor = MouseCursor.ARROW;
+			}
+			
+			private function handleLoosePropMouseDown(event:MouseEvent):void {
+				var image:AlphaHitAreaImage = AlphaHitAreaImage(event.target);
+				image.disableInteractivePNG();
+				var dragSource:DragSource = new DragSource();
+				dragSource.addData({
+					startMouseX: event.stageX,
+					startMouseY: event.stageY,
+					propIndex: loosePropsGroup.getElementIndex(event.currentTarget as IVisualElement)
+				}, "prop");
+				DragManager.doDrag(event.currentTarget as IUIComponent, dragSource, event);
+			}
+			
+			private function handleLoosePropDragEnter(event:DragEvent):void {
+				DragManager.acceptDragDrop(event.currentTarget as IUIComponent);
+			}
+			
+			private function handleLoosePropDragOver(event:DragEvent):void {
+				if (event.altKey || event.ctrlKey) {
+					DragManager.showFeedback(DragManager.COPY);
+				}
+				else {
+					DragManager.showFeedback(DragManager.MOVE);
+				}
+			}
+			
+			private function handleLoosePropDragDrop(event:DragEvent):void {
+				var data:Object = event.dragSource.dataForFormat("prop");
+				var obj:IUIComponent = event.dragInitiator;
+				
+				var destX:int = obj.x + (event.stageX - data.startMouseX);
+				var destY:int = obj.y + (event.stageY - data.startMouseY);
+				
+				if (event.action == DragManager.COPY) {
+					var looseProp:PalaceLooseProp = room.getLoosePropByIndex(data.propIndex);
+					var propId:int = looseProp.prop.asset.id;
+					var propCrc:int = looseProp.prop.asset.crc;
+					PalaceClient.getInstance().addLooseProp(propId, propCrc, destX, destY);					
+				}
+				else {
+					var tween:Move = new Move(obj);
+					tween.xTo = destX;
+					tween.yTo = destY;
+					tween.duration = 100;
+					tween.play();
+					
+					PalaceClient.getInstance().moveLooseProp(data.propIndex, destX, destY);
+				}
+				
+			}
+			
+			private function handleLoosePropDragComplete(event:DragEvent):void {
+				AlphaHitAreaImage(event.dragInitiator).enableInteractivePNG();
+			}
+			
 			private function handleClick(event:MouseEvent):void {
 				var x:int = this.contentMouseX;
 				var y:int = this.contentMouseY;
@@ -258,9 +356,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				
 				var chatBubble:ChatBubble = new ChatBubble();
 				chatBubble.setStyle('skinClass', Class(net.codecomposer.palace.view.ChatBubbleSkin));
+				chatBubble.addEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
+				chatBubble.addEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
+				chatBubble.addEventListener(DragEvent.DRAG_OVER, handleLoosePropDragOver);
 				chatBubble.text = message.text;
 				chatBubble.x = message.x;
 				chatBubble.y = message.y;
+				chatBubble.mouseEnabled = false;
 				chatBubble.isWhisper = message.isWhisper;
 				chatBubble.tintColor = message.tint;
 				chatBubble.visible = true;
@@ -357,6 +459,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				avatar.user = event.user;
 				avatar.alpha = 1;
 				avatar.addEventListener(MouseEvent.CLICK, handleAvatarClick);
+				avatar.addEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
+				avatar.addEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
+				avatar.addEventListener(DragEvent.DRAG_OVER, handleLoosePropDragOver);
 				avatarsGroup.addElement(avatar);
 				avatar.validateDisplayList();
 				avatarsByUser[event.user] = avatar;
@@ -494,6 +599,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	</s:Rect>
 	
 	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
+		dragEnter="handleLoosePropDragEnter(event)"
+		dragDrop="handleLoosePropDragDrop(event)"
+		dragOver="handleLoosePropDragOver(event)"
 		smoothBitmapContent="true"
 		scaleContent="false" complete="handleBackgroundLoadComplete(event)"
 		loaderContext="{PalaceClient.loaderContext}" ioError="handleBGioERROR(event);"
