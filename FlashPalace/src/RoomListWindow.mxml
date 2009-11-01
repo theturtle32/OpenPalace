@@ -31,9 +31,17 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private function gotoSelectedRoom():void {
 				PalaceClient.getInstance().gotoRoom(roomList.selectedRoomId);
 			}
+			
+			private function refreshRoomList():void {
+				PalaceClient.getInstance().requestRoomList();
+			}
 		]]>
 	</mx:Script>
 	<view:RoomListGrid resizableColumns="false" id="roomList" left="0" right="0" top="0" bottom="40" roomSelected="gotoSelectedRoom();"/>
-	<mx:Button label="Go To Room" right="10" bottom="10" click="gotoSelectedRoom();"/>
+	<mx:HBox right="10" bottom="10">
+		<mx:Button label="Refresh" click="refreshRoomList();" />
+		<mx:Button label="Go To Room" click="gotoSelectedRoom();"/>
+	</mx:HBox>
+	
 	
 </MDIWindow>

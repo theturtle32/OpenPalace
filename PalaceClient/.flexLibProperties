@@ -53,6 +53,7 @@
     <classEntry path="net.codecomposer.palace.message.RoomDescription"/>
     <classEntry path="net.codecomposer.palace.rpc.webservice.OPWSParameters"/>
     <classEntry path="net.codecomposer.palace.model.PalacePropFormat"/>
+    <classEntry path="net.codecomposer.palace.view.AlphaHitAreaImage"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

@@ -1211,6 +1211,9 @@ package net.codecomposer.palace.rpc
 			currentRoom.name = roomName;
 			trace("Room name: " + currentRoom.name);
 			
+			requestRoomList();
+			requestUserList();
+			
 			var roomChangeEvent:PalaceEvent = new PalaceEvent(PalaceEvent.ROOM_CHANGED);
 			dispatchEvent(roomChangeEvent);
 		}
