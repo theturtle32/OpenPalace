@@ -625,7 +625,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		loaderContext="{PalaceClient.loaderContext}" ioError="handleBGioERROR(event);"
 		visible="false" />
 	
-	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" />
+	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}"
+							hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0"
+							dragEnter="handleLoosePropDragEnter(event)"
+							dragDrop="handleLoosePropDragDrop(event)"
+							dragOver="handleLoosePropDragOver(event)"
+							/>
 	
 	<view:PaintLayer dataProvider="{room.drawBackCommands}" />
 	
