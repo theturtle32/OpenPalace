@@ -194,9 +194,27 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				Mouse.cursor = MouseCursor.ARROW;
 			}
 			
+			/* Interactive PNG functionality -- tracking the hit area based on
+			   the alpha value -- must be disabled during a drag operation to
+			   avoid unexpected "red x" cursors preventing you from completing
+			   the drag */
+			private function disableLoosePropsInteractivePNG():void {
+				var count:int = loosePropsGroup.numElements;
+				for (var i:int = 0; i < count; i++) {
+					AlphaHitAreaImage(loosePropsGroup.getElementAt(i)).disableInteractivePNG();
+				}
+			}
+			
+			private function enableLoosePropsInteractivePNG():void {
+				var count:int = loosePropsGroup.numElements;
+				for (var i:int = 0; i < count; i++) {
+					AlphaHitAreaImage(loosePropsGroup.getElementAt(i)).enableInteractivePNG();
+				}
+			}
+			
 			private function handleLoosePropMouseDown(event:MouseEvent):void {
 				var image:AlphaHitAreaImage = AlphaHitAreaImage(event.target);
-				image.disableInteractivePNG();
+				disableLoosePropsInteractivePNG();
 				var dragSource:DragSource = new DragSource();
 				dragSource.addData({
 					startMouseX: event.stageX,
@@ -245,7 +263,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			
 			private function handleLoosePropDragComplete(event:DragEvent):void {
-				AlphaHitAreaImage(event.dragInitiator).enableInteractivePNG();
+				enableLoosePropsInteractivePNG();
 			}
 			
 			private function handleClick(event:MouseEvent):void {
