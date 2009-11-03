@@ -9,16 +9,15 @@
  
 	<fx:Script>
 		<![CDATA[
-			import mx.utils.URLUtil;
+			import flexlib.mdi.events.MDIWindowEvent;
+			
+			import mx.binding.utils.ChangeWatcher;
 			import mx.events.BrowserChangeEvent;
-			import mx.messaging.config.ServerConfig;
+			import mx.events.PropertyChangeEvent;
 			import mx.managers.BrowserManager;
 			import mx.managers.IBrowserManager;
-			import flexlib.mdi.events.MDIWindowEvent;
-			import spark.components.ButtonBarButton;
-			import net.codecomposer.palace.view.UserListGrid;
-			import mx.events.PropertyChangeEvent;
-			import mx.binding.utils.ChangeWatcher;
+			import mx.utils.URLUtil;
+			
 			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
 			public var palace:PalaceClient = PalaceClient.getInstance();
@@ -39,11 +38,18 @@
 			
 			private function handleStageKeyDown(event:KeyboardEvent):void {
 				if (palace.connected) {
+					var newColor:int;
 					if (event.keyCode == Keyboard.NUMPAD_ADD) {
-						palace.setColor(palace.currentUser.color+1);
+						newColor = palace.currentUser.color + 1;
+						if (newColor > 15) {
+							newColor = 0;
+						}
+						palace.setColor(newColor);
 					}
 					else if (event.keyCode == Keyboard.NUMPAD_SUBTRACT) {
-						palace.setColor(palace.currentUser.color-1);
+						newColor = palace.currentUser.color - 1;
+						if (newColor < 0) { newColor = 15; }
+						palace.setColor(newColor);
 					}
 				}
 			}

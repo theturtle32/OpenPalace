@@ -360,7 +360,7 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(OutgoingMessageTypes.USER_COLOR);
 			socket.writeInt(2);
 			socket.writeInt(id);
-			color = Math.max(color%15, 0);
+			color = Math.max(Math.min(color, 15), 0);
 			socket.writeShort(color);
 			currentUser.color = color;
 			socket.flush();
