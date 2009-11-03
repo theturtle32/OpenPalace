@@ -21,13 +21,22 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	width="{backgroundImage.width}" height="{backgroundImage.height}"
 	minWidth="512" minHeight="384"
 	clipAndEnableScrolling="true"
+	currentState="normal"
 	xmlns:view="net.codecomposer.palace.view.*"
+	dragEnter="handleLoosePropDragEnter(event)"
+	dragDrop="handleLoosePropDragDrop(event)"
+	dragOver="handleLoosePropDragOver(event)"
 	creationComplete="handleCreationComplete()" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009">
 
 	<s:layout>
 		<s:BasicLayout />
 	</s:layout>
 
+	<s:states>
+		<mx:State name="normal" />
+		<mx:State name="unableToLoadBackground" />
+	</s:states>
+	
 	<fx:Script>
 		<![CDATA[
 			import mx.binding.utils.ChangeWatcher;
@@ -558,6 +567,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			
 			private function handleBGChange(event:PropertyChangeEvent):void {
+				currentState = "normal";
 				backgroundImage.visible = false;
 				if (room.backgroundFile == null) {
 					return;
@@ -603,6 +613,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					fade.alphaFrom = 0;
 					fade.alphaTo = 1;
 					fade.play();
+					currentState = "normal";
 				}
 				backgroundImage.visible = true;
 				backgroundImage.smoothBitmapContent = true;
@@ -619,6 +630,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				}
 				else {
 					backgroundImage.source = null;
+					currentState = "unableToLoadBackground";
 				}
 			}
 			
@@ -643,6 +655,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		scaleContent="false" complete="handleBackgroundLoadComplete(event)"
 		loaderContext="{PalaceClient.loaderContext}" ioError="handleBGioERROR(event);"
 		visible="false" />
+	
+	<s:Label text="Unable to load background {room.backgroundFile}." width="90%"
+			 mouseEnabled="false"
+			 color="#AAAAAA" fontSize="15"
+			 includeIn="unableToLoadBackground"
+			 textAlign="center"
+			 verticalCenter="0" horizontalCenter="0" />
 	
 	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}"
 							hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0"
