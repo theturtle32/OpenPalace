@@ -678,7 +678,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 	<view:PaintLayer dataProvider="{room.drawFrontCommands}" />
 
-	<s:Group id="nameTagGroup" mouseEnabled="false">
+	<s:Group id="nameTagGroup" mouseEnabled="false"
+			 dragEnter="handleLoosePropDragEnter(event)"
+			 dragDrop="handleLoosePropDragDrop(event)"
+			 dragOver="handleLoosePropDragOver(event)">
 		<s:layout>
 			<s:BasicLayout />
 		</s:layout>
