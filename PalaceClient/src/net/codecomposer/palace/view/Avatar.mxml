@@ -65,6 +65,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private var imagesByProp:Dictionary = new Dictionary();
 			
+			private static const ANIMATE_FORWARD:int = 1;
+			private static const ANIMATE_BACKWARD:int = -1;
+			
+			private var animatedProps:Array;
+			private var animatedPropTimer:Timer = new Timer(350, 0);
+			private var animationIndex:int = 0;
+			private var bounceAnimation:Boolean = false;
+			private var animationDirection:int = ANIMATE_FORWARD;
+			
 			private function updateFace(event:PropertyChangeEvent=null):void {
 			}
 			
@@ -79,7 +88,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 //				hitArea = hitSprite;
 //				
 				user.props.addEventListener(CollectionEvent.COLLECTION_CHANGE, handlePropsChange);
-				
+				animatedPropTimer.addEventListener(TimerEvent.TIMER, animateProps);
 				loadProps();
 			}
 			
@@ -103,6 +112,70 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				image.alpha = prop.ghost ? 0.5 : 1.0;
 				imagesByProp[prop] = image;
 				propsGroup.addElement(image);
+				updateAnimatedProps();
+			}
+			
+			private function updateAnimatedProps():void {
+				var useBounce:Boolean = false;
+				animatedProps = [];
+				var numProps:int = user.props.length;
+				for (var i:int = 0; i < numProps; i ++) {
+					var prop:PalaceProp = PalaceProp(user.props.getItemAt(i));
+					if (prop.animate) {
+						animatedProps.push(prop);
+						if (prop.bounce) {
+							useBounce = true;
+						}
+					}
+				}
+				if (animatedProps.length == 1) {
+					animatedProps = [];
+				}
+				if (animatedProps.length == 2) {
+					useBounce = false;
+				}
+				animationIndex = 0;
+				bounceAnimation = useBounce;
+				animationDirection = ANIMATE_FORWARD;
+				
+				animatedPropTimer.stop();
+				
+				if (animatedProps.length > 1) {
+					animatedPropTimer.reset();
+					animatedPropTimer.start();
+				}
+			}
+				
+			private function animateProps(event:TimerEvent):void {
+				for (var i:int = 0; i < animatedProps.length; i ++) {
+					var prop:PalaceProp = animatedProps[i]
+					var image:AlphaHitAreaImage = AlphaHitAreaImage(imagesByProp[prop])
+					if (image) {
+						image.visible = (i == animationIndex);
+					}
+				}
+				
+				animationIndex += animationDirection;
+				
+				if (animationIndex >= animatedProps.length) {
+					if (bounceAnimation) {
+						animationDirection *= -1;
+						animationIndex = animatedProps.length-2;
+					}
+					else {
+						animationIndex = 0;
+					}
+				}
+				else if (animationIndex <= 0) {
+					if (bounceAnimation) {
+						animationDirection *= -1;
+						animationIndex = 0;
+					}
+					else {
+						animationIndex = 0;
+					}
+				}
+				
 			}
 			
 			private function handlePropMouseOver(event:MouseEvent):void {
@@ -139,6 +212,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 						propsGroup.removeAllElements();
 						break;
 				}
+				updateAnimatedProps();
 			}
 			
 			private function handlePropLoaded(event:Event):void {
@@ -156,6 +230,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					fade.alphaTo = prop.ghost ? 0.5 : 1.0;
 					fade.play();
 				}
+				updateAnimatedProps();
 			}
 			
 			
