@@ -36,9 +36,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			import mx.core.FlexBitmap;
 			import mx.core.IUIComponent;
 			import mx.core.IVisualElement;
-			import mx.effects.Fade;
-			import mx.effects.Move;
 			import mx.events.DragEvent;
+			import mx.events.EffectEvent;
 			import mx.events.PropertyChangeEvent;
 			import mx.managers.DragManager;
 			
@@ -51,6 +50,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			import net.codecomposer.palace.model.PalaceLooseProp;
 			import net.codecomposer.palace.model.PalaceUser;
 			import net.codecomposer.palace.rpc.PalaceClient;
+			
+			import spark.effects.Animate;
+			import spark.effects.Fade;
+			import spark.effects.Move;
 			
 			private var loosePropContextMenu:ContextMenu;
 			
@@ -431,7 +434,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					
 					innerLoop: for (var i:int = 0; i < currentlyDisplayedChatMessages.length; i ++) {
 						var m:ChatMessage = ChatMessage(currentlyDisplayedChatMessages.getItemAt(i));
-						if (m.chatBubble.hitTestObject(chatBubble)) {
+						if (!m.isStickyBubble && m.chatBubble.hitTestObject(chatBubble)) {
 							overlapped = true;
 							chatBubble.tryNextPosition();
 							chatBubble.validateNow();
@@ -464,12 +467,28 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function removeChatBubble(message:ChatMessage):void {
 				try {
+					var bubble:ChatBubble = message.chatBubble;
+					var fade:Fade = new Fade(bubble);
+					fade.duration = 300;
+					fade.alphaFrom = 1;
+					fade.alphaTo = 0;
+					fade.addEventListener(EffectEvent.EFFECT_END, handleChatBubbleFadeComplete);
+					fade.play();
 					currentlyDisplayedChatMessages.removeItemAt(currentlyDisplayedChatMessages.getItemIndex(message));
-					textGroup.removeElement(message.chatBubble);
 				}
 				catch (e:Error) { /* do nothing */ }
 				
 				checkChatQueue();
+			}
+			
+			private function handleChatBubbleFadeComplete(event:EffectEvent):void {
+				try {
+					textGroup.removeElement(Animate(event.target).target as IVisualElement);
+				}
+				catch(e:Error) {
+					trace("Unable to remove element after fadeout animation. ", Animate(event.target).target);
+					// do nothing
+				}
 			}
 			
 			private function handleUserEntered(event:PalaceRoomEvent):void {
