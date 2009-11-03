@@ -57,6 +57,12 @@ package net.codecomposer.palace.rpc
 
 	public class PalaceClient extends EventDispatcher
 	{
+				
+		[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
+		[Event(type="net.codecomposer.event.PalaceEvent",name="connectComplete")]
+		[Event(type="net.codecomposer.event.PalaceEvent",name="connectFailed")]
+		[Event(type="net.codecomposer.event.PalaceEvent",name="disconnected")]
+		
 		private static var instance:PalaceClient;
 		
 		[Bindable]
@@ -119,6 +125,8 @@ package net.codecomposer.palace.rpc
 		public var state:int = STATE_DISCONNECTED;
 		[Bindable]
 		public var connected:Boolean = false;
+		[Bindable]
+		public var connecting:Boolean = false;
 		[Bindable]
 		public var serverName:String = "No Server";
 		[Bindable]
@@ -238,6 +246,8 @@ package net.codecomposer.palace.rpc
 			else {
 				resetState();
 			}
+			connecting = true;
+			dispatchEvent(new PalaceEvent(PalaceEvent.CONNECT_START));
 			socket = new Socket(this.host, this.port);
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData);
 			socket.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
@@ -788,6 +798,11 @@ package net.codecomposer.palace.rpc
 		
 		private function onIOError(event:IOErrorEvent):void {
 			trace("IO Error!");
+			if (connecting) {
+				var e:PalaceEvent = new PalaceEvent(PalaceEvent.CONNECT_FAILED);
+				e.text = "Unable to connect to " + host + ":" + port + ".\n(" + event.text + ")"
+				dispatchEvent(e);
+			}
 		}
 		
 		private function onSecurityError(event:SecurityErrorEvent):void {
@@ -916,6 +931,8 @@ package net.codecomposer.palace.rpc
 			socket.flush();
 			
 			state = STATE_READY;
+			connecting = false;
+			dispatchEvent(new PalaceEvent(PalaceEvent.CONNECT_COMPLETE));
 			
 			requestRoomList();
 			requestUserList();

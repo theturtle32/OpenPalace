@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:view="net.codecomposer.palace.view.*" xmlns:code="http://code.google.com/p/flexlib/"
 	title="{palace.serverName} - {palace.currentRoom.name}"
-	creationComplete="handleCreationComplete()">
+	creationComplete="handleCreationComplete()"
+	currentState="disconnected">
+	
+	<s:states>
+		<s:State name="disconnected" />
+		<s:State name="connecting" />
+		<s:State name="connected" />
+	</s:states>
 	
 	<s:layout>
-		<s:VerticalLayout gap="0"/>
+		<s:BasicLayout />
 	</s:layout>
+	
 	<fx:Script>
 		<![CDATA[
 
@@ -35,10 +43,22 @@
 		]]>
 	</fx:Script>
 	
-	<view:PalaceRoomView id="roomView"
-		room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
+	<s:Group>
+		<s:layout>
+			<s:VerticalLayout gap="0"/>
+		</s:layout>
 		
-	<code:PromptingTextInput prompt="Type here to chat..."
-		width="100%"
-		id="chatBox" keyDown="handleChatKeyDown(event);" maxChars="254"/>
+		<view:PalaceRoomView id="roomView"
+							 room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
+		
+		<code:PromptingTextInput prompt="Type here to chat..."
+								 width="100%"
+								 id="chatBox" keyDown="handleChatKeyDown(event);" maxChars="254"/>
+	</s:Group>
+	
+
+	<s:Label includeIn="connecting"
+			 color="#AAAAAA" fontSize="15"
+			 horizontalCenter="0" verticalCenter="0"
+			 text="Connecting..." />
 </s:Panel>

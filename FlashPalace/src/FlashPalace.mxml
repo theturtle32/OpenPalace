@@ -12,12 +12,14 @@
 			import flexlib.mdi.events.MDIWindowEvent;
 			
 			import mx.binding.utils.ChangeWatcher;
+			import mx.controls.Alert;
 			import mx.events.BrowserChangeEvent;
 			import mx.events.PropertyChangeEvent;
 			import mx.managers.BrowserManager;
 			import mx.managers.IBrowserManager;
 			import mx.utils.URLUtil;
 			
+			import net.codecomposer.palace.event.PalaceEvent;
 			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
 			public var palace:PalaceClient = PalaceClient.getInstance();
@@ -60,25 +62,36 @@
 				browserManager.addEventListener(BrowserChangeEvent.BROWSER_URL_CHANGE, handleBrowserURLChange);
 				handleBrowserURLChange();
 				
-				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
 				ChangeWatcher.watch(palace, ['currentRoom','name'], handleRoomChange);
 				showConnectWindow();
+				
+				palace.addEventListener(PalaceEvent.CONNECT_COMPLETE, handleConnectComplete);
+				palace.addEventListener(PalaceEvent.CONNECT_FAILED, handleConnectFailed);
+				palace.addEventListener(PalaceEvent.CONNECT_START, handleConnectStart);
+				palace.addEventListener(PalaceEvent.DISCONNECTED, handleDisconnected);
+			}
+			
+			private function handleConnectComplete(event:PalaceEvent):void {
+				chatWindow.currentState = "connected";
+			}
+			
+			private function handleConnectFailed(event:PalaceEvent):void {
+				showConnectWindow();
+				Alert.show(event.text, "Error");
+				chatWindow.currentState = "disconnected"
+			}
+			
+			private function handleConnectStart(event:PalaceEvent):void {
+				hideConnectWindow();
+				chatWindow.currentState = "connecting";
+			}
+			
+			private function handleDisconnected(event:PalaceEvent):void {
+				browserManager.setTitle("No Connection - OpenPalace");
 			}
 			
 			private function updateTitle(serverName:String, roomName:String):void {
 				browserManager.setTitle(roomName + " - " + serverName + " - OpenPalace");
-			}
-			
-			private function handleConnectedChange(event:PropertyChangeEvent):void {
-				if (palace.connected) {
-					if (connectWindow) {
-						mdic.windowManager.remove(connectWindow);
-						connectWindow = null;
-					}
-				}
-				else {
-					browserManager.setTitle("No Connection - OpenPalace");
-				}
 			}
 			
 			private function handleRoomChange(event:PropertyChangeEvent):void {
@@ -121,6 +134,18 @@
 				}
 				mdic.windowManager.add(connectWindow);
 				mdic.windowManager.bringToFront(connectWindow);
+			}
+			
+			private function hideConnectWindow():void {
+				if (connectWindow) {
+					try {
+						mdic.windowManager.remove(connectWindow);
+					}
+					catch (e:Error) {
+						// do nothing
+					}
+					connectWindow = null;
+				}
 			}
 			
 			private function showLogWindow():void {
