@@ -151,6 +151,7 @@ package net.codecomposer.palace.model
 				if ( propDef.success ) {
 					var prop:PalaceProp = getProp(null, propDef.legacy_identifier.id, propDef.legacy_identifier.crc);
 					prop.asset.guid = propDef.guid;
+					prop.asset.imageDataURL = propDef.image_data_url;
 					props[prop.asset.guid] = prop;
 					uploadPropToS3(propDef);
 				}

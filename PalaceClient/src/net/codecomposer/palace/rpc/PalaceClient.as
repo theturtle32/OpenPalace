@@ -37,6 +37,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.openpalace.accountserver.rpc.AccountServerClient;
 	import net.codecomposer.palace.crypto.PalaceEncryption;
 	import net.codecomposer.palace.event.PalaceEvent;
+	import net.codecomposer.palace.event.PropEvent;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
 	import net.codecomposer.palace.message.RoomDescription;
@@ -536,6 +537,15 @@ package net.codecomposer.palace.rpc
 				assetRequestQueueTimer.start();
 			}
 		}
+		
+		private function sendPropToServer(prop:PalaceProp):void {
+			var assetResponse:ByteArray = prop.assetData(socket.endian);
+			socket.writeInt(OutgoingMessageTypes.ASSET_REGI);
+			socket.writeInt(assetResponse.length);
+			socket.writeInt(0);
+			
+			socket.writeBytes(assetResponse);
+		}
 
 		public function get currentUser():PalaceUser {
 			return currentRoom.getUserById(id);
@@ -552,8 +562,9 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(id);
 			socket.writeInt(user.props.length);
 			for each (var prop:PalaceProp in user.props) {
-				socket.writeUnsignedInt(prop.asset.id);
-				socket.writeUnsignedInt(prop.asset.crc);
+				socket.writeInt(prop.asset.id);
+				//socket.writeUnsignedInt(prop.asset.crc);
+				socket.writeUnsignedInt(0);
 			}
 			socket.flush();
 		}
@@ -1570,9 +1581,24 @@ package net.codecomposer.palace.rpc
 			var assetCrc:uint = socket.readUnsignedInt();
 			trace("Got asset request for type: " + type + ", assetId: " + assetId + ", assetCrc: " + assetCrc);
 			var prop:PalaceProp = PalacePropStore.getInstance().getProp(null, assetId, assetCrc);
-			if (prop != null) {
-				trace("Have prop to send...");
+
+			if (prop.width > 44 || prop.height > 44 ||
+				prop.verticalOffset > 44 || prop.verticalOffset < -44 ||
+				prop.horizontalOffset > 44 || prop.horizontalOffset < -44) {
+				// web service big prop... ignore request.
+				return;
 			}
+				
+			if (prop.ready) {
+				sendPropToServer(prop);
+			}
+			else {
+				prop.addEventListener(PropEvent.PROP_LOADED, handlePropReadyToSend);
+			}
+		}
+		
+		private function handlePropReadyToSend(event:PropEvent):void {
+			sendPropToServer(event.prop);
 		}
 		
 		private function handleReceiveAsset(size:int, referenceId:int):void {

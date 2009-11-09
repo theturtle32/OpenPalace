@@ -17,7 +17,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.model
 {
-	import flash.utils.ByteArray;
+	
 	
 	public class PalaceAsset
 	{
@@ -34,6 +34,10 @@ package net.codecomposer.palace.model
 		public var blockOffset:int;
 		public var blockNumber:int;
 		public var data:Array;
+		
+		public static const ASSET_TYPE_PROP:int = 0x50726f70;
+		public static const ASSET_TYPE_USERBASE:int = 0x55736572;
+		public static const ASSET_TYPE_IPUSERBASE:int = 0x49557372;
 		
 		public function PalaceAsset()
 		{

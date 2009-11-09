@@ -228,10 +228,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				var image:AlphaHitAreaImage = AlphaHitAreaImage(event.target);
 				disableLoosePropsInteractivePNG();
 				var dragSource:DragSource = new DragSource();
+				var propIndex:int = loosePropsGroup.getElementIndex(event.currentTarget as IVisualElement);
 				dragSource.addData({
 					startMouseX: event.stageX,
 					startMouseY: event.stageY,
-					propIndex: loosePropsGroup.getElementIndex(event.currentTarget as IVisualElement)
+					propIndex: propIndex,
+					looseProp: room.looseProps.getItemAt(propIndex)
 				}, "prop");
 				DragManager.doDrag(event.currentTarget as IUIComponent, dragSource, event);
 			}

@@ -43,6 +43,7 @@ package net.codecomposer.palace.message
 		public static const PROP_MOVE:int = 1833988720;
 		public static const PROP_DELETE:int = 1682993776;
 		public static const PROP_NEW:int = 1850765936;
+		public static const ASSET_REGI:int = 0x72417374;
 		
 	}
 }

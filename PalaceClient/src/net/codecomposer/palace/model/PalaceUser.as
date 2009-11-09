@@ -22,6 +22,7 @@ package net.codecomposer.palace.model
 	import mx.collections.ArrayCollection;
 	
 	import net.codecomposer.palace.event.PropEvent;
+	import net.codecomposer.palace.rpc.PalaceClient;
 
 	[Bindable]
 	public class PalaceUser extends EventDispatcher
@@ -97,7 +98,7 @@ package net.codecomposer.palace.model
 		}
 		
 		public function toggleProp(prop:PalaceProp):void {
-			var wearingProp:Boolean = (props.source.indexOf(prop) != -1);
+			var wearingProp:Boolean = (props.getItemIndex(prop) != -1);
 			if (wearingProp) {
 				removeProp(prop);
 			}
@@ -107,26 +108,34 @@ package net.codecomposer.palace.model
 		}
 		
 		public function wearProp(prop:PalaceProp):void {
-			if (props.length < 9) {
+			prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
+			if (props.length < 9 && props.getItemIndex(prop) == -1) {
 				props.addItem(prop);
 			}
 			syncPropIdsToProps();
 			checkFaceProps();
+			updatePropsOnServer();
 		}
 		
 		public function removeProp(prop:PalaceProp):void {
-			var propIndex:int = props.source.indexOf(prop);
+			var propIndex:int = props.getItemIndex(prop);
 			if (propIndex != -1) {
 				props.removeItemAt(propIndex);
 			}
 			syncPropIdsToProps();
 			checkFaceProps();
+			updatePropsOnServer();
+		}
+		
+		public function updatePropsOnServer():void {
+			PalaceClient.getInstance().updateUserProps();
 		}
 		
 		public function naked():void {
 			props.removeAll();
 			syncPropIdsToProps();
 			checkFaceProps();
+			updatePropsOnServer();
 		}
 		
 		public function syncPropIdsToProps():void {

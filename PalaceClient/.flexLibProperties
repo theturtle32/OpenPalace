@@ -54,6 +54,7 @@
     <classEntry path="net.codecomposer.palace.rpc.webservice.OPWSParameters"/>
     <classEntry path="net.codecomposer.palace.model.PalacePropFormat"/>
     <classEntry path="net.codecomposer.palace.view.AlphaHitAreaImage"/>
+    <classEntry path="net.codecomposer.palace.model.SavedPropRecord"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

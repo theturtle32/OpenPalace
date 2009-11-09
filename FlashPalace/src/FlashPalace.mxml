@@ -29,6 +29,7 @@
 			private var userListWindow:UserListWindow;
 			private var logWindow:LogWindow;
 			private var preferencesWindow:PreferencesWindow;
+			private var propsWindow:PropsWindow;
 			
 			private var preferences:Preferences = Preferences.getInstance();
 			
@@ -161,6 +162,28 @@
 				logWindow = null;
 			}
 			
+			private function showPropsWindow():void {
+				propsWindow = new PropsWindow();
+				propsWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					propsButton.selected = false;
+				});
+				mdic.windowManager.add(propsWindow);
+			}
+			
+			private function hidePropsWindow():void {
+				mdic.windowManager.remove(propsWindow);
+				propsWindow = null;
+			}
+			
+			private function handlePropsClick(event:MouseEvent):void {
+				if (ToggleButton(event.target).selected) {
+					showPropsWindow();
+				}
+				else {
+					hidePropsWindow();
+				}
+			}
+			
 			private function handleLogClick(event:MouseEvent):void {
 				if (ToggleButton(event.target).selected) {
 					showLogWindow();
@@ -251,6 +274,7 @@
 		<s:ToggleButton id="roomsButton" label="Rooms" click="handleRoomsClick(event)" />
 		<s:ToggleButton id="usersButton" label="Users" click="handleUsersClick(event)" />
 		<s:ToggleButton id="logButton" label="Log" click="handleLogClick(event)" />
+		<s:ToggleButton id="propsButton" label="Props" click="handlePropsClick(event)" />
 		<s:ToggleButton id="preferencesButton" label="Preferences" click="handlePreferencesClick(event)" />
 		<mx:Spacer width="15" />
 		<s:Label text="Zoom:" />
