@@ -81,6 +81,8 @@
 					propRecord.crc = prop.crc;
 					propRecord.imageDataURL = prop.imageDataURL;
 					propRecord.guid = prop.guid;
+					propRecord.width = prop.width || 44;
+					propRecord.height = prop.height || 44;
 					lookupTable[prop.id + ":" + prop.crc] = propRecord;
 					props.addItem(propRecord);
 				}
@@ -106,6 +108,8 @@
 						propRecord.crc = prop.asset.crc;
 						propRecord.imageDataURL = prop.asset.imageDataURL;
 						propRecord.guid = prop.asset.guid;
+						propRecord.width = prop.width;
+						propRecord.height = prop.height;
 						addProp(propRecord);
 					}
 					else {
@@ -129,12 +133,14 @@
 				palace.currentUser.naked();
 			} 
 			
-			private function handleWearClick():void {
-				var foo:Object = propsList.selectedItem;
-				trace("Selected item: " + SavedPropRecord(propsList.selectedItem).id);
-				var savedProp:SavedPropRecord = SavedPropRecord(propsList.selectedItem);
-				var prop:PalaceProp = PalacePropStore.getInstance().getProp(savedProp.guid, savedProp.id, savedProp.crc);
-				palace.currentUser.toggleProp(prop);
+			public function handleWearClick():void {
+				if (palace.connected && propsList.selectedItem) {
+					var foo:Object = propsList.selectedItem;
+					trace("Selected item: " + SavedPropRecord(propsList.selectedItem).id);
+					var savedProp:SavedPropRecord = SavedPropRecord(propsList.selectedItem);
+					var prop:PalaceProp = PalacePropStore.getInstance().getProp(savedProp.guid, savedProp.id, savedProp.crc);
+					palace.currentUser.toggleProp(prop);
+				}
 			}
 			
 			private function handleDeleteClick():void {
@@ -148,26 +154,38 @@
 			
 			private function handleDragEnter(event:DragEvent):void {
 				var propData:Object = event.dragSource.dataForFormat('prop');
-				if (propData) {
+				if (propData && propData.looseProp) {
 					DragManager.acceptDragDrop(event.currentTarget as IUIComponent);
 				}
 			}
 			
 			private function handleDragOver(event:DragEvent):void {
-				DragManager.showFeedback(DragManager.COPY);
+				if (event.altKey || event.ctrlKey) {
+					DragManager.showFeedback(DragManager.COPY);
+				}
+				else {
+					DragManager.showFeedback(DragManager.MOVE);
+				}
 			}
 			
 			private function handleDragDrop(event:DragEvent):void {
 				var propData:Object = event.dragSource.dataForFormat('prop');
-				var looseProp:PalaceLooseProp = propData.looseProp;
-				var prop:PalaceProp = looseProp.prop;
-				var propRecord:SavedPropRecord = new SavedPropRecord();
-				propRecord.id = prop.asset.id;
-				propRecord.crc = prop.asset.crc;
-				propRecord.guid = prop.asset.guid;
-				propRecord.imageDataURL = prop.asset.imageDataURL;
-				addProp(propRecord);
-				savePropsToDisk();
+				if (propData.looseProp) {
+					var looseProp:PalaceLooseProp = propData.looseProp;
+					var prop:PalaceProp = looseProp.prop;
+					var propRecord:SavedPropRecord = new SavedPropRecord();
+					propRecord.id = prop.asset.id;
+					propRecord.crc = prop.asset.crc;
+					propRecord.guid = prop.asset.guid;
+					propRecord.width = prop.width;
+					propRecord.height = prop.height;
+					propRecord.imageDataURL = prop.asset.imageDataURL;
+					addProp(propRecord);
+					savePropsToDisk();
+					if (event.action == DragManager.MOVE) {
+						PalaceClient.getInstance().deleteLooseProp(propData.propIndex);
+					}
+				}
 			}
 			
 			private function handleNewClick():void {
@@ -298,7 +316,7 @@
 			<s:HorizontalLayout />
 		</s:layout>
 		
-		<s:List id="propsList" doubleClick="handleWearClick()" dataProvider="{props}" width="100%" height="100%"
+		<s:List id="propsList" dataProvider="{props}" width="100%" height="100%"
 				dragEnter="handleDragEnter(event)"
 				dragOver="handleDragOver(event)"
 				dragDrop="handleDragDrop(event)">
@@ -307,11 +325,28 @@
 			</s:layout>
 			<s:itemRenderer>
 				<fx:Component>
-					<s:ItemRenderer>
+					<s:ItemRenderer doubleClick="outerDocument.handleWearClick()"
+									mouseMove="handleMouseMove(event)">
 						<fx:Script>
 							<![CDATA[
+								import mx.core.DragSource;
+								import mx.managers.DragManager;
 								[Bindable]
 								private var loaderContext:LoaderContext = new LoaderContext(true);
+								
+								private function handleMouseMove(event:MouseEvent):void {
+									if (event.buttonDown) {
+										var dragSource:DragSource = new DragSource();
+										dragSource.addData({
+											startMouseX: event.stageX,
+											startMouseY: event.stageY,
+											width: data.width,
+											height: data.height,
+											propId: data.id
+										}, "prop");
+										DragManager.doDrag(this, dragSource, event);
+									}
+								}
 							]]>
 						</fx:Script>
 						
@@ -340,10 +375,10 @@
 			</s:layout>
 			<s:Button label="New" click="handleNewClick()" />
 			<s:Button label="Edit" enabled="false" />
-			<s:Button label="Delete" click="handleDeleteClick()" />
-			<s:Button label="Wear" click="handleWearClick()" />
-			<s:Button label="Naked" click="handleNakedClick()" />
-			<s:Button label="Save" click="handleSaveClick()" />
+			<s:Button label="Delete" enabled="{propsList.selectedItem != null}" click="handleDeleteClick()" />
+			<s:Button label="Wear" enabled="{palace.connected &amp;&amp; propsList.selectedItem != null}" click="handleWearClick()" />
+			<s:Button label="Naked" enabled="{palace.connected}" click="handleNakedClick()" />
+			<s:Button label="Save" enabled="{palace.connected}" click="handleSaveClick()" />
 			
 			<!--
 			<s:Button label="DeleteAll" click="deleteAll()" />

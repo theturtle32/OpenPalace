@@ -266,6 +266,7 @@ package net.codecomposer.palace.model
 		}
 		
 		public function assetData(endian:String = Endian.LITTLE_ENDIAN):ByteArray {
+			trace("Generating asset for server...");
 			var ba:ByteArray = new ByteArray();
 			ba.endian = endian;
 			

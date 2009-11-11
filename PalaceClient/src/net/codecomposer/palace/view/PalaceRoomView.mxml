@@ -165,8 +165,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private function handleLoosePropMoved(event:PalaceRoomEvent):void {
 				trace("Moved loose prop " + event.looseProp.id);
 				var image:AlphaHitAreaImage = imagesByLooseProp[event.looseProp];
-				image.x = event.looseProp.x;
-				image.y = event.looseProp.y;
+				
+				var tween:Move = new Move(image);
+				tween.xTo = event.looseProp.x;
+				tween.yTo = event.looseProp.y;
+				tween.duration = 100;
+				tween.play();
+
 			}
 			
 			private function handleLoosePropRemoved(event:PalaceRoomEvent):void {
@@ -243,7 +248,11 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			
 			private function handleLoosePropDragOver(event:DragEvent):void {
-				if (event.altKey || event.ctrlKey) {
+				var data:Object = event.dragSource.dataForFormat("prop");
+				if (data.propId) {
+					DragManager.showFeedback(DragManager.COPY);
+				}
+				else if (event.altKey || event.ctrlKey) {
 					DragManager.showFeedback(DragManager.COPY);
 				}
 				else {
@@ -255,22 +264,35 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				var data:Object = event.dragSource.dataForFormat("prop");
 				var obj:IUIComponent = event.dragInitiator;
 				
-				var destX:int = obj.x + (event.stageX - data.startMouseX);
-				var destY:int = obj.y + (event.stageY - data.startMouseY);
+				var destX:int; 
+				var destY:int;
 				
 				if (event.action == DragManager.COPY) {
-					var looseProp:PalaceLooseProp = room.getLoosePropByIndex(data.propIndex);
-					var propId:int = looseProp.prop.asset.id;
-					var propCrc:int = looseProp.prop.asset.crc;
-					PalaceClient.getInstance().addLooseProp(propId, propCrc, destX, destY);					
+					if (data.propId) {
+						// dragged from bag
+						var destPoint:Point = this.globalToContent(new Point(event.stageX, event.stageY));
+						destX = destPoint.x - data.width/2;
+						destY = destPoint.y - data.height/2;
+						PalaceClient.getInstance().addLooseProp(data.propId, 0, destX, destY);
+					}
+					else {
+						destX = obj.x + (event.stageX - data.startMouseX);
+						destY = obj.y + (event.stageY - data.startMouseY);
+						try {
+							var looseProp:PalaceLooseProp = room.getLoosePropByIndex(data.propIndex);
+							var propId:int = looseProp.prop.asset.id;
+							var propCrc:int = looseProp.prop.asset.crc;
+							PalaceClient.getInstance().addLooseProp(propId, propCrc, destX, destY);
+						}
+						catch (e:Error) {
+							// prop was deleted out from under us.
+						}
+					}
 				}
 				else {
-					var tween:Move = new Move(obj);
-					tween.xTo = destX;
-					tween.yTo = destY;
-					tween.duration = 100;
-					tween.play();
-					
+					destX = obj.x + (event.stageX - data.startMouseX);
+					destY = obj.y + (event.stageY - data.startMouseY);
+
 					PalaceClient.getInstance().moveLooseProp(data.propIndex, destX, destY);
 				}
 				

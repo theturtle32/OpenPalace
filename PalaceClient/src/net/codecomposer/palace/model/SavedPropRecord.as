@@ -7,6 +7,8 @@ package net.codecomposer.palace.model
 		public var crc:uint;
 		public var imageDataURL:String;
 		public var guid:String;
+		public var width:uint;
+		public var height:uint;
 		
 		public function SavedPropRecord()
 		{

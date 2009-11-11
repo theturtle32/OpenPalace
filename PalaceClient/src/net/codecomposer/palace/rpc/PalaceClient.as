@@ -438,16 +438,7 @@ package net.codecomposer.palace.rpc
 			socket.flush();
 		}
 		
-		private var lastPropMoveTime:uint;
-		private var lastPropMoveSignature:Object;
-		
 		public function moveLooseProp(propIndex:int, x:int, y:int):void {
-			lastPropMoveSignature = {
-				propIndex: propIndex,
-				x: x,
-				y: y
-			};
-			lastPropMoveTime = (new Date()).valueOf();
 			socket.writeInt(OutgoingMessageTypes.PROP_MOVE);
 			socket.writeInt(8);
 			socket.writeInt(0);
@@ -539,6 +530,13 @@ package net.codecomposer.palace.rpc
 		}
 		
 		private function sendPropToServer(prop:PalaceProp):void {
+			if (prop.width != 44 || prop.height != 44 ||
+				prop.verticalOffset > 44 || prop.verticalOffset < -44 ||
+				prop.horizontalOffset > 44 || prop.horizontalOffset < -44) {
+				// web service big prop... ignore request.
+				return;
+			}
+			
 			var assetResponse:ByteArray = prop.assetData(socket.endian);
 			socket.writeInt(OutgoingMessageTypes.ASSET_REGI);
 			socket.writeInt(assetResponse.length);
@@ -1582,13 +1580,6 @@ package net.codecomposer.palace.rpc
 			trace("Got asset request for type: " + type + ", assetId: " + assetId + ", assetCrc: " + assetCrc);
 			var prop:PalaceProp = PalacePropStore.getInstance().getProp(null, assetId, assetCrc);
 
-			if (prop.width != 44 || prop.height != 44 ||
-				prop.verticalOffset > 44 || prop.verticalOffset < -44 ||
-				prop.horizontalOffset > 44 || prop.horizontalOffset < -44) {
-				// web service big prop... ignore request.
-				return;
-			}
-				
 			if (prop.ready) {
 				sendPropToServer(prop);
 			}
@@ -1681,17 +1672,7 @@ package net.codecomposer.palace.rpc
 			var propIndex:int = socket.readInt();
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
-			var currentTime:uint = (new Date()).valueOf();
-			var timeSinceLastPropMove:uint = currentTime - lastPropMoveTime;
-			if (lastPropMoveSignature && timeSinceLastPropMove < 200 &&
-				lastPropMoveSignature.x == x &&
-				lastPropMoveSignature.y == y &&
-				lastPropMoveSignature.propIndex == propIndex) {
-				
-			}
-			else {
-				currentRoom.moveLooseProp(propIndex, x, y);
-			}
+			currentRoom.moveLooseProp(propIndex, x, y);
 		}
 		
 		private function handlePropDelete(size:int, referenceId:int):void {
