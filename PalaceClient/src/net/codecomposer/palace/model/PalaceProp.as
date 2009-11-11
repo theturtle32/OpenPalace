@@ -76,7 +76,7 @@ package net.codecomposer.palace.model
 		public static const PROP_FORMAT_8BIT:uint   = 0x00;
 		
 		private static const dither20bit:Number = 255/63;
-		private static const ditherS20Bit:Number = 8.2258064516129;
+		private static const ditherS20Bit:Number = 255/31;
 
 		private static const ASSET_CRC_MAGIC:uint = 0xd9216290;
 		
@@ -437,6 +437,8 @@ package net.codecomposer.palace.model
 		
 		
 		private function encodeS20BitProp():ByteArray {
+			// Implementation ported from REALBasic code provided by
+			// Jameson Heesen (Pa\/\/n), of PalaceChat
 			var ba:ByteArray = new ByteArray();
 			ba.endian = Endian.BIG_ENDIAN;
 			var bm:FlexBitmap = FlexBitmap(bitmap);
@@ -444,8 +446,8 @@ package net.codecomposer.palace.model
 				var bitmapData:BitmapData = bm.bitmapData;
 				var propBit16:Number = 31 / 255;
 				var data:Vector.<uint>;
-				if (bm.width > 44 || bm.height > 44) {
-					trace("Big prop -- encoding proxy prop");
+				if (bm.width != 44 || bm.height != 44) {
+					trace("Encoding proxy prop");
 					var pixelCount:uint = 44 * 44;
 					data = new Vector.<uint>(pixelCount);
 					for (var i:int = 0; i < pixelCount; i++) {
@@ -500,6 +502,7 @@ package net.codecomposer.palace.model
 				}
 			}
 			ba.compress();
+			ba.position = 0;
 			return ba;
 		}
 		

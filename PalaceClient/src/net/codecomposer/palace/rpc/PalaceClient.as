@@ -1582,7 +1582,7 @@ package net.codecomposer.palace.rpc
 			trace("Got asset request for type: " + type + ", assetId: " + assetId + ", assetCrc: " + assetCrc);
 			var prop:PalaceProp = PalacePropStore.getInstance().getProp(null, assetId, assetCrc);
 
-			if (prop.width > 44 || prop.height > 44 ||
+			if (prop.width != 44 || prop.height != 44 ||
 				prop.verticalOffset > 44 || prop.verticalOffset < -44 ||
 				prop.horizontalOffset > 44 || prop.horizontalOffset < -44) {
 				// web service big prop... ignore request.

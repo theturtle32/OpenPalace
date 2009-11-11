@@ -21,6 +21,9 @@ package net.codecomposer.palace.rpc.webservice
 	// OPWS = Open Palace Web Service
 	public class OPWSNewProps extends EventDispatcher
 	{
+		[Event(type="OPWSEvent", name="result")]
+		[Event(type="OPWSEvent", name="fault")]
+		
 		private var _loader:URLLoader;
 		
 		private var _props:Array;

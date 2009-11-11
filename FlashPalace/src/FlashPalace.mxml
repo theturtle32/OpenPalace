@@ -30,6 +30,7 @@
 			private var logWindow:LogWindow;
 			private var preferencesWindow:PreferencesWindow;
 			private var propsWindow:PropsWindow;
+			private var newPropWindow:NewPropWindow;
 			
 			private var preferences:Preferences = Preferences.getInstance();
 			
@@ -164,6 +165,8 @@
 			
 			private function showPropsWindow():void {
 				propsWindow = new PropsWindow();
+				propsWindow.palace = palace;
+				propsWindow.addEventListener(PropEvent.NEW_PROP, handleNewProp);
 				propsWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
 					propsButton.selected = false;
 				});
@@ -173,6 +176,26 @@
 			private function hidePropsWindow():void {
 				mdic.windowManager.remove(propsWindow);
 				propsWindow = null;
+			}
+			
+			private function handleNewProp(event:PropEvent):void {
+				trace("New Prop: " + event.fileReference.name);
+				newPropWindow = new NewPropWindow();
+				newPropWindow.addEventListener(MDIWindowEvent.CLOSE, handleNewPropWindowClose);
+				newPropWindow.addEventListener(PropEvent.SAVE_PROP, handleSaveProp);
+				mdic.windowManager.add(newPropWindow);
+				newPropWindow.fileReference = event.fileReference;
+			}
+			
+			private function handleSaveProp(event:PropEvent):void {
+				trace("Prop Name: " + event.newPropDefinition.name);
+				if (propsWindow) {
+					propsWindow.addNewProp(event.newPropDefinition);
+				}
+			}
+			
+			private function handleNewPropWindowClose(event:MDIWindowEvent):void {
+				trace("New Prop Window Close");
 			}
 			
 			private function handlePropsClick(event:MouseEvent):void {

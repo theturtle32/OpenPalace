@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<code:MDIWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				layout="absolute"
+				xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:code="http://code.google.com/p/flexlib/" width="226" height="420">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Metadata>
+		[Event(type="PropEvent", name="newProp")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Image;
+			private var bitmap:Bitmap;
+			private var loader:Loader;
+			
+			[Bindable]
+			private var image:Image;
+			private var horizontalScale:Number = 1;
+			private var verticalScale:Number = 1;
+			private var scale:Number;
+			
+			[Bindable]
+			private var maxSize:uint = 220;
+			
+			private var _fileReference:FileReference;
+			
+			[Bindable(event="fileReferenceChanged")]
+			public function set fileReference(newValue:FileReference):void {
+				if (_fileReference !== newValue) {
+					_fileReference = newValue;
+					dispatchEvent(new Event("fileReferenceChanged"));
+					updateDisplay();
+				}
+			}
+			public function get fileReference():FileReference {
+				return _fileReference;
+			}
+			
+			private function updateDisplay():void {
+				loader = new Loader();
+				loader.contentLoaderInfo.addEventListener(Event.COMPLETE, handleImageLoadComplete);
+				loader.loadBytes(_fileReference.data);
+			}
+			
+			private function handleImageLoadComplete(event:Event):void {
+				if (loader.content is Bitmap) {
+					trace("image loaded.");
+					bitmap = loader.content as Bitmap;
+					
+					image = new Image();
+					image.smoothBitmapContent = true;
+					image.source = bitmap;
+					image.horizontalCenter = 0;
+					image.verticalCenter = 0;
+					
+					doPreview();
+
+					imageContainer.removeAllElements();
+					imageContainer.addElement(image);
+				}
+			}
+			
+			private function doPreview():void {
+				horizontalScale = Math.min(1, maxSize / bitmap.width);
+				verticalScale = Math.min(1, maxSize / bitmap.height);
+				scale = Math.min(verticalScale, horizontalScale);
+				image.scaleX = scale;
+				image.scaleY = scale;
+				image.alpha = ghost.selected ? 0.5 : 1.0;
+				smiley.visible = !head.selected;
+				
+				dimensionsLabel.text = Math.round(bitmap.width * scale) + "x" + Math.round(bitmap.height * scale);
+			}
+
+			private function handleScaleSliderChange(event:Event):void {
+				maxSize = scaleSlider.value;
+				trace(maxSize);
+				doPreview();
+			}
+			
+			private function handleSave():void {
+				var e:PropEvent = new PropEvent(PropEvent.SAVE_PROP);
+				e.newPropDefinition = new NewPropDefinition();
+				e.newPropDefinition.name = propName.text;
+				e.newPropDefinition.head = head.selected;
+				e.newPropDefinition.bounce = bounce.selected;
+				e.newPropDefinition.animate = animate.selected;
+				e.newPropDefinition.ghost = ghost.selected;
+				e.newPropDefinition.width = Math.round(bitmap.width * scale);
+				e.newPropDefinition.height = Math.round(bitmap.height * scale);
+				e.newPropDefinition.offsetX = Math.round(22 - (e.newPropDefinition.width / 2));
+				e.newPropDefinition.offsetY = Math.round(22 - (e.newPropDefinition.height / 2));
+				
+				var matrix:Matrix = new Matrix();
+				matrix.scale(scale, scale);
+				
+				var newBitmapData:BitmapData = new BitmapData(Math.round(bitmap.width*scale),Math.round(bitmap.height*scale), true, 0x000000);
+				newBitmapData.draw(bitmap, matrix);
+				var newBitmap:Bitmap = new Bitmap(newBitmapData, PixelSnapping.NEVER, true);
+				
+				e.newPropDefinition.bitmap = newBitmap;
+				dispatchEvent(e);
+				close();
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Group width="222" height="222"
+			 left="1" top="1">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+		
+		<s:Scroller
+			id="smiley"
+			horizontalScrollPolicy="off" verticalScrollPolicy="off"
+			width="44" height="44"
+			horizontalCenter="0" verticalCenter="0">
+			<s:Group horizontalScrollPosition="45" verticalScrollPosition="0">
+				<!-- <mx:Image source="@Embed(source='assets/faces/defaultsmileys.png')" /> -->
+			</s:Group>
+		</s:Scroller>
+		
+		<s:Graphic>
+			<s:Rect width="222" height="222"
+					left="0" top="0">
+				<s:stroke>
+					<s:SolidColorStroke color="#444444" />
+				</s:stroke>
+				<s:fill>
+					<s:LinearGradient rotation="90">
+						<s:GradientEntry color="#999999" />
+						<s:GradientEntry color="#666666" />
+					</s:LinearGradient>
+				</s:fill>
+			</s:Rect>
+		</s:Graphic>
+		
+		<s:Group id="imageContainer" width="220" height="220"
+				 top="1" left="1">
+			
+			<s:layout>
+				<s:BasicLayout />
+			</s:layout>
+		</s:Group>
+		
+	</s:Group>
+	
+	<s:Group bottom="5" horizontalCenter="0">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="center" />
+		</s:layout>
+		<s:Label id="dimensionsLabel" horizontalCenter="0" bottom="25" />
+		<s:HSlider width="176"
+				   bottom="5" horizontalCenter="0"
+				   id="scaleSlider"
+				   minimum="44" maximum="220"
+				   stepSize="1"
+				   value="220"
+				   liveDragging="true"
+				   change="handleScaleSliderChange(event)"/>
+		
+		
+		<s:Group height="60">
+			<s:layout>
+				<s:TileLayout horizontalGap="3" verticalGap="2" />
+			</s:layout>
+			
+			<s:CheckBox label="Head" id="head" selected="false" change="doPreview()" />
+			<s:CheckBox label="Animate" id="animate" selected="false" change="doPreview()" />
+			<s:CheckBox label="Bounce" id="bounce" selected="false" change="doPreview()" />
+			<s:CheckBox label="Ghost" id="ghost" selected="false" change="doPreview()" />
+			
+		</s:Group>
+
+		<s:Group width="100%">
+			<s:layout>
+				<s:HorizontalLayout verticalAlign="middle" />
+			</s:layout>
+			<s:Label text="Name:" />
+			<s:TextInput id="propName" text="OpenPalace Prop" width="100%" />
+		</s:Group>
+		
+		
+		<s:Button label="Save" click="handleSave()" />
+	</s:Group>
+	
+</code:MDIWindow>

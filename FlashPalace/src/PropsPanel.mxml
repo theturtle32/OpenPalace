@@ -22,6 +22,8 @@
 			import net.codecomposer.palace.rpc.PalaceClient;
 			private var _palace:PalaceClient;
 			
+			private var importFileReference:FileReference;
+			
 			[Bindable(event="palaceClientChanged")]
 			public function set palace(newValue:PalaceClient):void {
 				if (_palace !== newValue) {
@@ -153,6 +155,17 @@
 				addProp(propRecord);
 				savePropsToDisk();
 			}
+			
+			private function handleNewClick():void {
+				var fileFilter:FileFilter = new FileFilter("Images", "*.jpg;*.gif;*.png;*.jpeg", "JPEG;GIFf;PNGf;jp2_")
+				importFileReference = new FileReference();
+				importFileReference.addEventListener(Event.SELECT, handleImportImageSelect);
+				importFileReference.browse([fileFilter]);
+			}
+			
+			private function handleImportImageSelect(event:Event):void {
+				trace("Have file. " + importFileReference.name);
+			}
 		]]>
 	</fx:Script>
 	
@@ -171,13 +184,21 @@
 			<s:itemRenderer>
 				<fx:Component>
 					<s:ItemRenderer>
+						<fx:Script>
+							<![CDATA[
+								[Bindable]
+								private var loaderContext:LoaderContext = new LoaderContext(true);
+							]]>
+						</fx:Script>
+
 						<s:states>
 							<s:State name="normal" />
 							<s:State name="hovered" />
 							<s:State name="selected" />
 						</s:states>
-						<mx:Image left="2" right="2" top="2" bottom="2"
-								  source="{data.imageDataURL}" width="44" height="44" maintainAspectRatio="true" smoothBitmapContent="true" />
+						<mx:Image left="2" right="2" top="2" bottom="2" loaderContext="{loaderContext}"
+								  source="{data.imageDataURL}" width="44" height="44" maintainAspectRatio="true"
+								  smoothBitmapContent="true" />
 						<s:Rect width="100%" height="100%">
 							<s:fill>
 								<s:SolidColor color="#a8c6ee" alpha.normal="0" alpha.hovered="0.2" alpha.selected="0.4" />
@@ -193,7 +214,7 @@
 			<s:layout>
 				<s:VerticalLayout horizontalAlign="right" />
 			</s:layout>
-			<s:Button label="New" enabled="false" />
+			<s:Button label="New" click="handleNewClick()" />
 			<s:Button label="Edit" enabled="false" />
 			<s:Button label="Delete" click="handleDeleteClick()" />
 			<s:Button label="Wear" click="handleWearClick()" />
