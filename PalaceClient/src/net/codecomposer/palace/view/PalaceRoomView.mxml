@@ -236,8 +236,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				var dragSource:DragSource = new DragSource();
 				var propIndex:int = loosePropsGroup.getElementIndex(event.currentTarget as IVisualElement);
 				dragSource.addData({
-					startMouseX: event.stageX,
-					startMouseY: event.stageY,
+					startMouseX: this.contentMouseX,
+					startMouseY: this.contentMouseY,
 					propIndex: propIndex,
 					looseProp: room.looseProps.getItemAt(propIndex)
 				}, "prop");
@@ -277,8 +277,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 						PalaceClient.getInstance().addLooseProp(data.propId, 0, destX, destY);
 					}
 					else {
-						destX = obj.x + (event.stageX - data.startMouseX);
-						destY = obj.y + (event.stageY - data.startMouseY);
+						destX = obj.x + (this.contentMouseX - data.startMouseX);
+						destY = obj.y + (this.contentMouseY - data.startMouseY);
 						try {
 							var looseProp:PalaceLooseProp = room.getLoosePropByIndex(data.propIndex);
 							var propId:int = looseProp.prop.asset.id;
@@ -291,8 +291,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					}
 				}
 				else {
-					destX = obj.x + (event.stageX - data.startMouseX);
-					destY = obj.y + (event.stageY - data.startMouseY);
+					destX = obj.x + (this.contentMouseX - data.startMouseX);
+					destY = obj.y + (this.contentMouseY - data.startMouseY);
 
 					PalaceClient.getInstance().moveLooseProp(data.propIndex, destX, destY);
 				}
@@ -370,7 +370,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 						
 			private function handleStageMouseUp(event:MouseEvent):void {
 				stopAvatarDrag();
-				updateSelfPosition();
 				sendCurrentPositionToServer();
 			}
 			

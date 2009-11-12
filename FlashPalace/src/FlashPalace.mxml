@@ -301,7 +301,7 @@
 		<s:ToggleButton id="preferencesButton" label="Preferences" click="handlePreferencesClick(event)" />
 		<mx:Spacer width="15" />
 		<s:Label text="Zoom:" />
-		<s:HSlider id="zoomSlider" width="75" minimum="1" maximum="1.5" snapInterval="0.01" liveDragging="true" change="handleZoomChange(event)" />
+		<s:HSlider id="zoomSlider" width="75" value="1.0" minimum="0.5" maximum="1.5" snapInterval="0.01" liveDragging="true" change="handleZoomChange(event)" />
 	</s:HGroup>
 			
 	
