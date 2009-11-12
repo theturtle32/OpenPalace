@@ -1,5 +1,6 @@
 package net.codecomposer.palace.model
 {
+	[Bindable]
 	public class PalaceConfig
 	{
 		public function PalaceConfig()
@@ -8,5 +9,7 @@ package net.codecomposer.palace.model
 
 		public static var webServiceURL:String = "http://www.openpalace.org/webservice";
 		public static var numberPropsToCacheInRAM:int = 1000; 
+		public static var URIEncodeImageNames:Boolean = true;
+		public static var fadeBackgroundImages:Boolean = true;
 	}
 }

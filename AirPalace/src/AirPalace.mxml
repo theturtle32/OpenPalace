@@ -21,8 +21,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	backgroundColor="#444444"
 	xmlns:view="net.codecomposer.palace.view.*"
 	minHeight="384" minWidth="512"
-	width="{roomView.width}"
-	height="{roomView.height+chatBox.height+30}"
 	paddingBottom="0" paddingLeft="0" paddingRight="0" paddingTop="0" 
 	verticalGap="0"
 	horizontalScrollPolicy="off"
@@ -36,6 +34,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	creationComplete="handleCreationComplete()" xmlns:local="*" viewSourceURL="srcview/index.html">
 	<mx:Script>
 		<![CDATA[
+			import mx.events.ResizeEvent;
 			import mx.events.AIREvent;
 			import mx.events.PropertyChangeEvent;
 			import net.codecomposer.palace.rpc.PalaceClient;
@@ -86,6 +85,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private function handleCreationComplete():void {
 				openConnectWindow();
 				openLogWindow();
+				updateWindowSize();
+				roomView.addEventListener(ResizeEvent.RESIZE, updateWindowSize);
+			}
+			
+			private function updateWindowSize(event:ResizeEvent = null):void {
+				width = roomView.width;
+				height = roomView.height + chatBox.height + 30;
 			}
 			
 			private function openConnectWindow():void {
@@ -121,7 +127,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	<mx:ApplicationControlBar id="controlBar" horizontalAlign="right" dock="true">
 		<mx:Label color="#FFFFFF" text="{palace.currentRoom.users.length}/{palace.population}" />
 		<mx:Spacer width="100%" />
-		<mx:Button label="Props" click="openPropsWindow()" />
 		<mx:Button label="Log" click="openLogWindow()"/>
 		<mx:Button label="Rooms" click="openRoomList()"/>
 		<mx:Button label="Users" click="openUserList()"/>

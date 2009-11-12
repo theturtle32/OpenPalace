@@ -26,6 +26,7 @@ package net.codecomposer.palace.model
 	import flash.net.URLRequest;
 	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
+	import flash.utils.Endian;
 	import flash.utils.setTimeout;
 	
 	import mx.core.FlexBitmap;
@@ -34,6 +35,8 @@ package net.codecomposer.palace.model
 	import net.codecomposer.palace.event.PropEvent;
 	
 	[Event(name="propLoaded",type="net.codecomposer.palace.event.PropEvent")]
+	[Event(name="propDecoded",type="net.codecomposer.palace.event.PropEvent")]
+	
 	
 	[Bindable]
 	public class PalaceProp extends EventDispatcher
@@ -58,6 +61,8 @@ package net.codecomposer.palace.model
 		public var bounce:Boolean = false;
 		public var propFormat:uint = 0x00;
 		
+		public var webServiceFormat:String;
+		
 		public static const HEAD_FLAG:uint = 0x02;
 		public static const GHOST_FLAG:uint = 0x04;
 		public static const RARE_FLAG:uint = 0x08;
@@ -71,8 +76,10 @@ package net.codecomposer.palace.model
 		public static const PROP_FORMAT_8BIT:uint   = 0x00;
 		
 		private static const dither20bit:Number = 255/63;
-		private static const ditherS20Bit:Number = 8.2258064516129;
+		private static const ditherS20Bit:Number = 255/31;
 
+		private static const ASSET_CRC_MAGIC:uint = 0xd9216290;
+		
 		private static const rect:Rectangle = new Rectangle(0,0,44,44);
 		
 		private static const mask:uint = 0xFFC1; // Original palace prop flags.
@@ -112,6 +119,7 @@ package net.codecomposer.palace.model
 			prop.palindrome = source.palindrome;
 			prop.bounce = source.bounce;
 			prop.propFormat = source.propFormat;
+			prop.webServiceFormat = source.webServiceFormat;
 			prop.asset.blockCount = source.asset.blockCount;
 			prop.asset.blockNumber = source.asset.blockNumber;
 			prop.asset.blockOffset = source.asset.blockOffset;
@@ -150,7 +158,7 @@ package net.codecomposer.palace.model
 		
 		public function decodeProp():void {			
 			// Try not to block the UI while props are rendering.
-			setTimeout(renderBitmap, 200+40*(++itemsToRender));
+			setTimeout(renderBitmap, 200+20*(++itemsToRender));
 		}
 		
 		public function loadBitmapFromURL(url:String = null):void {
@@ -208,22 +216,27 @@ package net.codecomposer.palace.model
             if ((flags & mask) == 0xff80) {
             	//WTF?!  Bizarre flags...
             	trace("16bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_16_BIT;
             	decode16BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_S20BIT)) {
             	trace("s20bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_S20_BIT;
             	decodeS20BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_32BIT)) {
             	trace("32bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_32_BIT;
 	       		decode32BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_20BIT)) {
             	trace("20bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_20_BIT;
 	       		decode20BitProp();
             }
             else {
             	trace("8bit prop");
+				webServiceFormat = PalacePropFormat.FORMAT_8_BIT;
             	decode8BitProp();
             }
 			
@@ -239,6 +252,99 @@ package net.codecomposer.palace.model
 			dispatchEvent(new PropEvent(PropEvent.PROP_LOADED, this));
 		}
 		
+		private function computeCRC(data:ByteArray):uint {
+			var originalPosition:uint = data.position;
+			data.position = 0;
+			var crc:uint = ASSET_CRC_MAGIC;
+			var len:int = data.bytesAvailable;
+			while (len--) {
+				var currentByte:uint = data.readUnsignedByte();
+				crc = ((crc << 1) | ((crc & 0x80000000) ? 1 : 0)) ^ (currentByte);
+			}
+			data.position = originalPosition;
+			return crc;
+		}
+		
+		public function assetData(endian:String = Endian.LITTLE_ENDIAN):ByteArray {
+			trace("Generating asset for server...");
+			var ba:ByteArray = new ByteArray();
+			ba.endian = endian;
+			
+			var flags:uint = 0;
+			if (animate)
+				flags = flags | ANIMATE_FLAG;
+			if (bounce)
+				flags = flags | BOUNCE_FLAG;
+			if (head)
+				flags = flags | HEAD_FLAG;
+			if (palindrome)
+				flags = flags | PALINDROME_FLAG;
+			if (rare)
+				flags = flags | RARE_FLAG;
+			if (ghost)
+				flags = flags | GHOST_FLAG;
+			
+			// Set s20bit format
+			flags = flags | PROP_FORMAT_S20BIT;
+			
+			var imageData:ByteArray = encodeS20BitProp();
+			imageData.position = 0;
+			var assetCRC:uint = computeCRC(imageData);
+			
+			var size:uint = imageData.length + 12; // 12 bytes for metadata
+			
+			// AssetType
+			ba.writeInt(PalaceAsset.ASSET_TYPE_PROP);
+			
+			// AssetSpec
+			ba.writeInt(asset.id);
+			ba.writeUnsignedInt(assetCRC);
+			
+			// BlockSize
+			ba.writeInt(size);
+			
+			// BlockOffset
+			ba.writeInt(0); // always zero
+			
+			// BlockNbr
+			ba.writeShort(0); // always zero
+			
+			// NbrBlocks
+			ba.writeShort(1);
+			
+		// AssetDescriptor
+			// flags
+			ba.writeUnsignedInt(0); // this is unused.. not really the prop flags
+			// size
+			ba.writeUnsignedInt(size);
+			// name
+			ba.writeByte(asset.name.length);
+			var paddedName:String = asset.name;
+			for (var ct:int = 0; ct < 31 - asset.name.length; ct ++) {
+				paddedName += " ";
+			}
+			trace("PaddedName: \"" + paddedName + "\" length: " + paddedName.length);
+			ba.writeMultiByte(paddedName, 'Windows-1252');
+		
+			// Data -- first 12 bytes are info about prop
+			ba.writeShort(44);
+			ba.writeShort(44);
+			if (width > 44 || height > 44) {
+				ba.writeShort(0);
+				ba.writeShort(0);
+			}
+			else {
+				ba.writeShort(horizontalOffset);
+				ba.writeShort(verticalOffset);
+			}
+			ba.writeShort(0); // script offset??!
+			ba.writeShort(flags);
+			
+			// Image Data
+			ba.writeBytes(imageData);
+			
+			return ba;
+		}
 		
 		private function decode32BitProp():void {
 			// Implementation thanks to Phalanx team
@@ -247,11 +353,13 @@ package net.codecomposer.palace.model
 			for (var i:int = 12; i < asset.data.length; i ++) {
 				data.writeByte(asset.data[i]);
 			}
-			data.uncompress();
 			data.position = 0;
+			//trace("Computed CRC: " + computeCRC(data) + " - Given CRC: " + asset.crc);
+			
+			data.uncompress();
 			
 			var bd:BitmapData = new BitmapData(width, height);
-			var ba:ByteArray = new ByteArray();
+			var ba:Vector.<uint> = new Vector.<uint>(width*height, true);
 			var C:uint;
 			var x:int = 0;
 			var y:int = 0;
@@ -262,6 +370,8 @@ package net.codecomposer.palace.model
 			var G:uint = 0;
 			var B:uint = 0;
 			
+			var pos:uint = 0;
+			
 			for (X = 0; X <= 1935; X++) {
 				ofst = X * 4;
 				R = data[ofst];
@@ -269,13 +379,10 @@ package net.codecomposer.palace.model
 				B = data[ofst+2];
 				A = data[ofst+3];
 
-				ba.writeByte(A);
-				ba.writeByte(R);
-				ba.writeByte(G);
-				ba.writeByte(B);
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
+
 			}
-			ba.position = 0;
-			bd.setPixels(rect, ba);
+			bd.setVector(rect, ba);
 			bitmap = bd;
 		}
 		
@@ -287,11 +394,12 @@ package net.codecomposer.palace.model
 			for (var i:int = 12; i < asset.data.length; i ++) {
 				data.writeByte(asset.data[i]);
 			}
-			data.uncompress();
 			data.position = 0;
+			//trace("Computed CRC: " + computeCRC(data) + " - Given CRC: " + asset.crc);
+			data.uncompress();
 			
 			var bd:BitmapData = new BitmapData(width, height);
-			var ba:ByteArray = new ByteArray();
+			var ba:Vector.<uint> = new Vector.<uint>(width*height, true);
 			var C:uint;
 			var x:int = 0;
 			var y:int = 0;
@@ -302,6 +410,8 @@ package net.codecomposer.palace.model
 			var G:uint = 0;
 			var B:uint = 0;
 			
+			var pos:uint = 0;
+			
 			for (X = 0; X <= 967; X++) {
 				ofst = X * 5;
 				R = uint((uint(data[ofst] >> 2) & 63) * dither20bit);
@@ -311,10 +421,7 @@ package net.codecomposer.palace.model
 				B = uint(((C >> 6) & 63) * dither20bit);
 				A = (((C >> 4) & 3) * 85);
 
-				ba.writeByte(A);
-				ba.writeByte(R);
-				ba.writeByte(G);
-				ba.writeByte(B);
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
 
 				C = (data[ofst+2] << 8) | data[ofst+3];
 				R = uint(((C >> 6) & 63) * dither20bit);
@@ -323,14 +430,81 @@ package net.codecomposer.palace.model
 				B = uint(((C >> 2) & 63) * dither20bit);
 				A = ((C & 3) * 85);
 				
-				ba.writeByte(A);
-				ba.writeByte(R);
-				ba.writeByte(G);
-				ba.writeByte(B);
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
 			}
-			ba.position = 0; 
-			bd.setPixels(rect, ba);
+			bd.setVector(rect, ba);
 			bitmap = bd;
+		}
+		
+		
+		private function encodeS20BitProp():ByteArray {
+			// Implementation ported from REALBasic code provided by
+			// Jameson Heesen (Pa\/\/n), of PalaceChat
+			var ba:ByteArray = new ByteArray();
+			ba.endian = Endian.BIG_ENDIAN;
+			var bm:FlexBitmap = FlexBitmap(bitmap);
+			if (bm && bm is FlexBitmap) {
+				var bitmapData:BitmapData = bm.bitmapData;
+				var propBit16:Number = 31 / 255;
+				var data:Vector.<uint>;
+				if (bm.width != 44 || bm.height != 44) {
+					trace("Encoding proxy prop");
+					var pixelCount:uint = 44 * 44;
+					data = new Vector.<uint>(pixelCount);
+					for (var i:int = 0; i < pixelCount; i++) {
+						data[i] = 0x00FFFFFF;
+					}
+				}
+				else {
+					data = bitmapData.getVector(new Rectangle(0,0,44,44));
+				}
+				var pixelIndex:uint = 0;
+				var intComp:uint = 0;
+				var a:uint, r:uint, g:uint, b:uint;
+				for (var y:int = 0; y < 44; y++) {
+					for (var x:int = 0; x < 44; x++) {
+						var color:uint;
+						color = data[pixelIndex];
+						a = ((color & 0xFF000000) >> 24) & 0xFF;
+						r = ((color & 0x00FF0000) >> 16) & 0xFF;
+						g = ((color & 0x0000FF00) >> 8) & 0xFF;
+						b =  (color & 0x000000FF);
+						intComp =            uint(Math.round(Number(r) * propBit16)) << 19;
+						intComp = intComp | (uint(Math.round(Number(g) * propBit16)) << 14);
+						intComp = intComp | (uint(Math.round(Number(b) * propBit16)) << 9);
+						intComp = intComp | (uint(Math.round(Number(a) * propBit16)) << 4);
+						
+						ba.writeByte((intComp & 0xFF0000) >> 16);
+						ba.writeByte((intComp &   0xFF00) >> 8);
+						// ba.writeByte(intComp & 0xF0);
+						
+						pixelIndex ++;
+						x++;
+						
+						intComp = (intComp & 0xF0) << 16;
+							
+						color = data[pixelIndex];
+						a = ((color & 0xFF000000) >> 24) & 0xFF;
+						r = ((color & 0x00FF0000) >> 16) & 0xFF;
+						g = ((color & 0x0000FF00) >> 8) & 0xFF;
+						b =  (color & 0x000000FF);
+						
+						intComp = intComp | (uint(Math.round(Number(r) * propBit16)) << 15);
+						intComp = intComp | (uint(Math.round(Number(g) * propBit16)) << 10);
+						intComp = intComp | (uint(Math.round(Number(b) * propBit16)) << 5);
+						intComp = intComp |  uint(Math.round(Number(a) * propBit16));
+						
+						ba.writeByte((intComp & 0xFF0000) >> 16);
+						ba.writeByte((intComp & 0x00FF00) >> 8);
+						ba.writeByte( intComp & 0x0000FF);
+						
+						pixelIndex ++;
+					}
+				}
+			}
+			ba.compress();
+			ba.position = 0;
+			return ba;
 		}
 		
 		private function decodeS20BitProp():void {
@@ -341,11 +515,11 @@ package net.codecomposer.palace.model
 			for (var i:int = 12; i < asset.data.length; i ++) {
 				data.writeByte(asset.data[i]);
 			}
-			data.uncompress();
 			data.position = 0;
+			//trace("Computed CRC: " + computeCRC(data) + " - Given CRC: " + asset.crc);
+			data.uncompress();
 			
 			var bd:BitmapData = new BitmapData(width, height);
-			var colors:Array = new Array(9); // array of bytes
 			var C:uint;
 			var x:int = 0;
 			var y:int = 0;
@@ -354,44 +528,41 @@ package net.codecomposer.palace.model
 			
 			var color:uint;
 			
-			var ba:ByteArray = new ByteArray();
+			var ba:Vector.<uint> = new Vector.<uint>(width*height, true);
+			
+			var A:uint, R:uint, G:uint, B:uint; 
+			
+			var pos:uint = 0;
 			
 			for (X = 0; X < 968; X++) {
 				ofst = X * 5;
 				
-				colors[2] = uint(((data[ofst] >> 3) & 31) * ditherS20Bit) & 0xFF; // << 3; //red
+				R = uint(((data[ofst] >> 3) & 31) * ditherS20Bit) & 0xFF; // << 3; //red
 				C = (data[ofst] << 8) | data[ofst+1];
-				colors[1] = uint((C >> 6 & 31) * ditherS20Bit) & 0xFF; //<< 3; //green
-				colors[0] = uint((C >> 1 & 31) * ditherS20Bit) & 0xFF; //<< 3; //blue
+				G = uint((C >> 6 & 31) * ditherS20Bit) & 0xFF; //<< 3; //green
+				B = uint((C >> 1 & 31) * ditherS20Bit) & 0xFF; //<< 3; //blue
 				C = (data[ofst+1] << 8) | data[ofst+2];
-				colors[3] = uint((C >> 4 & 31) * ditherS20Bit) & 0xFF; //<< 3; //alpha
+				A = uint((C >> 4 & 31) * ditherS20Bit) & 0xFF; //<< 3; //alpha
 				
-				ba.writeByte(colors[3]);
-				ba.writeByte(colors[2]);
-				ba.writeByte(colors[1]);
-				ba.writeByte(colors[0]);
-				
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
+
 				x++;
 				
 				C = (data[ofst+2] << 8) | data[ofst+3];
-				colors[6] = uint((C >> 7 & 31) * ditherS20Bit) & 0xFF; // << 3; //red
-				colors[5] = uint((C >> 2 & 31) * ditherS20Bit) & 0xFF; // << 3; //green
+				R = uint((C >> 7 & 31) * ditherS20Bit) & 0xFF; // << 3; //red
+				G = uint((C >> 2 & 31) * ditherS20Bit) & 0xFF; // << 3; //green
 				C = (data[ofst+3] << 8) | data[ofst+4];
-				colors[4] = uint((C >> 5 & 31) * ditherS20Bit) & 0xFF; // << 3; //blue
-				colors[7] = uint((C & 31) * ditherS20Bit) & 0xFF; // << 3; //alpha				
+				B = uint((C >> 5 & 31) * ditherS20Bit) & 0xFF; // << 3; //blue
+				A = uint((C & 31) * ditherS20Bit) & 0xFF; // << 3; //alpha				
 				
-				ba.writeByte(colors[7]);
-				ba.writeByte(colors[6]);
-				ba.writeByte(colors[5]);
-				ba.writeByte(colors[4]);
-				
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
+								
 				if (x > 43) {
 					x = 0;
 					y++;
 				}
 			}
-			ba.position = 0;
-			bd.setPixels(rect, ba);
+			bd.setVector(rect, ba);
 			bitmap = bd;
 		}
 		
@@ -399,8 +570,8 @@ package net.codecomposer.palace.model
 			// Implementation thanks to Phalanx team
 			// Translated from C++ implementation
 			
-			var ba:ByteArray = new ByteArray();
-			var bd:BitmapData = new BitmapData(44,44, true);
+			var ba:Vector.<uint> = new Vector.<uint>(width*height, true);
+			var bd:BitmapData = new BitmapData(width, height, true);
 			var A:uint = 0;
 			var R:uint = 0;
 			var G:uint = 0;
@@ -416,8 +587,11 @@ package net.codecomposer.palace.model
 			for (var i:int = 12; i < asset.data.length; i ++) {
 				data.writeByte(asset.data[i]);
 			}
-			data.uncompress();
 			data.position = 0;
+			//trace("Computed CRC: " + computeCRC(data) + " - Given CRC: " + asset.crc);
+			data.uncompress();
+			
+			var pos:uint = 0;
 			
 			for (X=0; X < 1936; X++) {
 				ofst = X * 2;
@@ -427,10 +601,7 @@ package net.codecomposer.palace.model
 				B = uint((uint(C / 2) & 31) * 255 / 31) & 0xFF;
 				A = (C & 1) * 255 & 0xFF;
 				
-				ba.writeByte(A);
-				ba.writeByte(R);
-				ba.writeByte(G);
-				ba.writeByte(B);
+				ba[pos++] = (A<<24 | R<<16 | G<<8 | B);
 				
 				x ++;
 				
@@ -441,16 +612,22 @@ package net.codecomposer.palace.model
 				
 			}
 			
-			ba.position = 0;
-			bd.setPixels(rect, ba);
+			bd.setVector(rect, ba);
 			bitmap = bd;
 		}
 
 		private function decode8BitProp():void {
             var counter:int = 0; 
-            
-            var pixData:Array = new Array(width * (height + 1));
+            var ba:ByteArray = new ByteArray();
+            var pixData:Vector.<uint> = new Vector.<uint>(width * (height + 1), true);
             var n:int = 12;
+//			for (n = 12; n < asset.data.length; n++) {
+//				ba.writeByte(asset.data[n]);
+//			}
+//			ba.position = 0;
+//			trace("Computed CRC: " + computeCRC(ba) + " - Given CRC: " + asset.crc);
+//			
+//			n = 12;
             var index:int = width;
             for (var y:int = height - 1; y >= 0; y--)
             {
@@ -487,15 +664,15 @@ package net.codecomposer.palace.model
             
 			// Using setPixels() now instead of setPixel() -- WAY faster.
             
-			var bitmapBytes:ByteArray = new ByteArray();
+			var bitmapBytes:Vector.<uint> = new Vector.<uint>(width*height, true);
+			var pos:uint = 0;
 			var z:int = pixData.length;
 			for (y = 44; y < z; y ++) {
-				bitmapBytes.writeUnsignedInt(pixData[y]);
+				bitmapBytes[pos++] = pixData[y];
 			}
-			bitmapBytes.position = 0;			
 
             var bitmapData:BitmapData = new BitmapData(width, height, true);
-			bitmapData.setPixels(rect, bitmapBytes);
+			bitmapData.setVector(rect, bitmapBytes);
 			
 			bitmap = bitmapData;
 		}

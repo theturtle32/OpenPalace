@@ -17,7 +17,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.rpc
 {
+	import com.adobe.net.URI;
+	
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.IOErrorEvent;
 	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
@@ -33,28 +36,71 @@ package net.codecomposer.palace.rpc
 	
 	import net.codecomposer.openpalace.accountserver.rpc.AccountServerClient;
 	import net.codecomposer.palace.crypto.PalaceEncryption;
+	import net.codecomposer.palace.event.PalaceEvent;
+	import net.codecomposer.palace.event.PropEvent;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
+	import net.codecomposer.palace.message.RoomDescription;
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
+	import net.codecomposer.palace.model.PalaceConfig;
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.model.PalaceImageOverlay;
 	import net.codecomposer.palace.model.PalaceLooseProp;
-	import net.codecomposer.palace.model.PalacePalette;
 	import net.codecomposer.palace.model.PalaceProp;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
-	
-	
-	public class PalaceClient
+	import net.codecomposer.palace.record.PalaceDrawRecord;
+	import net.codecomposer.palace.view.PalaceSoundPlayer;
+
+	public class PalaceClient extends EventDispatcher
 	{
+				
+		[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
+		[Event(type="net.codecomposer.event.PalaceEvent",name="connectComplete")]
+		[Event(type="net.codecomposer.event.PalaceEvent",name="connectFailed")]
+		[Event(type="net.codecomposer.event.PalaceEvent",name="disconnected")]
+		
 		private static var instance:PalaceClient;
 		
 		[Bindable]
 		public static var loaderContext:LoaderContext = new LoaderContext();
+
+		/* FLAGS */
+		
+		public static const AUXFLAGS_UNKNOWN_MACHINE:uint = 0;
+		public static const AUXFLAGS_MAC68K:uint = 1;
+		public static const AUXFLAGS_MACPPC:uint = 2;
+		public static const AUXFLAGS_WIN16:uint = 3;
+		public static const AUXFLAGS_WIN32:uint = 4;
+		public static const AUXFLAGS_JAVA:uint = 5;
+		
+		public static const AUXFLAGS_OSMASK:uint = 0x0000000F;
+		public static const AUXFLAGS_AUTHENTICATE:uint = 0x80000000;
+		
+		public static const ULCAPS_ASSETS_PALACE:uint = 0x00000001;
+		public static const ULCAPS_ASSETS_FTP:uint = 0x00000002;
+		public static const ULCAPS_ASSETS_HTTP:uint = 0x00000004;
+		public static const ULCAPS_ASSETS_OTHER:uint = 0x00000008;
+		public static const ULCAPS_FILES_PALACE:uint = 0x00000010;
+		public static const ULCAPS_FILES_FTP:uint = 0x00000020;
+		public static const ULCAPS_FILES_HTTP:uint = 0x00000040;
+		public static const ULCAPS_FILES_OTHER:uint = 0x00000080;
+		public static const ULCAPS_EXTEND_PKT:uint = 0x00000100;
+		
+		public static const DLCAPS_ASSETS_PALACE:uint = 0x00000001;
+		public static const DLCAPS_ASSETS_FTP:uint = 0x00000002;
+		public static const DLCAPS_ASSETS_HTTP:uint = 0x00000004;
+		public static const DLCAPS_ASSETS_OTHER:uint = 0x00000008;
+		public static const DLCAPS_FILES_PALACE:uint = 0x00000010;
+		public static const DLCAPS_FILES_FTP:uint = 0x00000020;
+		public static const DLCAPS_FILES_HTTP:uint =  0x00000040;
+		public static const DLCAPS_FILES_OTHER:uint = 0x00000080;
+		public static const DLCAPS_FILES_HTTPSRVR:uint = 0x00000100;
+		public static const DLCAPS_EXTEND_PKT:uint = 0x00000200;
 		
 		private var socket:Socket = null;
 		
@@ -81,11 +127,11 @@ package net.codecomposer.palace.rpc
 		[Bindable]
 		public var connected:Boolean = false;
 		[Bindable]
+		public var connecting:Boolean = false;
+		[Bindable]
 		public var serverName:String = "No Server";
 		[Bindable]
 		public var serverInfo:PalaceServerInfo = new PalaceServerInfo();
-		[Bindable]
-		public var userName:String;
 		[Bindable]
 		public var population:int = 0;
 		[Bindable]
@@ -102,6 +148,32 @@ package net.codecomposer.palace.rpc
 		private var assetRequestQueue:Array = [];
 		private var assetRequestQueueCounter:int = 0;
 		private var assetsLastRequestedAt:Date = new Date();
+		
+		private var puidChanged:Boolean = false;
+		private var puidCounter:uint = 0xf5dc385e;
+		private var puidCRC:uint = 0xc144c580;
+		private var regCounter:uint = 0xcf07309c;
+		private var regCRC:uint = 0x5905f923;
+		
+		private var recentLogonUserIds:ArrayCollection = new ArrayCollection();
+		
+		private var _userName:String = "OpenPalace User";
+		
+		private var temporaryUserFlags:int;
+		// We get the user flags before we have the current user
+		
+		[Bindable(event="userNameChange")]
+		public function get userName():String {
+			return _userName;
+		}
+		
+		public function set userName(newValue:String):void {
+			if (newValue.length > 31) {
+				newValue = newValue.slice(0, 31); 
+			}
+			_userName = newValue;
+			dispatchEvent(new Event('userNameChange'));
+		}
 		
 		// States
 		public static const STATE_DISCONNECTED:int = 0;
@@ -133,13 +205,23 @@ package net.codecomposer.palace.rpc
 			currentRoom.backgroundFile = null;
 			currentRoom.selectedUser = null;
 			currentRoom.removeAllUsers();
-			currentRoom.looseProps.removeAll();
+			currentRoom.clearLooseProps();
 			currentRoom.hotSpots.removeAll();
+			currentRoom.drawBackCommands.removeAll();
+			currentRoom.drawFrontCommands.removeAll();
+			currentRoom.drawLayerHistory = new Vector.<uint>();
+			currentRoom.id = 0;
 			population = 0;
 			serverName = "No Server"
 			roomList.removeAll();
 			userList.removeAll();
 			socket = null;
+			
+			if (puidChanged) {
+				trace("Server changed our puid and needs us to reconnect.");
+				puidChanged = false;
+				connect(userName, host, port);				
+			}
 		}
 		
 		// ***************************************************************
@@ -148,6 +230,12 @@ package net.codecomposer.palace.rpc
 
 		public function connect(userName:String, host:String, port:int = 9998):void {
 			PalaceClient.loaderContext.checkPolicyFile = true;
+			
+			host = host.toLowerCase();
+			var match:Array = host.match(/^palace:\/\/(.*)$/);
+			if (match && match.length > 0) {
+				host = match[1];
+			}
 			
 			this.host = host;
 			this.port = port;
@@ -159,6 +247,8 @@ package net.codecomposer.palace.rpc
 			else {
 				resetState();
 			}
+			connecting = true;
+			dispatchEvent(new PalaceEvent(PalaceEvent.CONNECT_START));
 			socket = new Socket(this.host, this.port);
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData);
 			socket.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
@@ -177,9 +267,28 @@ package net.codecomposer.palace.rpc
 			}
 			resetState();
 		}
+		
+		public function changeName(newName:String):void {
+			userName = newName;
+			if (socket && socket.connected) {
+				socket.writeInt(OutgoingMessageTypes.CHANGE_NAME);
+				socket.writeInt(userName.length + 1);
+				socket.writeInt(0);
+				socket.writeByte(userName.length);
+				socket.writeMultiByte(userName, 'Windows-1252');
+				socket.flush();
+			}
+		}
 
 		public function say(message:String):void {
 			if (!connected || message == null || message.length == 0) {
+				return;
+			}
+			
+			if (handleClientCommand(message)) { return; }
+			
+			if (message.toLocaleLowerCase() == "clean") {
+				deleteLooseProp(-1); // clear loose props
 				return;
 			}
 			
@@ -205,6 +314,38 @@ package net.codecomposer.palace.rpc
 			socket.flush();
 		}
 		
+		private function handleClientCommand(message:String):Boolean {
+			var clientCommandMatch:Array = message.match(/^~(\w+) (.*)$/);
+			if (clientCommandMatch && clientCommandMatch.length > 0) {
+				var command:String = clientCommandMatch[1];
+				var argument:String = clientCommandMatch[2];
+				switch (command) {
+					case "susr":
+						trace("You are attempting to become a superuser with password \"" +
+								argument + "\"");
+						becomeWizard(argument);
+						break;
+					default:
+						trace("Unrecognized command: " + command + " argument " + argument);
+				}
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		
+		public function becomeWizard(password:String):void {
+			var passwordBytes:ByteArray = PalaceEncryption.getInstance().encrypt(password, false);
+			passwordBytes.position = 0;
+			socket.writeInt(OutgoingMessageTypes.SUPERUSER);
+			socket.writeInt(passwordBytes.length + 1);
+			socket.writeInt(0);
+			socket.writeByte(passwordBytes.length);
+			socket.writeBytes(passwordBytes);
+			socket.flush();
+		}
+		
 		public function move(x:int, y:int):void {
 			var user:PalaceUser = currentRoom.getUserById(id);
 			
@@ -221,6 +362,19 @@ package net.codecomposer.palace.rpc
 			
 			user.x = x;
 			user.y = y;
+		}
+		
+		public function setColor(color:int):void {
+			if (!connected) {
+				return;
+			}
+			socket.writeInt(OutgoingMessageTypes.USER_COLOR);
+			socket.writeInt(2);
+			socket.writeInt(id);
+			color = Math.max(Math.min(color, 15), 0);
+			socket.writeShort(color);
+			currentUser.color = color;
+			socket.flush();
 		}
 				
 		public function requestRoomList():void {
@@ -254,6 +408,67 @@ package net.codecomposer.palace.rpc
 			socket.flush();
 			
 			currentRoom.selectedUser = null;
+		}
+		
+		public function lockDoor(roomId:int, spotId:int):void {
+			socket.writeInt(OutgoingMessageTypes.DOOR_LOCK);
+			socket.writeInt(4);
+			socket.writeInt(0);
+			socket.writeShort(roomId);
+			socket.writeShort(spotId);
+			socket.flush();
+		}
+		
+		public function unlockDoor(roomId:int, spotId:int):void {
+			socket.writeInt(OutgoingMessageTypes.DOOR_UNLOCK);
+			socket.writeInt(4);
+			socket.writeInt(0);
+			socket.writeShort(roomId);
+			socket.writeShort(spotId);
+			socket.flush();
+		}
+		
+		public function setSpotState(roomId:int, spotId:int, spotState:int):void {
+			socket.writeInt(OutgoingMessageTypes.SPOT_STATE);
+			socket.writeInt(6);
+			socket.writeInt(0);
+			socket.writeShort(roomId);
+			socket.writeShort(spotId);
+			socket.writeShort(spotState);
+			socket.flush();
+		}
+		
+		public function moveLooseProp(propIndex:int, x:int, y:int):void {
+			socket.writeInt(OutgoingMessageTypes.PROP_MOVE);
+			socket.writeInt(8);
+			socket.writeInt(0);
+			socket.writeInt(propIndex);
+			socket.writeShort(y);
+			socket.writeShort(x);
+			socket.flush();
+		}
+		
+		public function addLooseProp(propId:int, propCrc:uint, x:int, y:int):void {
+			socket.writeInt(OutgoingMessageTypes.PROP_NEW);
+			socket.writeInt(12);
+			socket.writeInt(0);
+			
+			socket.writeInt(propId);
+			socket.writeUnsignedInt(propCrc);
+			socket.writeShort(y);
+			socket.writeShort(x);
+			
+			socket.flush();
+		}
+		
+		public function deleteLooseProp(propIndex:int):void {
+			socket.writeInt(OutgoingMessageTypes.PROP_DELETE);
+			socket.writeInt(4);
+			socket.writeInt(0);
+			
+			socket.writeInt(propIndex);
+			
+			socket.flush();
 		}
 		
 		public function requestAsset(assetType:int, assetId:uint, assetCrc:uint):void {
@@ -313,6 +528,22 @@ package net.codecomposer.palace.rpc
 				assetRequestQueueTimer.start();
 			}
 		}
+		
+		private function sendPropToServer(prop:PalaceProp):void {
+			if (prop.width != 44 || prop.height != 44 ||
+				prop.verticalOffset > 44 || prop.verticalOffset < -44 ||
+				prop.horizontalOffset > 44 || prop.horizontalOffset < -44) {
+				// web service big prop... ignore request.
+				return;
+			}
+			
+			var assetResponse:ByteArray = prop.assetData(socket.endian);
+			socket.writeInt(OutgoingMessageTypes.ASSET_REGI);
+			socket.writeInt(assetResponse.length);
+			socket.writeInt(0);
+			
+			socket.writeBytes(assetResponse);
+		}
 
 		public function get currentUser():PalaceUser {
 			return currentRoom.getUserById(id);
@@ -329,8 +560,9 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(id);
 			socket.writeInt(user.props.length);
 			for each (var prop:PalaceProp in user.props) {
-				socket.writeUnsignedInt(prop.asset.id);
-				socket.writeUnsignedInt(prop.asset.crc);
+				socket.writeInt(prop.asset.id);
+				//socket.writeUnsignedInt(prop.asset.crc);
+				socket.writeUnsignedInt(0);
 			}
 			socket.flush();
 		}
@@ -342,6 +574,7 @@ package net.codecomposer.palace.rpc
 		// ***************************************************************
 				
 		private function onConnect(event:Event):void {
+			//PalaceSoundPlayer.getInstance().playConnectionPing();
 			connected = true;
 			state = STATE_HANDSHAKING;
 			trace("Connected");
@@ -516,7 +749,29 @@ package net.codecomposer.palace.rpc
 							case IncomingMessageTypes.PROP_NEW:
 								handlePropNew(size, p);
 								break;
+							
+							case IncomingMessageTypes.DOOR_LOCK:
+								handleDoorLock(size, p);
+								break;
+							
+							case IncomingMessageTypes.DOOR_UNLOCK:
+								handleDoorUnlock(size, p);
+								break;
 								
+							case IncomingMessageTypes.PICT_MOVE:
+								handlePictMove(size, p);
+								break;
+								
+							case IncomingMessageTypes.SPOT_STATE:
+								handleSpotState(size, p);
+								break;
+								
+							case IncomingMessageTypes.SPOT_MOVE:
+								handleSpotMove(size, p);
+								break;
+							case IncomingMessageTypes.DRAW_CMD:
+								handleDrawCommand(size, p);
+								break;
 	//						case IncomingMessage.CONNECTION_DIED:
 	//							handleConnectionDied(size, p);
 	//							break;
@@ -525,9 +780,18 @@ package net.codecomposer.palace.rpc
 	//							handleIncomingFile(size, p);
 	//							break;
 							
+							case IncomingMessageTypes.BLOWTHRU:
+								trace("Blowthru message.");
+								// fall through to default...
 							default:
-								trace("Unhandled MessageID: " + messageID.toString());
-								_throwAwayData(size, p);
+								trace("Unhandled MessageID: " + messageID.toString() + " (" + messageID.toString(16) + ") - " +
+									  "Size: " + size + " - referenceId: " + p);
+								var dataToDump:Array = [];
+								for (var i:int = 0; i < size; i++) {
+									dataToDump[i] = socket.readUnsignedByte();
+								}
+								outputHexView(dataToDump);
+								//_throwAwayData(size, p);
 								break;
 						}
 						messageID = 0;
@@ -543,6 +807,11 @@ package net.codecomposer.palace.rpc
 		
 		private function onIOError(event:IOErrorEvent):void {
 			trace("IO Error!");
+			if (connecting) {
+				var e:PalaceEvent = new PalaceEvent(PalaceEvent.CONNECT_FAILED);
+				e.text = "Unable to connect to " + host + ":" + port + ".\n(" + event.text + ")"
+				dispatchEvent(e);
+			}
 		}
 		
 		private function onSecurityError(event:SecurityErrorEvent):void {
@@ -559,16 +828,16 @@ package net.codecomposer.palace.rpc
 			
 			switch (messageID) {
 				case IncomingMessageTypes.UNKNOWN_SERVER: //1886610802
-					trace("Untested Server Version");
+					Alert.show("Got MSG_TROPSER.  Don't know how to proceed.","Logon Error");
 					break;
-				case IncomingMessageTypes.LITTLE_ENDIAN_SERVER: //1920559476
+				case IncomingMessageTypes.LITTLE_ENDIAN_SERVER: // MSG_DIYIT
 					trace("Server is Little Endian");
 					socket.endian = Endian.LITTLE_ENDIAN;
 					size = socket.readInt();
 					p = socket.readInt();
 					logOn(size, p);
 					break;
-				case IncomingMessageTypes.BIG_ENDIAN_SERVER: //1953069426
+				case IncomingMessageTypes.BIG_ENDIAN_SERVER: // MSG_TIYID
 					trace("Server is Big Endian");
 					socket.endian = Endian.BIG_ENDIAN;
 					size = socket.readInt();
@@ -576,7 +845,7 @@ package net.codecomposer.palace.rpc
 					logOn(size, p);
 					break;
 				default:
-					trace("Unhandled MessageID: " + messageID.toString());
+					trace("Unexpected MessageID while logging on: " + messageID.toString());
 					break;
 			}
 		}
@@ -590,76 +859,89 @@ package net.codecomposer.palace.rpc
 			currentRoom.selfUserId = id = referenceId;
 
 
-			// bk.c(eb) writes a,b,c, no flush
-			socket.writeInt(1919248233);
-			socket.writeInt(128);
-			socket.writeInt(id); // client id/room number?
-			// working from id
-			socket.writeInt(0x5905f923);// b[0]
-			socket.writeInt(0xcf07309c);// b[1]
+			// LOGON
+			socket.writeInt(OutgoingMessageTypes.LOGON);
+			socket.writeInt(128); // struct AuxRegistrationRec is 128 bytes
+			socket.writeInt(0); // RefNum unused in LOGON message
 
-			// Username has to be Windows-1252
-			var userNameBA:ByteArray = new ByteArray();
-			userNameBA.writeMultiByte(userName, 'Windows-1252');
-			userNameBA.position = 0;
-			socket.writeByte(userNameBA.bytesAvailable);
-			socket.writeBytes(userNameBA); //? name  or super.a?
+			// regCode crc
+			socket.writeInt(regCRC);  // Guest regCode crc
 			
-			i = 64 - (1 + userName.length);
-			if (i < 0) { 	// padding???
-				i = 0;
+			// regCode counter
+			socket.writeInt(regCounter);  // Guest regCode counter
+
+			// Username has to be Windows-1252 and up to 31 characters
+			if (userName.length > 31) {
+				userName = userName.slice(0,31);
 			}
+			socket.writeByte(userName.length);
+			socket.writeMultiByte(userName, 'Windows-1252');
+			i = 31 - (userName.length);
 			for(; i > 0; i--) { 
 				socket.writeByte(0);
 			}
-	
-			/*
-			socket.writeInt(5);	// 5 
-			*/
-			socket.writeInt(0x80000004);
 
-			//socket.writeInt(0);	// unset or d?
-			socket.writeInt(0xf5dc385e);
+			for (i=0; i < 32; i ++) {
+				socket.writeByte(0);
+			}			
 	
-        	//socket.writeInt(0); // e?
-			socket.writeInt(0xc144c580);
+			// auxFlags
+			socket.writeInt(AUXFLAGS_AUTHENTICATE | AUXFLAGS_WIN32);
+
+			// puidCtr
+			socket.writeInt(puidCounter);
 	
-        	//socket.writeInt(0); // f?
-			socket.writeInt(0x00002a30);
+        	// puidCRC
+			socket.writeInt(puidCRC);
 	
-        	//socket.writeInt(0); // g?
-			socket.writeInt(0x00021df9);
+        	// demoElapsed - no longer used
+			socket.writeInt(0);
 	
-        	//socket.writeInt(0); // h?
-			socket.writeInt(0x00002a30);
+        	// totalElapsed - no longer used
+			socket.writeInt(0);
+	
+        	// demoLimit - no longer used
+			socket.writeInt(0);
         
-			//WriteShort(1); // i? room id?
-			socket.writeShort(0); // i? room id?
+			// desired room id
+			socket.writeShort(0);
 
-			/*	// version
-	        WriteBytes((unsigned char *)"J2.0", 4); 
-			WriteByte(0);
-			WriteByte(0); */
-			socket.writeMultiByte("350211", "Windows-1252");
+			// Protocol spec lists these as reserved, and says there shouldn't
+			// be anything put in them... but the server records these 6 bytes
+			// in the log file.  So I'll exploit that.
+			socket.writeMultiByte("OPNPAL", "iso-8859-1");
 	
+			// ulRequestedProtocolVersion -- ignored on server
 	        socket.writeInt(0);
 
-	        //socket.writeInt(0);
-    	    socket.writeInt(1);
+			// ulUploadCaps
+    	    socket.writeInt(
+    	    	ULCAPS_ASSETS_PALACE  // This is a lie... for now
+    	    );
 
-        	//socket.writeInt(0);
-	        socket.writeInt(0x00000111);
+        	// ulDownloadCaps
+        	// We have to lie about our capabilities so that servers don't
+        	// reject OpenPalace as a Hacked client.
+	        socket.writeInt(
+	        	DLCAPS_ASSETS_PALACE |
+	        	DLCAPS_FILES_PALACE |  // This is a lie...
+	        	DLCAPS_FILES_HTTPSRVR
+	        );
 
-        	//socket.writeInt(0);
-        	socket.writeInt(1);
-
-        	//socket.writeInt(0);
-        	socket.writeInt(1);
-
+        	// ul2DEngineCaps -- Unused
         	socket.writeInt(0);
+
+        	// ul2dGraphicsCaps -- Unused
+        	socket.writeInt(0);
+
+			// ul3DEngineCaps -- Unused
+        	socket.writeInt(0);
+        	
 			socket.flush();
 			
 			state = STATE_READY;
+			connecting = false;
+			dispatchEvent(new PalaceEvent(PalaceEvent.CONNECT_COMPLETE));
 			
 			requestRoomList();
 			requestUserList();
@@ -667,16 +949,45 @@ package net.codecomposer.palace.rpc
 		
 		
 		// not fully implemented
-		// a bounced logon message?
+		// This is only sent when the server is running in "guests-are-members" mode.
 		private function alternateLogon(size:int, referenceId:int):void {
-			// orig logon id seems to be bullshit?
-			//id = b;
-			//	FILE * fp = fopen("altlogonrx.hex", "w+");
-			for(var i:int = 0; i < size; i++) {
-				socket.readByte();
-			}
-			//		fputc(ReadByte(), fp);	// unknown server params
-			//	fclose(fp);
+			// This is pointless... it's basically echoing back the logon packet
+			// that we sent to the server.
+			// the only reason we support this is so that certain silly servers
+			// can change our puid and ask us to reconnect "for security
+			// reasons"
+			
+			 var crc:uint = socket.readUnsignedInt();
+			 var counter:uint = socket.readUnsignedInt();
+			 var userNameLength:int = socket.readUnsignedByte();
+			 
+			 var userName:String = socket.readMultiByte(userNameLength, 'Windows-1252');
+			 for (var i:int = 0; i<31-userNameLength; i++) {
+			 	socket.readByte(); // padding on the end of the username
+			 }
+			 for (i=0; i<32; i++) {
+			 	socket.readByte(); // wiz password field
+			 }
+			 var auxFlags:uint = socket.readUnsignedInt();
+			 var puidCtr:uint = socket.readUnsignedInt();
+			 var puidCRC:uint = socket.readUnsignedInt();
+			 var demoElapsed:uint = socket.readUnsignedInt();
+			 var totalElapsed:uint = socket.readUnsignedInt();
+			 var demoLimit:uint = socket.readUnsignedInt();
+			 var desiredRoom:int = socket.readShort();
+			 var reserved:String = socket.readMultiByte(6,'iso-8859-1');
+			 var ulRequestedProtocolVersion:uint = socket.readUnsignedInt();
+			 var ulUploadCaps:uint = socket.readUnsignedInt();
+			 var ulDownloadCaps:uint = socket.readUnsignedInt();
+			 var ul2DEngineCaps:uint = socket.readUnsignedInt();
+			 var ul2DGraphicsCaps:uint = socket.readUnsignedInt();
+			 var ul3DEngineCaps:uint = socket.readUnsignedInt();
+			 
+			 if (puidCtr != this.puidCounter || puidCRC != this.puidCRC) {
+			 	this.puidCRC = puidCRC;
+			 	this.puidCounter = puidCtr;
+			 	puidChanged = true;
+			 }
 		}
 		
 		private function handleReceiveServerVersion(size:int, referenceId:int):void {
@@ -699,16 +1010,35 @@ package net.codecomposer.palace.rpc
 		}
 		
 		// not fully implemented
-		private function handleReceiveUserStatus(a:int, b:int):void {
-			// a is length? b is client id
-			var data:String = socket.readMultiByte(a, 'Windows-1252');
-			trace("User status?  Data: \n" + data); 			
+		private function handleReceiveUserStatus(size:int, referenceId:int):void {
+			if (currentUser) {
+				currentUser.flags = socket.readShort();
+			}
+			else {
+				temporaryUserFlags = socket.readShort();
+			}
+			var array:Array = [];
+			var bytesRemaining:int = size - 2;
+			for (var i:int = 0; i < bytesRemaining; i ++) {
+				array.push(socket.readUnsignedByte());
+			}
+			trace("Interesting... there is more to the user status message than just the documented flags:");
+			outputHexView(array)
 		}
 		
 		//class c2
 		private function handleReceiveUserLog(size:int, referenceId:int):void {
 			population = socket.readInt();
-			trace("Got population: " + population);
+			recentLogonUserIds.addItem(referenceId);
+			var timer:Timer = new Timer(15000, 1);
+			timer.addEventListener(TimerEvent.TIMER, function(event:TimerEvent):void {
+				var index:int = recentLogonUserIds.getItemIndex(referenceId);
+				if (index != -1) {
+					recentLogonUserIds.removeItemAt(index);
+				}
+			});
+			timer.start();
+			trace("User ID: " + referenceId + " just logged on.  Population: " + population);
 		}
 		
 		private function handleReceiveMediaServer(size:int, referenceId:int):void {
@@ -743,73 +1073,95 @@ package net.codecomposer.palace.rpc
 					(bytes[byteNum] >= 32 && bytes[byteNum] <= 126) ? String.fromCharCode(bytes[byteNum]) : " "
 				);
 			}
-			output = output.concat(outputLineHex, "      ", outputLineAscii, "\n");
+			
+			var bufferLength:int = 57 - outputLineHex.length;
+			var bufferString:String = "";
+			for (var i:int = 0; i < bufferLength; i ++) {
+				bufferString += " ";
+			}
+			
+			output = output.concat(outputLineHex, bufferString, outputLineAscii, "\n");
 			trace(output);
 		}
 
 		
 		// not fully implemented
 		private function handleReceiveRoomDescription(size:int, referenceId:int):void {
-			var roomFlags:int = socket.readInt();
-			var face:int = socket.readInt();
-			var roomID:int = socket.readShort();
-			var roomNameOffset:int = socket.readShort();
-			var imageNameOffset:int = socket.readShort();
-			var artistNameOffset:int = socket.readShort();
-			var passwordOffset:int = socket.readShort();
-			var hotSpotCount:int = socket.readShort();
-			var hotSpotOffset:int = socket.readShort();
-			var imageCount:int = socket.readShort();
-			var imageOffset:int = socket.readShort();
-			var drawCommandsCount:int = socket.readShort();
-			var firstDrawCommand:int = socket.readShort();
-			var peopleCount:int = socket.readShort();
-			var loosePropCount:int = socket.readShort();
-			var firstLooseProp:int = socket.readShort();
-			socket.readShort();
-			var roomDataLength:int = socket.readShort();
-			var roomBytes:Array = new Array(roomDataLength);
+			var messageBytes:ByteArray = new ByteArray();
+			messageBytes.endian = socket.endian;
+			socket.readBytes(messageBytes, 0, size);
+			
+			var roomDescription:RoomDescription = new RoomDescription();
+			roomDescription.read(messageBytes, referenceId);
+			
+			
+			messageBytes.position = 0;
+			
+			var roomFlags:int = messageBytes.readInt();
+			var face:int = messageBytes.readInt();
+			var roomID:int = messageBytes.readShort();
+			currentRoom.id = roomID;
+			var roomNameOffset:int = messageBytes.readShort();
+			var imageNameOffset:int = messageBytes.readShort();
+			var artistNameOffset:int = messageBytes.readShort();
+			var passwordOffset:int = messageBytes.readShort();
+			var hotSpotCount:int = messageBytes.readShort();
+			var hotSpotOffset:int = messageBytes.readShort();
+			var imageCount:int = messageBytes.readShort();
+			var imageOffset:int = messageBytes.readShort();
+			var drawCommandsCount:int = messageBytes.readShort();
+			var firstDrawCommand:int = messageBytes.readShort();
+			var peopleCount:int = messageBytes.readShort();
+			var loosePropCount:int = messageBytes.readShort();
+			var firstLooseProp:int = messageBytes.readShort();
+			messageBytes.readShort();
+			var roomDataLength:int = messageBytes.readShort();
+			var rb:Array = new Array(roomDataLength);
 
 			trace("Reading in room description: " + roomDataLength + " bytes to read.");
 			for (var i:int = 0; i < roomDataLength; i++) {
-				roomBytes[i] = socket.readUnsignedByte();
+				rb[i] = messageBytes.readUnsignedByte();
 			}
 			
 			//outputHexView(roomBytes);
 			
 			var padding:int = size - roomDataLength - 40;
 			for (i=0; i < padding; i++) {
-				socket.readByte();
+				messageBytes.readByte();
 			}
 			
 			var byte:int;
 			
 			// Room Name
-			var roomNameLength:int = roomBytes[roomNameOffset];
+			var roomNameLength:int = rb[roomNameOffset];
 			var roomName:String = "";
 			var ba:ByteArray = new ByteArray();
 			for (i=0; i < roomNameLength; i++) {
-				byte = roomBytes[i+roomNameOffset+1];
+				byte = rb[i+roomNameOffset+1];
 				ba.writeByte(byte);
 			}
 			ba.position = 0;
 			roomName = ba.readMultiByte(roomNameLength, 'Windows-1252');
 			
 			// Image Name
-			var imageNameLength:int = roomBytes[imageNameOffset];
+			var imageNameLength:int = rb[imageNameOffset];
 			var imageName:String = "";
 			for (i=0; i < imageNameLength; i++) {
-				byte = roomBytes[i+imageNameOffset+1];
+				byte = rb[i+imageNameOffset+1];
 				imageName += String.fromCharCode(byte);
+			}
+			if (PalaceConfig.URIEncodeImageNames) {
+				imageName = URI.escapeChars(imageName);
 			}
 
 			// Images
 			var images:Object = {};
+			currentRoom.hotspotBitmapCache = {};
 			for (i=0; i < imageCount; i++) {
 				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
 				var imageBA:ByteArray = new ByteArray();
 				for (var j:int=imageOffset; j < imageOffset+12; j++) {
-					imageBA.writeByte(roomBytes[j]);
+					imageBA.writeByte(rb[j]);
 				}
 				imageBA.endian = socket.endian;
 				imageBA.position = 0;
@@ -817,14 +1169,16 @@ package net.codecomposer.palace.rpc
 				imageOverlay.id = imageBA.readShort();
 				var picNameOffset:int = imageBA.readShort(); // pstring offset
 				imageOverlay.transparencyIndex = imageBA.readShort();
-				imageOverlay.transparencyColor = PalacePalette.clutARGB[imageOverlay.transparencyIndex];
-				trace("Transparency Index: " + imageOverlay.transparencyIndex + " - Transparency Color: " + imageOverlay.transparencyColor + " (" + imageOverlay.transparencyColor.toString(16) + ")");
+				trace("Transparency Index: " + imageOverlay.transparencyIndex);
 				imageBA.readShort(); // Reserved.  Padding.. field alignment
-				var picNameLength:int = roomBytes[picNameOffset];
+				var picNameLength:int = rb[picNameOffset];
 				var picName:String = "";
 				for (j=0; j < picNameLength; j++) {
-					var imageNameByte:int = roomBytes[picNameOffset+j+1]; 
+					var imageNameByte:int = rb[picNameOffset+j+1]; 
 					picName += String.fromCharCode(imageNameByte);
+				}
+				if (PalaceConfig.URIEncodeImageNames) {
+					picName = URI.escapeChars(picName);
 				}
 				imageOverlay.filename = picName;
 				images[imageOverlay.id] = imageOverlay; 
@@ -835,34 +1189,47 @@ package net.codecomposer.palace.rpc
 
 			// Hotspots
 			currentRoom.hotSpots.removeAll();
+			currentRoom.hotSpotsById = {};
 			for (i=0; i < hotSpotCount; i++) {
 				var hs:PalaceHotspot = new PalaceHotspot();
-				hs.readData(socket.endian, roomBytes, hotSpotOffset);
+				hs.readData(socket.endian, rb, hotSpotOffset);
 				hotSpotOffset += hs.size;
 				currentRoom.hotSpots.addItem(hs);
+				currentRoom.hotSpotsById[hs.id] = hs;
 			}
 			
 			// Loose Props
 			currentRoom.looseProps.removeAll();
 			var tempPropArray:Array = []; 
 			var propOffset:int = firstLooseProp;
+			currentRoom.clearLooseProps();
 			for (i=0; i < loosePropCount; i++) {
 				var looseProp:PalaceLooseProp = new PalaceLooseProp();
-				looseProp.loadData(socket.endian, roomBytes, propOffset);
-				tempPropArray.push(looseProp);
+				looseProp.loadData(socket.endian, rb, propOffset);
 				propOffset = looseProp.nextOffset;
+				currentRoom.addLooseProp(looseProp.id, looseProp.crc, looseProp.x, looseProp.y, true);
 			}
-			currentRoom.looseProps.source = tempPropArray;
 			
 			// Draw Commands
-//			currentRoom.drawCommands.removeAll();
-//			var drawCommandOffset:int = firstDrawCommand;
-//			for (i=0; i < drawCommandsCount; i++) {
-//				trace("Draw command at offset: " + drawCommandOffset);
-//				var drawRecord:PalaceDrawRecord = new PalaceDrawRecord();
-//				drawRecord.readData(socket.endian, roomBytes, drawCommandOffset);
-//				drawCommandOffset = drawRecord.nextOffset;
-//			}
+			currentRoom.drawFrontCommands.removeAll();
+			currentRoom.drawBackCommands.removeAll();
+			var drawCommandOffset:int = firstDrawCommand;
+			for (i=0; i < drawCommandsCount; i++) {
+				var drawRecord:PalaceDrawRecord = new PalaceDrawRecord();
+				drawRecord.readData(socket.endian, rb, drawCommandOffset);
+				drawCommandOffset = drawRecord.nextOffset;
+				if (drawRecord.layer == PalaceDrawRecord.LAYER_FRONT) {
+//					trace("Draw front layer command at offset: " + drawCommandOffset);
+					currentRoom.drawFrontCommands.addItem(drawRecord);
+					currentRoom.drawLayerHistory.push(PalaceDrawRecord.LAYER_FRONT);
+				}
+				else{
+//					trace("Draw back layer command at offset: " + drawCommandOffset);
+					currentRoom.drawBackCommands.addItem(drawRecord);
+					currentRoom.drawLayerHistory.push(PalaceDrawRecord.LAYER_BACK);
+				}
+				
+			}
 			
 			currentRoom.backgroundFile = imageName;
 			trace("Background Image: " + currentRoom.backgroundFile);
@@ -870,6 +1237,53 @@ package net.codecomposer.palace.rpc
 			currentRoom.name = roomName;
 			trace("Room name: " + currentRoom.name);
 			
+			var roomChangeEvent:PalaceEvent = new PalaceEvent(PalaceEvent.ROOM_CHANGED);
+			dispatchEvent(roomChangeEvent);
+		}
+		
+		private function handleDrawCommand(size:int, referenceId:int):void {	
+			
+			var pBytes:Array = [];
+			for (var i:int = 0; i < size; i++) {
+				pBytes[i] = socket.readUnsignedByte();
+			}
+
+			var drawRecord:PalaceDrawRecord = new PalaceDrawRecord();
+			drawRecord.readData(socket.endian, pBytes, 0);
+			
+			
+			if (drawRecord.command == PalaceDrawRecord.CMD_DELETE) {
+				//undo
+				if (currentRoom.drawFrontCommands.length == 0 &&
+				    currentRoom.drawBackCommands.length == 0) {
+					return;
+				}
+				if (currentRoom.drawLayerHistory.pop() == PalaceDrawRecord.LAYER_FRONT) {
+					currentRoom.drawFrontCommands.removeItemAt(currentRoom.drawFrontCommands.length-1);
+				}
+				else {
+					currentRoom.drawBackCommands.removeItemAt(currentRoom.drawBackCommands.length-1);
+				}
+				return;
+			}
+			else if (drawRecord.command == PalaceDrawRecord.CMD_DETONATE) {
+				//delete all
+				currentRoom.drawFrontCommands.removeAll();
+				currentRoom.drawBackCommands.removeAll();
+				currentRoom.drawLayerHistory = new Vector.<uint>();
+				return;
+			}
+			
+			var drawCommandOffset:int = drawRecord.nextOffset;
+			
+			if (drawRecord.layer == PalaceDrawRecord.LAYER_FRONT) {
+				currentRoom.drawFrontCommands.addItem(drawRecord);
+				currentRoom.drawLayerHistory.push(PalaceDrawRecord.LAYER_FRONT);
+			}
+			else {
+				currentRoom.drawBackCommands.addItem(drawRecord);
+				currentRoom.drawLayerHistory.push(PalaceDrawRecord.LAYER_BACK);
+			}
 		}
 		
 		// List of users in current room
@@ -906,6 +1320,7 @@ package net.codecomposer.palace.rpc
 				socket.readMultiByte(31-userNameLength, 'Windows-1252');
 
 				var user:PalaceUser = new PalaceUser();
+				user.isSelf = Boolean(userId == id);
 				user.id = userId;
 				user.name = userName;
 				user.propCount = propnum;
@@ -946,6 +1361,7 @@ package net.codecomposer.palace.rpc
 			for (var i:int = 0; i < userCount; i++) {
 				var user:PalaceUser = new PalaceUser();
 				user.id = socket.readInt();
+				user.isSelf = Boolean(user.id == id);
 				user.flags = socket.readShort();
 				user.roomID = socket.readShort();
 				if (roomById[user.roomID]) {
@@ -975,6 +1391,14 @@ package net.codecomposer.palace.rpc
 		
 		private function handleUserNew(size:int, referenceId:int):void {
 			var userId:int = socket.readInt();
+			if (recentLogonUserIds.getItemIndex(userId) != -1) {
+				// Recently logged on user.
+				var index:int = recentLogonUserIds.getItemIndex(userId);
+				if (index != -1) {
+					recentLogonUserIds.removeItemAt(index);
+				}
+				PalaceSoundPlayer.getInstance().playConnectionPing();
+			}
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
 			var propIds:Array = []; // Props, 9 slots
@@ -1010,6 +1434,7 @@ package net.codecomposer.palace.rpc
 			//userName = userName.substring(1);
 
 			var user:PalaceUser = new PalaceUser();
+			user.isSelf = Boolean(userId == id);
 			user.id = userId;
 			user.x = x;
 			user.y = y;
@@ -1143,6 +1568,7 @@ package net.codecomposer.palace.rpc
 			population = socket.readInt();
 			if (currentRoom.getUserById(referenceId) != null) {
 				currentRoom.removeUserById(referenceId);
+				PalaceSoundPlayer.getInstance().playConnectionPing();
 			}
 			trace("User " + referenceId + " logged off");
 		}
@@ -1153,9 +1579,17 @@ package net.codecomposer.palace.rpc
 			var assetCrc:uint = socket.readUnsignedInt();
 			trace("Got asset request for type: " + type + ", assetId: " + assetId + ", assetCrc: " + assetCrc);
 			var prop:PalaceProp = PalacePropStore.getInstance().getProp(null, assetId, assetCrc);
-			if (prop != null) {
-				trace("Have prop to send...");
+
+			if (prop.ready) {
+				sendPropToServer(prop);
 			}
+			else {
+				prop.addEventListener(PropEvent.PROP_LOADED, handlePropReadyToSend);
+			}
+		}
+		
+		private function handlePropReadyToSend(event:PropEvent):void {
+			sendPropToServer(event.prop);
 		}
 		
 		private function handleReceiveAsset(size:int, referenceId:int):void {
@@ -1238,31 +1672,86 @@ package net.codecomposer.palace.rpc
 			var propIndex:int = socket.readInt();
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
-			var prop:PalaceLooseProp = PalaceLooseProp(currentRoom.looseProps.getItemAt(propIndex));
-			prop.x = x;
-			prop.y = y;
+			currentRoom.moveLooseProp(propIndex, x, y);
 		}
 		
 		private function handlePropDelete(size:int, referenceId:int):void {
 			var propIndex:int = socket.readInt();
-			if (propIndex == -1) {
-				currentRoom.looseProps.removeAll();
-			}
-			else {
-				currentRoom.looseProps.removeItemAt(propIndex);
-			}
+			currentRoom.removeLooseProp(propIndex);
 		}
 		
 		private function handlePropNew(size:int, referenceId:int):void {
-			var prop:PalaceLooseProp = new PalaceLooseProp();
-			prop.id = socket.readUnsignedInt();
-			prop.crc = socket.readUnsignedInt();
-			prop.y = socket.readShort();
-			prop.x = socket.readShort();
-			prop.loadProp();
-			currentRoom.looseProps.addItemAt(prop, 0);
+			var id:int = socket.readInt();
+			var crc:uint = socket.readUnsignedInt();
+			var y:int = socket.readShort();
+			var x:int = socket.readShort();
+			currentRoom.addLooseProp(id, crc, x, y);
+		}
+		
+		private function handleDoorLock(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			trace("Spot id " + spotId + " in room id " + roomId + " has been locked");
+			if (roomId == currentRoom.id) {
+				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+				hs.changeState(1);
+			}
+		}
+		
+		private function handleDoorUnlock(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			trace("Spot id " + spotId + " in room id " + roomId + " has been unlocked");
+			if (roomId == currentRoom.id) {
+				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+				hs.changeState(0);
+			}
+		}
+		
+		private function handleSpotState(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			var spotState:int = socket.readUnsignedShort();
+			trace("Spot State Changed: Spot id " + spotId + " in room id " + roomId + " is now in state " + spotState);
+			if (roomId == currentRoom.id) {
+				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+				if (hs != null) {
+					hs.changeState(spotState);
+				}
+				else {
+					trace("Unable to access spot id " + spotId); 
+				}
+			}
+		}
+		
+		
+		private function handlePictMove(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			var y:int = socket.readShort();
+			var x:int = socket.readShort();
+			trace("Picture in HotSpot " + spotId + " in room " + roomId + " moved offset to " + x + "," + y);
+			if (roomId != currentRoom.id) { return; }
+			var hotSpot:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+			if (hotSpot != null) {
+				hotSpot.movePicTo(x, y);
+			}
+		}
+		
+		private function handleSpotMove(size:int, referenceId:int):void {
+			var roomId:int = socket.readShort();
+			var spotId:int = socket.readShort();
+			var y:int = socket.readShort();
+			var x:int = socket.readShort();
+			trace("Hotspot " + spotId + " in room " + roomId + " moved to " + x + "," + y);
+			if (roomId != currentRoom.id) { return; }
+			var hotSpot:PalaceHotspot = currentRoom.hotSpotsById[spotId];
+			if (hotSpot != null) {
+				hotSpot.moveTo(x, y);
+			}
 		}
 
+		
 		private function handleServerDown(size:int, referenceId:int):void {
 			var reason:String = "The connection to the server has been lost.";
 
@@ -1313,7 +1802,12 @@ package net.codecomposer.palace.rpc
 	            default:
 	                break;
 			}
-			Alert.show(reason, "Connection Dropped");
+			if (!puidChanged) {
+				// Don't show the disconnection error if the server dropped us
+				// just to change our puid and ask us to reconnect.
+				Alert.show(reason, "Connection Dropped");
+			}
+			trace("Connection Dropped: " + reason + " - Code: " + referenceId);
 		}
 		
 		private function _throwAwayData(a:int, b:int):void {

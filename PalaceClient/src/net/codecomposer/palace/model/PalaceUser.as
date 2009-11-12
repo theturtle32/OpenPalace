@@ -17,13 +17,57 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.model
 {
+	import flash.events.EventDispatcher;
+	
 	import mx.collections.ArrayCollection;
 	
 	import net.codecomposer.palace.event.PropEvent;
-	
+	import net.codecomposer.palace.rpc.PalaceClient;
+
 	[Bindable]
-	public class PalaceUser
+	public class PalaceUser extends EventDispatcher
 	{
+		// wizard
+		public static const SUPERUSER:uint = 0x0001;
+		
+		// Total wizard
+		public static const GOD:uint = 0x0002;
+		
+		// Server should drop user at first opportunity
+		public static const KILL:uint = 0x0004;
+		
+		// user is a guest (no registration code)
+		public static const GUEST:uint = 0x0008;
+		
+		// Redundant with KILL.  Shouldn't be used
+		public static const BANISHED:uint = 0x0010;
+		
+		// historical artifact.  Shouldn't be used
+		public static const PENALIZED:uint = 0x0020;
+		
+		// Comm error, drop at first opportunity
+		public static const COMM_ERROR:uint = 0x0040;
+		
+		// Not allowed to speak
+		public static const GAG:uint = 0x0080;
+		
+		// Stuck in corner and not allowed to move
+		public static const PIN:uint = 0x0100;
+		
+		// Doesn't appear on user list
+		public static const HIDE:uint = 0x0200;
+		
+		// Not accepting whisper from outside room
+		public static const REJECT_ESP:uint = 0x0400;
+		
+		// Not accepting whisper from inside room
+		public static const REJECT_PRIVATE:uint = 0x0800;
+		
+		// Not allowed to wear props
+		public static const PROPGAG:uint = 0x1000;
+		
+		
+		public var isSelf:Boolean = false;
 		public var id:int;
 		public var name:String = "Uninitialized User";
 		public var x:int;
@@ -54,7 +98,7 @@ package net.codecomposer.palace.model
 		}
 		
 		public function toggleProp(prop:PalaceProp):void {
-			var wearingProp:Boolean = (props.source.indexOf(prop) != -1);
+			var wearingProp:Boolean = (props.getItemIndex(prop) != -1);
 			if (wearingProp) {
 				removeProp(prop);
 			}
@@ -64,26 +108,34 @@ package net.codecomposer.palace.model
 		}
 		
 		public function wearProp(prop:PalaceProp):void {
-			if (props.length < 9) {
+			prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
+			if (props.length < 9 && props.getItemIndex(prop) == -1) {
 				props.addItem(prop);
 			}
 			syncPropIdsToProps();
 			checkFaceProps();
+			updatePropsOnServer();
 		}
 		
 		public function removeProp(prop:PalaceProp):void {
-			var propIndex:int = props.source.indexOf(prop);
+			var propIndex:int = props.getItemIndex(prop);
 			if (propIndex != -1) {
 				props.removeItemAt(propIndex);
 			}
 			syncPropIdsToProps();
 			checkFaceProps();
+			updatePropsOnServer();
+		}
+		
+		public function updatePropsOnServer():void {
+			PalaceClient.getInstance().updateUserProps();
 		}
 		
 		public function naked():void {
 			props.removeAll();
 			syncPropIdsToProps();
 			checkFaceProps();
+			updatePropsOnServer();
 		}
 		
 		public function syncPropIdsToProps():void {

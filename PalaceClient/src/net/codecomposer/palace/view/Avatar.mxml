@@ -17,144 +17,246 @@ You should have received a copy of the GNU General Public License
 along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
-	x="{user.x-this.width/2}" y="{user.y-this.height/2}"
-	height="132"
-	buttonMode="true"
-	horizontalScrollPolicy="off" verticalScrollPolicy="off"
+<s:SkinnableContainer xmlns:mx="library://ns.adobe.com/flex/halo"
+	xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009"
+	x="{user.x-22}" y="{user.y-22}"
+	height="44"
+	width="44"
+	mouseEnabled="false"
+	buttonMode="{!user.isSelf}"
 	creationComplete="handleCreationComplete()"
+	xmlns:view="net.codecomposer.palace.view.*"
 	xmlns:filters="flash.filters.*">
 	
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
+			import mx.core.FlexBitmap;
 			import mx.events.CollectionEvent;
-			import net.codecomposer.palace.model.PalaceProp;
-			import mx.binding.utils.ChangeWatcher;
+			import mx.events.CollectionEventKind;
 			import mx.events.PropertyChangeEvent;
-			import com.deviant.HueColorMatrixFilter;
-			import mx.collections.ArrayCollection;
+			
+			import net.codecomposer.palace.event.PropEvent;
+			import net.codecomposer.palace.model.PalaceProp;
 			import net.codecomposer.palace.model.PalaceUser;
+			
+			import spark.effects.Fade;
+			import spark.layouts.BasicLayout;
 			[Bindable]
 			public var user:PalaceUser = new PalaceUser();
 			
-			// Faces
-			[Embed(source="../../../../assets/faces/0.gif")]
-			[Bindable]
-			public static var face0:Class;
+			public static var chatBubbleTintColors:Array = [
+				0xFF9999, // 0  Red
+				0xFF9966, // 1  Orange
+				0xFFCC88, // 2  Gold
+				0xFFFFAA, // 3  Yellow
+				0xD0F29F, // 4  Yellow-Green
+				0xB9F29F, // 5  Green
+				0xAFF2AE, // 6  Green 2
+				0xC4F4DE, // 7  Green-Cyan
+				0xA9EEF1, // 8  Cyan
+				0x8DD2FF, // 9  Cyan-Blue
+				0x86ABFF, // 10 Blue
+				0x8F86FF, // 11 Blue-Violet
+				0xAB86FF, // 12 Violet
+				0xEF86FF, // 13 Magenta
+				0xFF86E4, // 14 Magenta-Rose
+				0xFF86B1  // 15 Rose
+			]; 
 			
-			[Embed(source="../../../../assets/faces/1.gif")]
-			[Bindable]
-			public static var face1:Class;
+			private var imagesByProp:Dictionary = new Dictionary();
 			
-			[Embed(source="../../../../assets/faces/2.gif")]
-			[Bindable]
-			public static var face2:Class;
+			private static const ANIMATE_FORWARD:int = 1;
+			private static const ANIMATE_BACKWARD:int = -1;
 			
-			[Embed(source="../../../../assets/faces/3.gif")]
-			[Bindable]
-			public static var face3:Class;
+			private var animatedProps:Array;
+			private var animatedPropTimer:Timer = new Timer(350, 0);
+			private var animationIndex:int = 0;
+			private var bounceAnimation:Boolean = false;
+			private var animationDirection:int = ANIMATE_FORWARD;
 			
-			[Embed(source="../../../../assets/faces/4.gif")]
-			[Bindable]
-			public static var face4:Class;
-			
-			[Embed(source="../../../../assets/faces/5.gif")]
-			[Bindable]
-			public static var face5:Class;
-			
-			[Embed(source="../../../../assets/faces/6.gif")]
-			[Bindable]
-			public static var face6:Class;
-			
-			[Embed(source="../../../../assets/faces/7.gif")]
-			[Bindable]
-			public static var face7:Class;
-			
-			[Embed(source="../../../../assets/faces/8.gif")]
-			[Bindable]
-			public static var face8:Class;
-			
-			[Embed(source="../../../../assets/faces/9.gif")]
-			[Bindable]
-			public static var face9:Class;
-			
-			[Embed(source="../../../../assets/faces/10.gif")]
-			[Bindable]
-			public static var face10:Class;
-			
-			[Embed(source="../../../../assets/faces/11.gif")]
-			[Bindable]
-			public static var face11:Class;
-			
-			[Embed(source="../../../../assets/faces/12.gif")]
-			[Bindable]
-			public static var face12:Class;
-			
-			[Bindable]
-			private var faces:ArrayCollection = new ArrayCollection([
-				face0,
-				face1,
-				face2,
-				face3,
-				face4,
-				face5,
-				face6,
-				face7,
-				face8,
-				face9,
-				face10,
-				face11,
-				face12,
-				face0,
-				face1,
-				face2
-			]);
-
-			private var colors:Object = {};
-			
-			private var hue:HueColorMatrixFilter = new HueColorMatrixFilter();				
-						
 			private function updateFace(event:PropertyChangeEvent=null):void {
-				if (user) {
-					hue.reset();
-					hue.Hue = colors[user.color];
-					face.filters = [hue.Filter];
-				}
 			}
 			
 			private function handleCreationComplete():void {
-				var startColor:int = -35;
-				var interval:int = 360/16;
-				for (var i:int = 0; i < 16; i++) {
-					colors[i] = startColor + (interval * i);
-				}
-				
-				updateFace();
-				ChangeWatcher.watch(this, ['user','face'], updateFace);
-				ChangeWatcher.watch(this, ['user','color'], updateFace);
+//				var hitSprite:Sprite = new Sprite();
+//				hitSprite.x = 44;
+//				hitSprite.y = 44;
+//				hitSprite.graphics.clear();
+//				hitSprite.graphics.beginFill(0x000000, 0);
+//				hitSprite.graphics.drawRect(0,0,44,44);
+//				hitSprite.graphics.endFill();
+//				hitArea = hitSprite;
+//				
+				user.props.addEventListener(CollectionEvent.COLLECTION_CHANGE, handlePropsChange);
+				animatedPropTimer.addEventListener(TimerEvent.TIMER, animateProps);
+				loadProps();
 			}
 			
+			private function loadProps():void {
+				var numProps:int = user.props.length;
+				for (var i:int = 0; i < numProps; i ++) {
+					addProp(PalaceProp(user.props.getItemAt(i)));
+				}
+			}
+			
+			private function addProp(prop:PalaceProp):void {
+				var image:AlphaHitAreaImage;
+				prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
+				image = new AlphaHitAreaImage();
+				image.addEventListener(MouseEvent.MOUSE_OVER, handlePropMouseOver);
+				image.addEventListener(MouseEvent.MOUSE_OUT, handlePropMouseOut);
+				var bitmap:FlexBitmap = FlexBitmap(prop.bitmap);
+				image.source = bitmap;
+				image.x = prop.horizontalOffset;
+				image.y = prop.verticalOffset;
+				image.alpha = prop.ghost ? 0.5 : 1.0;
+				imagesByProp[prop] = image;
+				propsGroup.addElement(image);
+				updateAnimatedProps();
+			}
+			
+			private function updateAnimatedProps():void {
+				var useBounce:Boolean = false;
+				animatedProps = [];
+				var numProps:int = user.props.length;
+				for (var i:int = 0; i < numProps; i ++) {
+					var prop:PalaceProp = PalaceProp(user.props.getItemAt(i));
+					if (prop.animate) {
+						animatedProps.push(prop);
+						if (prop.bounce) {
+							useBounce = true;
+						}
+					}
+				}
+				if (animatedProps.length == 1) {
+					animatedProps = [];
+				}
+				if (animatedProps.length == 2) {
+					useBounce = false;
+				}
+				animationIndex = 0;
+				bounceAnimation = useBounce;
+				animationDirection = ANIMATE_FORWARD;
+				
+				animatedPropTimer.stop();
+				
+				if (animatedProps.length > 1) {
+					animatedPropTimer.reset();
+					animatedPropTimer.start();
+				}
+			}
+				
+			private function animateProps(event:TimerEvent):void {
+				for (var i:int = 0; i < animatedProps.length; i ++) {
+					var prop:PalaceProp = animatedProps[i]
+					var image:AlphaHitAreaImage = AlphaHitAreaImage(imagesByProp[prop])
+					if (image) {
+						image.visible = (i == animationIndex);
+					}
+				}
+				
+				animationIndex += animationDirection;
+				
+				if (animationIndex >= animatedProps.length) {
+					if (bounceAnimation) {
+						animationDirection *= -1;
+						animationIndex = animatedProps.length-2;
+					}
+					else {
+						animationIndex = 0;
+					}
+				}
+				else if (animationIndex <= 0) {
+					if (bounceAnimation) {
+						animationDirection *= -1;
+						animationIndex = 0;
+					}
+					else {
+						animationIndex = 0;
+					}
+				}
+				
+			}
+			
+			private function handlePropMouseOver(event:MouseEvent):void {
+				if (!user.isSelf) {
+					Mouse.cursor = MouseCursor.BUTTON;
+				}
+			}
+			
+			private function handlePropMouseOut(event:MouseEvent):void {
+				Mouse.cursor = MouseCursor.ARROW;
+			}
+			
+			private function handlePropsChange(event:CollectionEvent):void {
+				var prop:PalaceProp;
+				var image:AlphaHitAreaImage;
+				switch (event.kind) {
+					case CollectionEventKind.ADD:
+						for each (prop in event.items) {
+							addProp(prop);
+						}
+						break;
+					case CollectionEventKind.REMOVE:
+						for each (prop in event.items) {
+							prop.removeEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
+							image = imagesByProp[prop];
+							if (image != null) {
+								propsGroup.removeElement(image);
+								delete imagesByProp[prop];
+							}
+						}
+						break;
+					case CollectionEventKind.RESET:
+						imagesByProp = new Dictionary();
+						propsGroup.removeAllElements();
+						break;
+				}
+				updateAnimatedProps();
+			}
+			
+			private function handlePropLoaded(event:Event):void {
+				var prop:PalaceProp = PalaceProp(event.target);
+				var image:AlphaHitAreaImage = imagesByProp[prop];
+				image.smoothBitmapContent = true;
+				if (image != null) {
+					image.alpha = 0;
+					image.source = prop.bitmap;
+					image.x = prop.horizontalOffset;
+					image.y = prop.verticalOffset;
+					var fade:Fade = new Fade(image);
+					fade.duration = 500;
+					fade.alphaFrom = 0;
+					fade.alphaTo = prop.ghost ? 0.5 : 1.0;
+					fade.play();
+				}
+				updateAnimatedProps();
+			}
+			
+			
 		]]>
-	</mx:Script>
-	<mx:Image x="44" y="44" width="44" height="44" source="{faces.getItemAt(user.face)}" visible="{user.showFace}" id="face"/>
-	<!--
-	<mx:Canvas backgroundColor="#000000" width="{nameTag.width}" height="{nameTag.height-2}" x="{nameTag.x}" y="{nameTag.y}" />
-	-->
-	<mx:Canvas id="propsCanvas" horizontalCenter="0" verticalCenter="0" width="132" height="132"
-		verticalScrollPolicy="off" horizontalScrollPolicy="off">
-		<mx:Repeater id="propRepeater" dataProvider="{user.props}">
-			<mx:Image source="{propRepeater.currentItem.bitmap}"
-				alpha="{propRepeater.currentItem.ghost ? 0.5 : 1.0}"
-				x="{propRepeater.currentItem.horizontalOffset+43}"
-				y="{propRepeater.currentItem.verticalOffset+43}" />
-		</mx:Repeater>
-	</mx:Canvas>
+	</fx:Script>
 	
-	<mx:Label color="#FFFFFF" id="nameTag" fontWeight="bold" selectable="false" 
-		text="{user.name}" textAlign="center" horizontalCenter="0" verticalCenter="24"
-		fontFamily="Arial" fontSize="12">
-		<mx:filters>
-			<filters:GlowFilter color="#000000" alpha="1" blurX="2" blurY="2" quality="{BitmapFilterQuality.MEDIUM}" strength="5" />
-		</mx:filters>
-	</mx:Label>
-</mx:Canvas>
+	<s:layout>
+		<s:BasicLayout />
+	</s:layout>
+	
+	<s:Scroller
+		horizontalScrollPolicy="off" verticalScrollPolicy="off"
+		width="44" height="44"
+		visible="{user.showFace}"
+		x="-1" y="-1">
+		<s:Group horizontalScrollPosition="{user.face * 45}" verticalScrollPosition="{user.color * 45}">
+			<view:AlphaHitAreaImage mouseOver="handlePropMouseOver(event)" mouseOut="handlePropMouseOut(event)"
+				smoothBitmapContent="true" source="@Embed(source='assets/faces/defaultsmileys.png')" />
+		</s:Group>
+	</s:Scroller>
+	
+	<s:Group id="propsGroup" x="0" y="0"
+		mouseEnabled="false">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+
+</s:SkinnableContainer>

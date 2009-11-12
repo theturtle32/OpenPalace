@@ -21,6 +21,9 @@ package net.codecomposer.palace.rpc.webservice
 	// OPWS = Open Palace Web Service
 	public class OPWSNewProps extends EventDispatcher
 	{
+		[Event(type="OPWSEvent", name="result")]
+		[Event(type="OPWSEvent", name="fault")]
+		
 		private var _loader:URLLoader;
 		
 		private var _props:Array;
@@ -54,7 +57,8 @@ package net.codecomposer.palace.rpc.webservice
 						animate: prop.animate,
 						palindrome: prop.palindrome,
 						bounce: prop.bounce
-					}
+					},
+					format: prop.webServiceFormat
 				};
 				requestDefs.push(requestDef);
 			}
@@ -66,6 +70,7 @@ package net.codecomposer.palace.rpc.webservice
 			];
 			request.data = JSON.encode({
 				api_version: 1,
+				api_key: OPWSParameters.API_KEY,
 				props: requestDefs
 			});
 

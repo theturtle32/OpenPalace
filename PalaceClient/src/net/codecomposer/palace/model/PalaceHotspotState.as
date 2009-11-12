@@ -19,6 +19,8 @@ package net.codecomposer.palace.model
 {
 	import flash.utils.ByteArray;
 	
+	import net.codecomposer.palace.view.HotSpotImage;
+
 	[Bindable]
 	public class PalaceHotspotState
 	{
@@ -26,6 +28,7 @@ package net.codecomposer.palace.model
 		public var pictureId:int;
 		public var x:int;
 		public var y:int;
+		public var hotspotImage:HotSpotImage;
 		
 		public static const size:int = 8;
 		

@@ -1,44 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!--
-This file is part of OpenPalace.
-
-OpenPalace is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-OpenPalace is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
--->
-
-<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"
-	xmlns:code="http://code.google.com/p/flexlib/" xmlns:local="*"
-	backgroundColor="#333333"
-	creationComplete="handleCreationComplete()" xmlns:view="net.codecomposer.palace.view.*">
-	<mx:Script>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" minWidth="800" minHeight="450"
+	skinClass="FlashPalaceApplicationSkin"
+	applicationComplete="handleApplicationComplete()"
+	creationComplete="handleCreationComplete()" xmlns:code="http://code.google.com/p/flexlib/" xmlns:view="net.codecomposer.palace.view.*" xmlns:local="*">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+ 
+	<fx:Script>
 		<![CDATA[
-			import mx.events.PropertyChangeEvent;
+			import flexlib.mdi.events.MDIWindowEvent;
+			
 			import mx.binding.utils.ChangeWatcher;
+			import mx.controls.Alert;
+			import mx.events.BrowserChangeEvent;
+			import mx.events.PropertyChangeEvent;
+			import mx.managers.BrowserManager;
+			import mx.managers.IBrowserManager;
+			import mx.utils.URLUtil;
+			
+			import net.codecomposer.palace.event.PalaceEvent;
 			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
 			public var palace:PalaceClient = PalaceClient.getInstance();
 
 			private var connectWindow:ConnectWindow;
+			private var roomListWindow:RoomListWindow;
+			private var userListWindow:UserListWindow;
+			private var logWindow:LogWindow;
+			private var preferencesWindow:PreferencesWindow;
+			private var propsWindow:PropsWindow;
+			private var newPropWindow:NewPropWindow;
+			
+			private var preferences:Preferences = Preferences.getInstance();
+			
+			private var browserManager:IBrowserManager;
 
-			private function handleCreationComplete():void {
-				ChangeWatcher.watch(palace, 'connected', handleConnectedChange);
-				connectWindow = new ConnectWindow();
-				mdic.windowManager.add(connectWindow);
+			private function handleApplicationComplete():void {
+				stage.addEventListener(KeyboardEvent.KEY_DOWN, handleStageKeyDown);
 			}
 			
-			private function handleConnectedChange(event:PropertyChangeEvent):void {
+			private function handleStageKeyDown(event:KeyboardEvent):void {
 				if (palace.connected) {
+					var newColor:int;
+					if (event.keyCode == Keyboard.NUMPAD_ADD) {
+						newColor = palace.currentUser.color + 1;
+						if (newColor > 15) {
+							newColor = 0;
+						}
+						palace.setColor(newColor);
+					}
+					else if (event.keyCode == Keyboard.NUMPAD_SUBTRACT) {
+						newColor = palace.currentUser.color - 1;
+						if (newColor < 0) { newColor = 15; }
+						palace.setColor(newColor);
+					}
+				}
+			}
+
+			private function handleCreationComplete():void {
+				browserManager = BrowserManager.getInstance();
+				browserManager.init("", "No Connection - OpenPalace");
+				browserManager.addEventListener(BrowserChangeEvent.BROWSER_URL_CHANGE, handleBrowserURLChange);
+				handleBrowserURLChange();
+				
+				ChangeWatcher.watch(palace, ['currentRoom','name'], handleRoomChange);
+				showConnectWindow();
+				
+				palace.addEventListener(PalaceEvent.CONNECT_COMPLETE, handleConnectComplete);
+				palace.addEventListener(PalaceEvent.CONNECT_FAILED, handleConnectFailed);
+				palace.addEventListener(PalaceEvent.CONNECT_START, handleConnectStart);
+				palace.addEventListener(PalaceEvent.DISCONNECTED, handleDisconnected);
+			}
+			
+			private function handleConnectComplete(event:PalaceEvent):void {
+				chatWindow.currentState = "connected";
+			}
+			
+			private function handleConnectFailed(event:PalaceEvent):void {
+				showConnectWindow();
+				Alert.show(event.text, "Error");
+				chatWindow.currentState = "disconnected"
+			}
+			
+			private function handleConnectStart(event:PalaceEvent):void {
+				hideConnectWindow();
+				chatWindow.currentState = "connecting";
+			}
+			
+			private function handleDisconnected(event:PalaceEvent):void {
+				browserManager.setTitle("No Connection - OpenPalace");
+			}
+			
+			private function updateTitle(serverName:String, roomName:String):void {
+				browserManager.setTitle(roomName + " - " + serverName + " - OpenPalace");
+			}
+			
+			private function handleRoomChange(event:PropertyChangeEvent):void {
+				if (palace.connected) {
+					updateTitle(palace.serverName, palace.currentRoom.name);
+				}
+			}
+			
+			private function handleBrowserURLChange(event:BrowserChangeEvent=null):void {
+				trace("URL Changed: " + browserManager.fragment);
+				var parameters:Object = URLUtil.stringToObject(browserManager.fragment);
+				if (parameters.palace != null) {
+					var url:String = String(parameters.palace).toLowerCase();
+					var match:Array = url.match(/^palace:\/\/(.*)$/);
+					if (match && match.length > 0) {
+						url = match[1];
+					}
+					
+					var parts:Array = url.split(':');
+					var hostName:String = parts[0];
+					var port:Number = 9998;
+					if ( parts[1] && String(parts[1]).length > 0 ) {
+						port = uint(parts[1]);
+					} 
+					trace("palace = " + hostName + " port " + port);
+					
+					if (hostName && hostName.length > 0) {
+						palace.connect(preferences.userName, hostName, port);
+					}
 				}
 			}
 			
@@ -50,68 +134,186 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (!connectWindow) {
 					connectWindow = new ConnectWindow();
 				}
-				mdic.windowManager.addCenter(connectWindow);
+				mdic.windowManager.add(connectWindow);
 				mdic.windowManager.bringToFront(connectWindow);
 			}
 			
+			private function hideConnectWindow():void {
+				if (connectWindow) {
+					try {
+						mdic.windowManager.remove(connectWindow);
+					}
+					catch (e:Error) {
+						// do nothing
+					}
+					connectWindow = null;
+				}
+			}
+			
 			private function showLogWindow():void {
-
+				logWindow = new LogWindow();
+				logWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					logButton.selected = false;
+				});
+				mdic.windowManager.add(logWindow);
+			}
+			
+			private function hideLogWindow():void {
+				mdic.windowManager.remove(logWindow);
+				logWindow = null;
+			}
+			
+			private function showPropsWindow():void {
+				propsWindow = new PropsWindow();
+				propsWindow.palace = palace;
+				propsWindow.addEventListener(PropEvent.NEW_PROP, handleNewProp);
+				propsWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					propsButton.selected = false;
+				});
+				mdic.windowManager.add(propsWindow);
+			}
+			
+			private function hidePropsWindow():void {
+				mdic.windowManager.remove(propsWindow);
+				propsWindow = null;
+			}
+			
+			private function handleNewProp(event:PropEvent):void {
+				trace("New Prop: " + event.fileReference.name);
+				newPropWindow = new NewPropWindow();
+				newPropWindow.addEventListener(MDIWindowEvent.CLOSE, handleNewPropWindowClose);
+				newPropWindow.addEventListener(PropEvent.SAVE_PROP, handleSaveProp);
+				mdic.windowManager.add(newPropWindow);
+				newPropWindow.fileReference = event.fileReference;
+			}
+			
+			private function handleSaveProp(event:PropEvent):void {
+				trace("Prop Name: " + event.newPropDefinition.name);
+				if (propsWindow) {
+					propsWindow.addNewProp(event.newPropDefinition);
+				}
+			}
+			
+			private function handleNewPropWindowClose(event:MDIWindowEvent):void {
+				trace("New Prop Window Close");
+			}
+			
+			private function handlePropsClick(event:MouseEvent):void {
+				if (ToggleButton(event.target).selected) {
+					showPropsWindow();
+				}
+				else {
+					hidePropsWindow();
+				}
+			}
+			
+			private function handleLogClick(event:MouseEvent):void {
+				if (ToggleButton(event.target).selected) {
+					showLogWindow();
+				}
+				else {
+					hideLogWindow();
+				}
 			}
 			
 			private function showUserList():void {
 				palace.requestUserList();
+				userListWindow = new UserListWindow();
+				userListWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					usersButton.selected = false;
+				});
+				mdic.windowManager.add(userListWindow);
 			}
 			
+			private function hideUserList():void {
+				mdic.windowManager.remove(userListWindow);
+				userListWindow = null;
+			}
+			
+			private function handleUsersClick(event:MouseEvent):void {
+				if (ToggleButton(event.target).selected) {
+					showUserList();
+				}
+				else {
+					hideUserList();
+				}
+			}
+			
+			private function showPreferences():void {
+				preferencesWindow = new PreferencesWindow();
+				preferencesWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					preferencesButton.selected = false;
+				});
+				mdic.windowManager.add(preferencesWindow);
+			}
+			
+			private function hidePreferences():void {
+				mdic.windowManager.remove(preferencesWindow);
+				preferencesWindow = null;
+			}
+			
+			private function handlePreferencesClick(event:MouseEvent):void {
+				if (ToggleButton(event.target).selected) {
+					showPreferences();
+				}
+				else {
+					hidePreferences();
+				}
+			}
+						
 			private function showRoomList():void {
 				palace.requestRoomList();
+				roomListWindow = new RoomListWindow();
+				roomListWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					roomsButton.selected = false;
+				});
+				mdic.windowManager.add(roomListWindow);
 			}
-		]]>
-	</mx:Script>
-	
-	<mx:ApplicationControlBar id="controlBar" horizontalAlign="left" dock="true">
-		<mx:Label text="{palace.currentRoom.users.length}/{palace.population}" />
-		<mx:Spacer width="100%" />
-		<mx:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
-		<mx:Button label="Connect" click="showConnectWindow()" />
-		<mx:CheckBox label="UTF-8 (Extended Characters)" id="useUTF8" selected="false" color="#CCCCCC"/>
-	</mx:ApplicationControlBar>
-
-
-	<mx:Binding source="useUTF8.selected" destination="palace.utf8" />
-
-	<mx:VDividedBox top="10" bottom="10" left="10" right="10">
-
-		<mx:HDividedBox width="100%" minHeight="{chatWindow.height}" resizeToContent="true">
-			<local:ChatWindow id="chatWindow" />
-			<mx:Canvas minWidth="250" height="100%">
-				<mx:Accordion right="0" width="300" height="100%" creationPolicy="all">
-					<mx:VBox label="Room List" width="100%" height="100%">
-						<view:RoomListGrid resizableColumns="false" id="roomList"
-							height="100%" width="100%"
-							roomSelected="PalaceClient.getInstance().gotoRoom(roomList.selectedRoomId);"/>
-						<mx:HBox width="100%" horizontalAlign="right" paddingBottom="5" paddingRight="5">
-							<mx:Button label="Refresh" click="showRoomList()" />
-						</mx:HBox>		
-					</mx:VBox>
-					<mx:VBox label="User List" width="100%" height="100%">
-						<view:UserListGrid resizableColumns="false" id="userList" height="100%" width="100%" />
-						<mx:HBox width="100%" horizontalAlign="right" paddingBottom="5" paddingRight="5">
-							<mx:Button label="Refresh" click="showUserList()" />
-							<mx:Button label="Go To Room" click="if (userList.selectedRoomId != -1) { PalaceClient.getInstance().gotoRoom(userList.selectedRoomId); }"/>	
-						</mx:HBox>
-					</mx:VBox>
-				</mx:Accordion>
-			</mx:Canvas>
-		</mx:HDividedBox>
-		
-		<local:LogWindow height="100%" width="100%" />
 			
-	</mx:VDividedBox>
+			private function hideRoomList():void {
+				mdic.windowManager.remove(roomListWindow);
+				roomListWindow = null;
+			}
+			
+			private function handleRoomsClick(event:MouseEvent):void {
+				if (ToggleButton(event.target).selected) {
+					showRoomList();
+				}
+				else {
+					hideRoomList();
+				}
+			}
+			
 
+			protected function handleZoomChange(event:Event):void
+			{
+				chatWindow.scaleX = chatWindow.scaleY = zoomSlider.value;
+			}
 
+		]]>
+	</fx:Script>
 
-	<code:MDICanvas id="mdic" width="100%" height="100%">
+	<s:HGroup top="5" left="5" gap="1" verticalAlign="middle">
+		<s:ToggleButton id="roomsButton" label="Rooms" click="handleRoomsClick(event)" />
+		<s:ToggleButton id="usersButton" label="Users" click="handleUsersClick(event)" />
+		<s:ToggleButton id="logButton" label="Log" click="handleLogClick(event)" />
+		<s:ToggleButton id="propsButton" label="Props" click="handlePropsClick(event)" />
+		<s:ToggleButton id="preferencesButton" label="Preferences" click="handlePreferencesClick(event)" />
+		<mx:Spacer width="15" />
+		<s:Label text="Zoom:" />
+		<s:HSlider id="zoomSlider" width="75" minimum="1" maximum="1.5" snapInterval="0.01" liveDragging="true" change="handleZoomChange(event)" />
+	</s:HGroup>
+			
+	
+	<s:HGroup top="5" right="5" verticalAlign="middle">
+		<s:Label text="{palace.currentRoom.users.length}/{palace.population}" />
+		<s:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
+		<s:Button label="Connect" click="showConnectWindow()" />
+	</s:HGroup>
 
+	<local:ChatWindow id="chatWindow" palace="{palace}" top="40" left="10" />	
+	
+	<code:MDICanvas id="mdic" width="100%" height="100%" >
 	</code:MDICanvas>
 
-</mx:Application>
+</s:Application>

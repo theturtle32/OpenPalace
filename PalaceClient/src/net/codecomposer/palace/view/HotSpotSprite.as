@@ -22,8 +22,8 @@ package net.codecomposer.palace.view
 	
 	import mx.core.FlexSprite;
 	
+	import net.codecomposer.palace.event.HotspotEvent;
 	import net.codecomposer.palace.model.PalaceHotspot;
-	import net.codecomposer.palace.model.PalaceHotspotState;
 	import net.codecomposer.palace.rpc.PalaceClient;
 
 	public class HotSpotSprite extends FlexSprite
@@ -31,28 +31,41 @@ package net.codecomposer.palace.view
 		
 		public var hotSpot:PalaceHotspot;
 		public var client:PalaceClient = PalaceClient.getInstance();		
+
+		private var mouseOver:Boolean = false;
 		
 		public function HotSpotSprite(hotSpot:PalaceHotspot, highlightOnMouseOver:Boolean = false)
 		{
 			this.hotSpot = hotSpot;
 			super();
+			hotSpot.addEventListener(HotspotEvent.MOVED, handleHotspotMoved)
+			x = hotSpot.location.x;
+			y = hotSpot.location.y;
 			draw();
 			addEventListener(MouseEvent.CLICK, handleHotSpotClick);
-			if (highlightOnMouseOver &&
-					(hotSpot.type == PalaceHotspot.TYPE_DOOR ||
+			if (hotSpot.dest != 0 &&
+					(hotSpot.type == PalaceHotspot.TYPE_PASSAGE ||
 					 hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
-					 hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR) &&
-					 hotSpot.dest > 0
+					 hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR ||
+					 hotSpot.type == PalaceHotspot.TYPE_BOLT)
 				)
 			{
-				addEventListener(MouseEvent.ROLL_OVER, handleMouseOver);
-				addEventListener(MouseEvent.ROLL_OUT, handleMouseOut);
+				if (highlightOnMouseOver) {
+					addEventListener(MouseEvent.ROLL_OVER, handleMouseOver);
+					addEventListener(MouseEvent.ROLL_OUT, handleMouseOut);
+				}
+				buttonMode = true;
+				useHandCursor = true;
 			}
+			trace("Hotspot " + hotSpot.name + " is type: " + hotSpot.type);
+		}
+		
+		private function handleHotspotMoved(event:HotspotEvent):void {
+			x = hotSpot.location.x;
+			y = hotSpot.location.y;
 		}
 		
 		public function draw():void {
-			trace("Hotspot " + hotSpot.name + " is type: " + hotSpot.type);
-			alpha = 0;
 			graphics.clear();
 			var points:Array = hotSpot.polygon;
 			if (points.length < 3) {
@@ -60,8 +73,18 @@ package net.codecomposer.palace.view
 				return;
 			}
 			var firstPoint:Point = Point(points[0]);
-			graphics.lineStyle(1, 0);
-			graphics.beginFill(0x333333, 0.5);
+			if (mouseOver || hotSpot.drawFrame) {
+				graphics.lineStyle(1, 0x000000);
+			}
+			else {
+				graphics.lineStyle(1, 0x000000, 0);
+			}
+			if (mouseOver) {
+				graphics.beginFill(0x333333, 0.5);
+			}
+			else {
+				graphics.beginFill(0x333333, 0.0);
+			}
 			graphics.moveTo(firstPoint.x, firstPoint.y);
 			for (var i:int = 1; i < points.length; i++) {
 				var point:Point = Point(points[i]);
@@ -69,46 +92,84 @@ package net.codecomposer.palace.view
 			}
 			graphics.lineTo(firstPoint.x, firstPoint.y);
 			graphics.endFill();
-			if (hotSpot.dest != 0 &&
-				 ( hotSpot.type == PalaceHotspot.TYPE_DOOR ||
-				   hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
-				   hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR )
-			    )
-			{
-				buttonMode = true;
-				useHandCursor = true;
-			}
 		}
 		
 		private function handleHotSpotClick(event:MouseEvent):void {
-			if (hotSpot.dest != 0 &&
-				 ( hotSpot.type == PalaceHotspot.TYPE_DOOR ||
-				   hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
-				   hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR )
-			    ) {
-			    	
-			    if (hotSpot.state == PalaceHotspotState.LOCKED &&
-			    	( hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
-			    	  hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR)
-			    	)
-			   	{
-			    	client.currentRoom.roomMessage("Sorry, the door is locked.");
-			    }
-			    else {
-					event.stopPropagation();
-					client.gotoRoom(hotSpot.dest);
-			    }
-			    
-			}
 			trace("Clicked hotspot - id: " + hotSpot.id + " Destination: " + hotSpot.dest + " type: " + hotSpot.type + " state: " + hotSpot.state);
+			if (hotSpot.dontMoveHere) {
+				event.stopImmediatePropagation();
+			}
+			switch (hotSpot.type) {
+				case PalaceHotspot.TYPE_NORMAL:
+					checkForPalaceLinksInScript();
+					break;
+				case PalaceHotspot.TYPE_PASSAGE:
+					event.stopPropagation();
+					checkForPalaceLinksInScript();
+					if (hotSpot.dest != 0) {
+						client.gotoRoom(hotSpot.dest);
+					}
+					break;
+				case PalaceHotspot.TYPE_LOCKABLE_DOOR:
+					if (hotSpot.state == PalaceHotspot.STATE_UNLOCKED) {
+						event.stopPropagation();
+						if (hotSpot.dest != 0) {
+							client.gotoRoom(hotSpot.dest);
+						}
+					}
+					else if (hotSpot.state == PalaceHotspot.STATE_LOCKED) {
+						client.currentRoom.roomMessage("Sorry, the door is locked.");
+					}
+					break;
+				case PalaceHotspot.TYPE_SHUTABLE_DOOR:
+					if (hotSpot.state == PalaceHotspot.STATE_UNLOCKED) {
+						event.stopPropagation();
+						if (hotSpot.dest != 0) {
+							client.gotoRoom(hotSpot.dest);
+						}
+					}
+					else if (hotSpot.state == PalaceHotspot.STATE_LOCKED) {
+						client.currentRoom.roomMessage("Sorry, the door is closed.");
+					}
+					break;
+				case PalaceHotspot.TYPE_NAVAREA:
+					trace("You clicked a nav area");
+					break;
+				case PalaceHotspot.TYPE_BOLT:
+					trace("You clicked a deadbolt");
+					var doorToBolt:PalaceHotspot = client.currentRoom.hotSpotsById[hotSpot.dest];
+					if (doorToBolt != null) {
+						if (doorToBolt.state == PalaceHotspot.STATE_UNLOCKED) {
+							client.lockDoor(client.currentRoom.id, doorToBolt.id);
+						}
+						else {
+							client.unlockDoor(client.currentRoom.id, doorToBolt.id);
+						}
+					}
+					break;
+			}
+		}//
+		
+		private function checkForPalaceLinksInScript():void {
+			trace("Checking for palace links in script...");
+			trace(hotSpot.script);
+			var matchParts:Array = hotSpot.script.toLowerCase().match(/on select.*\{.*["']palace:\/\/(.+?):{0,1}([0-9]*)["'].*netgoto/ms); 
+			if (matchParts && matchParts.length > 0) {
+				var port:int = int(matchParts[2]);
+				if (port < 1) { port = 9998; }
+				trace("Taking you to host: " + matchParts[1] + " port " + port);
+				client.connect(client.userName, matchParts[1], int(port));
+			}
 		}
 		
 		private function handleMouseOver(event:MouseEvent):void {
-			alpha = 1;
+			mouseOver = true;
+			draw();
 		}
 		
 		private function handleMouseOut(event:MouseEvent):void {
-			alpha = 0;
+			mouseOver = false;
+			draw();
 		}
 
 	}

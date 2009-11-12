@@ -19,6 +19,8 @@ package net.codecomposer.palace.model
 {
 	import flash.utils.ByteArray;
 	
+	import net.codecomposer.palace.event.PropEvent;
+	
 	[Bindable]
 	public class PalaceLooseProp
 	{
@@ -51,13 +53,16 @@ package net.codecomposer.palace.model
 			ba.readInt();
 			y = ba.readShort();
 			x = ba.readShort();
-			
-			loadProp();
 		}
 		
 		public function loadProp():void {
 			prop = propStore.getProp(guid, id, crc);
+			prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
 		}
-
+		
+		private function handlePropLoaded(event:PropEvent):void {
+			var loosePropLoadedEvent:PropEvent = new PropEvent(PropEvent.LOOSE_PROP_LOADED);
+			dispatchEvent(loosePropLoadedEvent);
+		}
 	}
 }

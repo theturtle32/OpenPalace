@@ -18,10 +18,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 <mx:Image xmlns:mx="http://www.adobe.com/2006/mxml" source="{mediaServer}{filename}"
 	x="{hotspot.location.x + state.x - this.width/2}"
 	y="{hotspot.location.y + state.y - this.height/2}"
+	smoothBitmapContent="true"
 	loaderContext="{PalaceClient.loaderContext}"
 	complete="handleLoaded(event)">
 	<mx:Script>
 		<![CDATA[
+			import net.codecomposer.palace.model.PalacePalette;
 			import net.codecomposer.palace.rpc.PalaceClient;
 			import net.codecomposer.palace.model.PalaceImageOverlay;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
@@ -36,36 +38,68 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			public var state:PalaceHotspotState;
 			[Bindable]
 			public var mediaServer:String;
-			[Bindable]
-			public var transparencyColor:uint;
-			[Bindable]
-			public var transparencyIndex:int;
+			
+			private var _transparencyIndex:int = -1;
+			
+			[Bindable('transparencyChanged')]
+			public function get transparencyColor():uint {
+				
+				if (transparencyIndex == 0 && this.content is Bitmap) {
+					try {
+						var bitmap:Bitmap = (this.content as Bitmap);
+						return bitmap.bitmapData.getPixel32(1, bitmap.height-1);
+					}
+					catch (e:Error) {
+						// do nothing
+					}
+				}
+				
+				return PalacePalette.clutARGB[transparencyIndex];
+			}
+
+			[Bindable('transparencyChanged')]			
+			public function get transparencyIndex():int {
+				return _transparencyIndex;
+			}
+			
+			public function set transparencyIndex(newValue:int):void {
+				_transparencyIndex = newValue;
+				dispatchEvent(new Event('transparencyChanged'));
+			} 
 			
 			private function handleLoaded(event:Event):void {
 				// Apply transparency value
 				if (this.content is Bitmap) {
 					var bitmap:Bitmap = Bitmap(this.content);
 					var bd:BitmapData;
-					if (!bitmap.bitmapData.transparent || transparencyIndex != 0) {
-						// Process transparency only if image isn't already transparent
-						trace("PROCESSING TRANSPARENCY!");
+					trace(" Transparency: " + filename + " - index color: " + transparencyIndex + " 0x" + transparencyColor.toString(16));
+					
+					if (transparencyIndex != -1) {
+						// Ideally I would like to only Process transparency
+						// only if the image isn't already transparent... That
+						// seems to break some images in certain palaces.
+						// Can check bitmap.bitmapData.transparent
+						trace("Processing Transparency.");
 						try {
-							bd = new BitmapData(bitmap.bitmapData.width, bitmap.bitmapData.height, true, 0x00000000);
-							bd.copyPixels(bitmap.bitmapData, bitmap.bitmapData.rect, new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y));
+							if (!bitmap.bitmapData.transparent) {
+								bd = new BitmapData(bitmap.bitmapData.width, bitmap.bitmapData.height, true, 0x00000000);
+								bd.copyPixels(bitmap.bitmapData, bitmap.bitmapData.rect, new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y));
+								bitmap.bitmapData = bd;
+							}
+							bitmap.bitmapData.threshold(
+								bitmap.bitmapData,
+								bitmap.bitmapData.rect,
+								new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y),
+								"==",
+								transparencyColor,
+								0x00AAFF00
+							);
+							
 						}
 						catch (error:Error) {
 							trace("WARNING: Error processing transparency: " + error.toString());
 							return;
 						}
-						bitmap.bitmapData = bd;
-						bitmap.bitmapData.threshold(
-							bitmap.bitmapData,
-							bitmap.bitmapData.rect,
-							new Point(bitmap.bitmapData.rect.x, bitmap.bitmapData.rect.y),
-							"==",
-							transparencyColor,
-							0x00AAFF00
-						);
 					}
 				}
 			}

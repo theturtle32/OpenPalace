@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo"
+	x.bottomRight="20"
+	x.topRight="20"
+	x.bottomLeft="{width*-1-20}"
+	x.topLeft="{width*-1-20}"
+	y.topRight="{height*-1+5}"
+	y.topLeft="{height*-1+5}"
+>
+	<fx:Metadata>
+		[HostComponent("ChatBubble")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			private var _tintColor:uint = 0xFFFFAA;
+
+			[Bindable('tintColorChanged')]
+			public function get tintColor():uint {
+				return _tintColor;
+			}
+
+			public function set tintColor(newValue:uint):void {
+				_tintColor = newValue;
+				dispatchEvent(new Event('tintColorChanged'));
+			}
+		]]>
+	</fx:Script>
+	
+	<s:filters>
+		<mx:DropShadowFilter blurX="6" blurY="10" distance="2" alpha="0.5" strength="1" angle="60" />
+	</s:filters>
+	
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	
+	<s:states>
+		<mx:State name="bottomRight" />
+		<mx:State name="bottomLeft" />
+		<mx:State name="topRight" />
+		<mx:State name="topLeft" />			
+	</s:states>
+	
+	<s:Path data="M 0.0 0.0 L 20.0 10.0 L 20.0 3.0 L 0.0 0.0" includeIn="bottomRight" top="4">
+		<s:fill>
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.3" />
+		</s:stroke>
+	</s:Path>
+
+	<s:Path data="M 20.0 0.0 L 0.0 10.0 L 0.0 3.0 L 20.0 0.0" includeIn="bottomLeft" top="4" right="0">
+		<s:fill>
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.3" />
+		</s:stroke>
+	</s:Path>
+
+	<s:Path data="M 0.0 0.0 L 20.0 -3.0 L 20.0 -10.0 L 0.0 0.0" includeIn="topRight" bottom="3">
+		<s:fill>
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.3" />
+		</s:stroke>
+	</s:Path>
+	
+	<s:Path data="M 20.0 0.0 L 0.0 -3.0 L 0.0 -10.0 L 20.0 0.0" includeIn="topLeft" bottom="3" right="0">
+		<s:fill>
+			<mx:SolidColor color="{tintColor}" alpha="0.9" />
+		</s:fill>
+		<s:stroke>
+			<mx:Stroke color="0x000000" alpha="0.4" />
+		</s:stroke>
+	</s:Path>
+
+	<s:Group
+		left.bottomRight="18"
+		left.topRight="18"
+		right.bottomLeft="18"
+		right.topLeft="18">
+		<s:Rect left="0" right="0" bottom="0" top="0" radiusX="10" radiusY="10">
+			<s:stroke>
+				<mx:LinearGradientStroke rotation="45">
+					<mx:GradientEntry color="0x000000" alpha="0.15" />
+					<mx:GradientEntry color="0x000000" alpha="0.4" />
+				</mx:LinearGradientStroke>
+			</s:stroke>
+		</s:Rect>
+		
+		<s:Rect
+			id="backgroundElement"
+			radiusX="10" radiusY="10"
+			left="1"
+			right="1"
+			bottom="1"
+			top="1"
+			>
+			<s:fill>
+				<mx:SolidColor color="{tintColor}" alpha="0.9" />
+			</s:fill>
+			
+			<s:filters>
+				<mx:BevelFilter
+					angle="45"
+					distance="3"
+					strength="1"
+					blurX="4"
+					blurY="4"
+					type="inner"
+					quality="3"
+					highlightColor="0xFFFFFF"
+					highlightAlpha="1"
+					shadowColor="0x000000"
+					shadowAlpha="0.20"
+					knockout="false">
+				</mx:BevelFilter>
+			</s:filters>
+			
+		</s:Rect>
+		
+		<s:Rect
+			radiusX="10" radiusY="10"
+			left="1"
+			right="1"
+			bottom="1"
+			top="1">
+			<s:fill>
+				<mx:LinearGradient rotation="65">
+					<mx:GradientEntry ratio="0.3" color="0x000000" alpha="0" />
+					<mx:GradientEntry color="0x000000" alpha="0.1" />
+				</mx:LinearGradient>
+			</s:fill>
+		</s:Rect>
+		
+		<s:RichText id="textElement"
+			maxWidth="125"
+			maxHeight="300"
+			textAlign="center"
+			verticalAlign="top"
+			lineBreak="toFit"
+			maxDisplayedLines="0"
+			left="10"
+			top="10"
+			bottom="10"
+			right="10"		
+		/>
+	</s:Group>
+	
+</s:SparkSkin>

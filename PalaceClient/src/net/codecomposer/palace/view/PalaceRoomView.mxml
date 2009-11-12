@@ -17,28 +17,94 @@ You should have received a copy of the GNU General Public License
 along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+<s:Group xmlns:mx="library://ns.adobe.com/flex/halo"
 	width="{backgroundImage.width}" height="{backgroundImage.height}"
 	minWidth="512" minHeight="384"
+	clipAndEnableScrolling="true"
+	currentState="normal"
 	xmlns:view="net.codecomposer.palace.view.*"
-	backgroundColor="#000000"
-	creationComplete="handleCreationComplete()">
-	<mx:Script>
+	dragEnter="handleLoosePropDragEnter(event)"
+	dragDrop="handleLoosePropDragDrop(event)"
+	dragOver="handleLoosePropDragOver(event)"
+	creationComplete="handleCreationComplete()" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009">
+
+	<s:layout>
+		<s:BasicLayout />
+	</s:layout>
+
+	<s:states>
+		<mx:State name="normal" />
+		<mx:State name="unableToLoadBackground" />
+	</s:states>
+	
+	<fx:Script>
 		<![CDATA[
-			import flash.utils.setTimeout;
-			import mx.core.UIComponent;
-			import mx.binding.utils.BindingUtils;
-			import net.codecomposer.palace.event.PalaceRoomEvent;
-			import net.codecomposer.palace.event.AvatarSelectEvent;
-			import net.codecomposer.palace.event.ChatEvent;
-			import net.codecomposer.palace.model.PalaceCurrentRoom;
-			import net.codecomposer.palace.rpc.PalaceClient;
-			import mx.events.PropertyChangeEvent;
-			import net.codecomposer.palace.model.PalaceUser;
 			import mx.binding.utils.ChangeWatcher;
+			import mx.collections.ArrayCollection;
+			import mx.core.DragSource;
+			import mx.core.FlexBitmap;
+			import mx.core.IUIComponent;
+			import mx.core.IVisualElement;
+			import mx.events.DragEvent;
+			import mx.events.EffectEvent;
+			import mx.events.PropertyChangeEvent;
+			import mx.managers.DragManager;
+			
+			import net.codecomposer.palace.event.ChatEvent;
+			import net.codecomposer.palace.event.PalaceRoomEvent;
+			import net.codecomposer.palace.event.PropEvent;
+			import net.codecomposer.palace.model.ChatMessage;
+			import net.codecomposer.palace.model.PalaceConfig;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
-			[Bindable]
-			public var room:PalaceCurrentRoom;
+			import net.codecomposer.palace.model.PalaceLooseProp;
+			import net.codecomposer.palace.model.PalaceUser;
+			import net.codecomposer.palace.rpc.PalaceClient;
+			
+			import spark.effects.Animate;
+			import spark.effects.Fade;
+			import spark.effects.Move;
+			
+			private var loosePropContextMenu:ContextMenu;
+			
+			private var _room:PalaceCurrentRoom;
+			private var roomBackgroundWatcher:ChangeWatcher;
+					
+			private var imagesByLooseProp:Dictionary = new Dictionary();
+			
+			[Bindable(event="roomChanged")]
+			public function get room():PalaceCurrentRoom {
+				return _room;
+			}
+			public function set room(newValue:PalaceCurrentRoom):void {
+				if (_room && _room !== newValue) {
+					_room.removeEventListener(ChatEvent.CHAT, handleChat);
+					_room.removeEventListener(ChatEvent.ROOM_MESSAGE, handleChat);
+					_room.removeEventListener(ChatEvent.WHISPER, handleChat);
+					_room.removeEventListener(PalaceRoomEvent.ROOM_CLEARED, handleRoomCleared);
+					_room.removeEventListener(PalaceRoomEvent.USER_ENTERED, handleUserEntered);
+					_room.removeEventListener(PalaceRoomEvent.USER_LEFT, handleUserLeft);
+					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_ADDED, handleLoosePropAdded);
+					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_MOVED, handleLoosePropMoved);
+					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_REMOVED, handleLoosePropRemoved);
+					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROPS_CLEARED, handleLoosePropsCleared);
+					roomBackgroundWatcher.unwatch();
+				}
+				if (_room !== newValue) {
+					_room = newValue;
+					_room.addEventListener(ChatEvent.CHAT, handleChat);
+					_room.addEventListener(ChatEvent.ROOM_MESSAGE, handleChat);
+					_room.addEventListener(ChatEvent.WHISPER, handleChat);
+					_room.addEventListener(PalaceRoomEvent.ROOM_CLEARED, handleRoomCleared);
+					_room.addEventListener(PalaceRoomEvent.USER_ENTERED, handleUserEntered);
+					_room.addEventListener(PalaceRoomEvent.USER_LEFT, handleUserLeft);
+					_room.addEventListener(PalaceRoomEvent.LOOSE_PROP_ADDED, handleLoosePropAdded);
+					_room.addEventListener(PalaceRoomEvent.LOOSE_PROP_MOVED, handleLoosePropMoved);
+					_room.addEventListener(PalaceRoomEvent.LOOSE_PROP_REMOVED, handleLoosePropRemoved);
+					_room.addEventListener(PalaceRoomEvent.LOOSE_PROPS_CLEARED, handleLoosePropsCleared);
+					roomBackgroundWatcher = ChangeWatcher.watch(room, 'backgroundFile', handleBGChange);
+					dispatchEvent(new Event("roomChanged"));
+				};
+			}
 			
 			[Bindable]
 			public var mediaServer:String;
@@ -47,34 +113,202 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private var nameTagsByUser:Dictionary = new Dictionary();
 			
 			private var baseBackgroundFile:String;
+			private var forcingPng:Boolean = false;
 			private var forcingJpeg:Boolean = false;
 			
-			private var isAir:Boolean;
-			
 			private function handleCreationComplete():void {
+				initializeLoosePropContextMenu();
 				this.addEventListener(MouseEvent.CLICK, handleClick);
-				room.addEventListener(ChatEvent.CHAT, handleChat);
-				room.addEventListener(PalaceRoomEvent.ROOM_CLEARED, handleRoomCleared);
-				room.addEventListener(PalaceRoomEvent.USER_ENTERED, handleUserEntered);
-				room.addEventListener(PalaceRoomEvent.USER_LEFT, handleUserLeft);
-				ChangeWatcher.watch(room, 'backgroundFile', handleBGChange);
 			}
 			
-			private function getHitArea():UIComponent {
-				var hitArea:UIComponent = new UIComponent();
-				hitArea.visible = false;
-				hitArea.mouseEnabled = false;
-				hitArea.graphics.clear();
-				hitArea.graphics.beginFill(0x000000, 1.0);
-				hitArea.graphics.drawRect(44,44,44,44);
-				hitArea.height = hitArea.width = 44;
-				hitArea.graphics.endFill();
-				return hitArea;
+			private function initializeLoosePropContextMenu():void {
+				loosePropContextMenu = new ContextMenu();
+				loosePropContextMenu.hideBuiltInItems();
+				var deletePropItem:ContextMenuItem = new ContextMenuItem("Delete Prop");
+				deletePropItem.addEventListener(ContextMenuEvent.MENU_ITEM_SELECT, handlePropDelete);
+				loosePropContextMenu.customItems.push(deletePropItem);
+			}
+		
+			private function handleLoosePropAdded(event:PalaceRoomEvent):void {
+				trace("Added loose prop " + event.looseProp.id);
+				var image:Image;
+				event.looseProp.addEventListener(PropEvent.LOOSE_PROP_LOADED, handleLoosePropLoaded);
+				image = new AlphaHitAreaImage();
+				var bitmap:FlexBitmap = FlexBitmap(event.looseProp.prop.bitmap);
+				image.addEventListener(MouseEvent.MOUSE_DOWN, handleLoosePropMouseDown);
+				image.addEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
+				image.addEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
+				image.addEventListener(DragEvent.DRAG_OVER, handleLoosePropDragOver);
+				image.addEventListener(MouseEvent.MOUSE_OVER, handleLoosePropMouseOver);
+				image.addEventListener(MouseEvent.MOUSE_OUT, handleLoosePropMouseOut);
+				image.addEventListener(DragEvent.DRAG_COMPLETE, handleLoosePropDragComplete);
+				image.contextMenu = loosePropContextMenu;
+				image.source = bitmap;
+				image.x = event.looseProp.x;
+				image.y = event.looseProp.y;
+				image.alpha = event.looseProp.prop.ghost ? 0.5 : 1.0;
+				imagesByLooseProp[event.looseProp] = image;
+				if (event.addToFront) {
+					loosePropsGroup.addElement(image);
+				}
+				else {
+					loosePropsGroup.addElementAt(image, 0);
+				}
+			}
+			
+			private function handlePropDelete(event:ContextMenuEvent):void {
+				var image:AlphaHitAreaImage = AlphaHitAreaImage(event.contextMenuOwner);
+				var propIndex:int = loosePropsGroup.getElementIndex(image);
+				PalaceClient.getInstance().deleteLooseProp(propIndex);
+			}
+			
+			private function handleLoosePropMoved(event:PalaceRoomEvent):void {
+				trace("Moved loose prop " + event.looseProp.id);
+				var image:AlphaHitAreaImage = imagesByLooseProp[event.looseProp];
+				
+				var tween:Move = new Move(image);
+				tween.xTo = event.looseProp.x;
+				tween.yTo = event.looseProp.y;
+				tween.duration = 100;
+				tween.play();
+
+			}
+			
+			private function handleLoosePropRemoved(event:PalaceRoomEvent):void {
+				trace("Removed loose prop " + event.propIndex);
+				loosePropsGroup.removeElementAt(event.propIndex);
+			}
+			
+			private function handleLoosePropsCleared(event:PalaceRoomEvent):void {
+				trace("Cleared loose props");
+				imagesByLooseProp = new Dictionary();
+				loosePropsGroup.removeAllElements();
+			}
+			
+			private function handleLoosePropLoaded(event:PropEvent):void {
+				var looseProp:PalaceLooseProp = PalaceLooseProp(event.target);
+				var image:AlphaHitAreaImage = imagesByLooseProp[looseProp];
+				if (image == null) { return; } 
+				image.smoothBitmapContent = true;
+				if (image != null) {
+					image.alpha = 0;
+					image.source = looseProp.prop.bitmap;
+					image.x = looseProp.x;
+					image.y = looseProp.y;
+					var fade:Fade = new Fade(image);
+					fade.duration = 500;
+					fade.alphaFrom = 0;
+					fade.alphaTo = looseProp.prop.ghost ? 0.5 : 1.0;
+					fade.play();
+				}
+			}
+			
+			private function handleLoosePropMouseOver(event:MouseEvent):void {
+				Mouse.cursor = MouseCursor.HAND;
+			}
+			
+			private function handleLoosePropMouseOut(event:MouseEvent):void {
+				Mouse.cursor = MouseCursor.ARROW;
+			}
+			
+			/* Interactive PNG functionality -- tracking the hit area based on
+			   the alpha value -- must be disabled during a drag operation to
+			   avoid unexpected "red x" cursors preventing you from completing
+			   the drag */
+			private function disableLoosePropsInteractivePNG():void {
+				var count:int = loosePropsGroup.numElements;
+				for (var i:int = 0; i < count; i++) {
+					AlphaHitAreaImage(loosePropsGroup.getElementAt(i)).disableInteractivePNG();
+				}
+			}
+			
+			private function enableLoosePropsInteractivePNG():void {
+				var count:int = loosePropsGroup.numElements;
+				for (var i:int = 0; i < count; i++) {
+					AlphaHitAreaImage(loosePropsGroup.getElementAt(i)).enableInteractivePNG();
+				}
+			}
+			
+			private function handleLoosePropMouseDown(event:MouseEvent):void {
+				var image:AlphaHitAreaImage = AlphaHitAreaImage(event.target);
+				disableLoosePropsInteractivePNG();
+				var dragSource:DragSource = new DragSource();
+				var propIndex:int = loosePropsGroup.getElementIndex(event.currentTarget as IVisualElement);
+				dragSource.addData({
+					startMouseX: event.stageX,
+					startMouseY: event.stageY,
+					propIndex: propIndex,
+					looseProp: room.looseProps.getItemAt(propIndex)
+				}, "prop");
+				DragManager.doDrag(event.currentTarget as IUIComponent, dragSource, event);
+			}
+			
+			private function handleLoosePropDragEnter(event:DragEvent):void {
+				DragManager.acceptDragDrop(event.currentTarget as IUIComponent);
+			}
+			
+			private function handleLoosePropDragOver(event:DragEvent):void {
+				var data:Object = event.dragSource.dataForFormat("prop");
+				if (data.propId) {
+					DragManager.showFeedback(DragManager.COPY);
+				}
+				else if (event.altKey || event.ctrlKey) {
+					DragManager.showFeedback(DragManager.COPY);
+				}
+				else {
+					DragManager.showFeedback(DragManager.MOVE);
+				}
+			}
+			
+			private function handleLoosePropDragDrop(event:DragEvent):void {
+				var data:Object = event.dragSource.dataForFormat("prop");
+				var obj:IUIComponent = event.dragInitiator;
+				
+				var destX:int; 
+				var destY:int;
+				
+				if (event.action == DragManager.COPY) {
+					if (data.propId) {
+						// dragged from bag
+						var destPoint:Point = this.globalToContent(new Point(event.stageX, event.stageY));
+						destX = destPoint.x - data.width/2;
+						destY = destPoint.y - data.height/2;
+						PalaceClient.getInstance().addLooseProp(data.propId, 0, destX, destY);
+					}
+					else {
+						destX = obj.x + (event.stageX - data.startMouseX);
+						destY = obj.y + (event.stageY - data.startMouseY);
+						try {
+							var looseProp:PalaceLooseProp = room.getLoosePropByIndex(data.propIndex);
+							var propId:int = looseProp.prop.asset.id;
+							var propCrc:int = looseProp.prop.asset.crc;
+							PalaceClient.getInstance().addLooseProp(propId, propCrc, destX, destY);
+						}
+						catch (e:Error) {
+							// prop was deleted out from under us.
+						}
+					}
+				}
+				else {
+					destX = obj.x + (event.stageX - data.startMouseX);
+					destY = obj.y + (event.stageY - data.startMouseY);
+
+					PalaceClient.getInstance().moveLooseProp(data.propIndex, destX, destY);
+				}
+				
+			}
+			
+			private function handleLoosePropDragComplete(event:DragEvent):void {
+				enableLoosePropsInteractivePNG();
 			}
 			
 			private function handleClick(event:MouseEvent):void {
 				var x:int = this.contentMouseX;
 				var y:int = this.contentMouseY;
+				if (x < 22) { x = 22; }
+				if (y < 22) { y = 22; }
+				if (x > width - 22) { x = width - 22; }
+				if (y > height - 22) { y = height - 22; }
 				trace("Movement requested x:" + x + " y:" + y);
 				var socket:PalaceClient = PalaceClient.getInstance();
 				socket.move(x, y);
@@ -84,17 +318,18 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (event.currentTarget is Avatar) {
 					var user:PalaceUser = Avatar(event.currentTarget).user;
 					trace("Clicked avatar " + user.id + " - self is " + room.selfUserId);
-					if (user.id == room.selfUserId) {
+					if (user.isSelf) {
 						room.selectedUser = null;
-					} 
+					}
 					else if (room.selectedUser != user) {
+						event.stopPropagation();
 						room.selectedUser = user;
 					}
 					else if (room.selectedUser == user) {
+						event.stopPropagation();
 						room.selectedUser = null;
 					}
 					updateAvatarTransparencies();
-					event.stopPropagation();
 				}
 			}
 			
@@ -113,15 +348,180 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				}
 			}
 			
+			private var stickyMessagesByUser:Dictionary = new Dictionary();
+			private var currentlyDisplayedChatMessages:ArrayCollection = new ArrayCollection();
+			private var chatQueue:Array = [];
+			
 			private function handleChat(event:ChatEvent):void {
+				if (event.soundName) {
+					PalaceSoundPlayer.getInstance().playSound(event.soundName);
+				}
+				
+				if (event.logOnly) { return; }
+				
+				var message:ChatMessage = new ChatMessage();
+				message.isWhisper = event.whisper;
+				message.text = event.chatText;
+				if (message.text.length < 1) { return; }
+				message.tint = event.user ? Avatar.chatBubbleTintColors[event.user.color] : 0xF9F9F9;
+				message.user = event.user;
+				if (event.user) {
+					message.x = event.user.x;
+					message.y = event.user.y;
+				}
+				else {
+					message.x = 0;
+					message.y = 10;
+				}
+				
+				chatQueue.push(message);
+				
+				checkChatQueue();
+			}
+			
+			private function checkChatQueue():void {
+				var itemsInQueue:int = chatQueue.length;
+				
+				for (var i:int = 0; i < itemsInQueue; i ++) {
+					var message:ChatMessage = chatQueue.shift();
+					if (!displayChatBubble(message)) {
+						// If we're not currently able to display the chat bubble,
+						// put it back on the queue.
+						trace("Didn't successfully display message.");
+						chatQueue.push(message);
+					}
+				}
+			}
+			
+			// return true for success, false to put it back on the queue
+			private function displayChatBubble(message:ChatMessage):Boolean {
+				
+				if (message.user && stickyMessagesByUser[message.user]) {
+					var oldMessage:ChatMessage = stickyMessagesByUser[message.user];
+					try {
+						delete stickyMessagesByUser[message.user];
+					}
+					catch (e:Error) { /* do nothing */ }
+					try {
+						textGroup.removeElement(oldMessage.chatBubble);
+					}
+					catch (e:Error) { /* do nothing */ }
+				}
+				
 				var chatBubble:ChatBubble = new ChatBubble();
-				chatBubble.text = event.chatText;
-				chatBubble.x = event.user.x + 25;
-				chatBubble.y = event.user.y - 20;
-				textCanvas.addChild(chatBubble)
-				setTimeout(function():void {
-					textCanvas.removeChild(chatBubble);
-				}, 1500 + (event.chatText.length * 150));
+				chatBubble.setStyle('skinClass', Class(net.codecomposer.palace.view.ChatBubbleSkin));
+				chatBubble.addEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
+				chatBubble.addEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
+				chatBubble.addEventListener(DragEvent.DRAG_OVER, handleLoosePropDragOver);
+				chatBubble.text = message.text;
+				chatBubble.x = message.x;
+				chatBubble.y = message.y;
+				chatBubble.mouseEnabled = false;
+				chatBubble.isWhisper = message.isWhisper;
+				chatBubble.tintColor = message.tint;
+				chatBubble.visible = true;
+				
+				var overlapped:Boolean = false;
+				
+				// Check for overlaps...
+				textGroup.addElement(chatBubble)
+				chatBubble.validateNow();
+				for (var positionNumber:int = 0; positionNumber < 4; positionNumber ++) {
+					overlapped = false;
+
+					// Check if we're running off the edge of the screen
+					//trace(chatBubble.skin.currentState);
+
+					var skinState:String = chatBubble.skin.currentState;
+					var rightCheck:int, leftCheck:int, bottomCheck:int, topCheck:int;
+					
+					
+					if (skinState.indexOf('Right') != -1) {
+						rightCheck = chatBubble.x + chatBubble.skin.x + chatBubble.skin.measuredWidth;
+						leftCheck = chatBubble.x + chatBubble.skin.x;
+					}
+					if (skinState.indexOf('Left') != -1) {
+						rightCheck = chatBubble.x + chatBubble.skin.x;
+						leftCheck = chatBubble.x + chatBubble.skin.x - chatBubble.skin.measuredWidth;
+					}
+					if (skinState.indexOf('bottom') != -1) {
+						bottomCheck = chatBubble.y + chatBubble.skin.y + chatBubble.skin.measuredHeight;
+						topCheck = chatBubble.y + chatBubble.skin.y;
+					}
+					if (skinState.indexOf('top') != -1) {
+						bottomCheck = chatBubble.y + chatBubble.skin.y;
+						topCheck = chatBubble.y + chatBubble.skin.y - chatBubble.skin.measuredHeight;
+					}
+					 
+					if (
+							rightCheck > width ||
+							bottomCheck > height ||
+							leftCheck < 0 ||
+							topCheck < 0
+					   ) { 
+					   	overlapped = true;
+						chatBubble.tryNextPosition();
+						chatBubble.validateNow();
+						continue;
+					}
+					
+					innerLoop: for (var i:int = 0; i < currentlyDisplayedChatMessages.length; i ++) {
+						var m:ChatMessage = ChatMessage(currentlyDisplayedChatMessages.getItemAt(i));
+						if (!m.isStickyBubble && m.chatBubble.hitTestObject(chatBubble)) {
+							overlapped = true;
+							chatBubble.tryNextPosition();
+							chatBubble.validateNow();
+							break innerLoop;
+						}
+					}
+					if (!overlapped) {
+						break;
+					}
+				}
+				
+				if (overlapped) {
+					//trace("unresolvable overlap detected.");
+					textGroup.removeElement(chatBubble);
+					return false;
+				}
+				
+				chatBubble.visible = true;
+				message.chatBubble = chatBubble;
+				
+				if (!message.isStickyBubble) {
+					setTimeout(removeChatBubble, 3000 + (message.text.length * 70), message);
+				}
+				else if (message.user) {
+					stickyMessagesByUser[message.user] = message;
+				}
+				currentlyDisplayedChatMessages.addItem(message);
+				return true;
+			}
+			
+			private function removeChatBubble(message:ChatMessage):void {
+				try {
+					var bubble:ChatBubble = message.chatBubble;
+					var fade:Fade = new Fade(bubble);
+					fade.duration = 300;
+					fade.alphaFrom = 1;
+					fade.alphaTo = 0;
+					fade.addEventListener(EffectEvent.EFFECT_END, handleChatBubbleFadeComplete);
+					fade.play();
+					currentlyDisplayedChatMessages.removeItemAt(currentlyDisplayedChatMessages.getItemIndex(message));
+				}
+				catch (e:Error) { /* do nothing */ }
+				
+				checkChatQueue();
+			}
+			
+			private function handleChatBubbleFadeComplete(event:EffectEvent):void {
+				try {
+					textGroup.removeElement(Animate(event.target).target as IVisualElement);
+				}
+				catch(e:Error) {
+					trace("Unable to remove element after fadeout animation. ", Animate(event.target).target);
+					// do nothing
+				}
 			}
 			
 			private function handleUserEntered(event:PalaceRoomEvent):void {
@@ -129,94 +529,218 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				avatar.user = event.user;
 				avatar.alpha = 1;
 				avatar.addEventListener(MouseEvent.CLICK, handleAvatarClick);
-				avatarsCanvas.addChild(avatar);
-				var hitArea:UIComponent = getHitArea();
-				avatar.addChild(hitArea);
-				avatar.hitArea = hitArea;
+				avatar.addEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
+				avatar.addEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
+				avatar.addEventListener(DragEvent.DRAG_OVER, handleLoosePropDragOver);
+				avatarsGroup.addElement(avatar);
 				avatar.validateDisplayList();
 				avatarsByUser[event.user] = avatar;
 				updateAvatarTransparencies();
 				
-//				var nameTag:NameTag = new NameTag();
-//				nameTag.user = event.user;
-//				nameTagsByUser[event.user] = nameTag;
-//				nameTagsCanvas.addChild(nameTag);
+				var nameTag:NameTag = new NameTag();
+				nameTag.user = event.user;
+				nameTagsByUser[event.user] = nameTag;
+				nameTag.alpha = 0;
+				nameTagGroup.addElement(nameTag);
+				
+				var fade:Fade = new Fade(nameTag);
+				fade.duration = 700;
+				fade.startDelay = int(Math.random() * 400);
+				fade.alphaFrom = 0;
+				fade.alphaTo = 1;
+				fade.play();
 			}
 			
 			private function handleUserLeft(event:PalaceRoomEvent):void {
 				var avatar:Avatar = avatarsByUser[event.user];
 				if (avatar != null) {
 					avatar.removeEventListener(MouseEvent.CLICK, handleAvatarClick);
-					avatarsCanvas.removeChild(avatar);
-					avatarsByUser[event.user] = null;
+					avatarsGroup.removeElement(avatar);
 					delete avatarsByUser[event.user];
 				}
 								
-//				var nameTag:NameTag = nameTagsByUser[event.user];
-//				if (nameTag != null) {
-//					nameTagsCanvas.removeChild(nameTag);
-//					nameTagsByUser[event.user] = null;
-//					delete nameTagsByUser[event.user];
-//				}
+				var nameTag:NameTag = nameTagsByUser[event.user];
+				if (nameTag != null) {
+					nameTagGroup.removeElement(nameTag);
+					delete nameTagsByUser[event.user];
+				}
+				
+				var chatMessage:ChatMessage = stickyMessagesByUser[event.user];
+				if (chatMessage != null) {
+					textGroup.removeElement(chatMessage.chatBubble);
+					delete stickyMessagesByUser[event.user];
+				}
 			}
 			
 			private function handleRoomCleared(event:PalaceRoomEvent):void {
 				for each (var avatar:Object in avatarsByUser) {
 					Avatar(avatar).removeEventListener(MouseEvent.CLICK, handleAvatarClick);
 				}
-				avatarsCanvas.removeAllChildren();
+				avatarsGroup.removeAllElements();
 				avatarsByUser = new Dictionary();
+
+				nameTagGroup.removeAllElements();
+				nameTagsByUser = new Dictionary();
 				
-//				for each (var nameTag:Object in nameTagsByUser) {
-//					nameTagsCanvas.removeAllChildren();
-//					nameTagsByUser = new Dictionary();
-//				}
+				currentlyDisplayedChatMessages.removeAll();
+				chatQueue = [];
+				textGroup.removeAllElements();
+				
 			}
 			
+			
+			
 			private function handleBGChange(event:PropertyChangeEvent):void {
+				currentState = "normal";
+				backgroundImage.visible = false;
 				if (room.backgroundFile == null) {
 					return;
 				}
+				forcingJpeg = false;
+				forcingPng = false;
 				var match:Array = room.backgroundFile.match(/^(.*)\.gif$/i);
-				if (match != null && Security.sandboxType == Security.APPLICATION) {
-					forcingJpeg = true;
+				if (match != null) {
 					baseBackgroundFile = match[1];
-					trace("Trying to find jpeg version of background."); 
-					backgroundImage.source = mediaServer + baseBackgroundFile + ".jpg";
+					tryPngBG();
 				}
 				else {
 					backgroundImage.source = mediaServer + room.backgroundFile;
 				}
 			}
 			
-			private function handleBGHTTP(event:HTTPStatusEvent):void {
-				if (forcingJpeg && event.status == 404) {
-					trace("Unable to load " + backgroundImage.source + " - Reverting to gif.");
-					forcingJpeg = false;
-					setTimeout(function():void {
-						backgroundImage.source = mediaServer + room.backgroundFile;
-						trace("Loading: " + backgroundImage.source);
-					}, 50);
+			private function tryJpegBG():void {
+				if (baseBackgroundFile && baseBackgroundFile.length > 0) {
+					trace("Trying to find jpeg version of background.");
+					forcingJpeg = true; 
+					backgroundImage.source = mediaServer + baseBackgroundFile + ".jpg";
 				}
 			}
 			
+			private function tryPngBG():void {
+				if (baseBackgroundFile && baseBackgroundFile.length > 0) {
+					trace("Trying to find png version of background.");
+					forcingPng = true; 
+					backgroundImage.source = mediaServer + baseBackgroundFile + ".png";
+				}
+			}
+			
+			private function tryRegularBG():void {
+				trace("Unable to load preferred background images - Reverting to originally specified filename.");
+				backgroundImage.source = mediaServer + room.backgroundFile;
+			}
+			
+			private function handleBackgroundLoadComplete(event:Event):void {
+				if (PalaceConfig.fadeBackgroundImages) { 
+					backgroundImage.alpha = 0;
+					var fade:Fade = new Fade(backgroundImage);
+					fade.duration = 600;
+					fade.alphaFrom = 0;
+					fade.alphaTo = 1;
+					fade.play();
+					currentState = "normal";
+				}
+				backgroundImage.visible = true;
+				backgroundImage.smoothBitmapContent = true;
+			}
+			
+			private function handleUnableToLoadBG():void {
+				if (forcingPng) {
+					forcingPng = false;
+					tryJpegBG();
+				}
+				else if (forcingJpeg) {
+					forcingJpeg = false;
+					tryRegularBG();
+				}
+				else {
+					backgroundImage.source = null;
+					currentState = "unableToLoadBackground";
+				}
+			}
+			
+			private function handleBGioERROR(event:IOErrorEvent):void {
+				handleUnableToLoadBG();
+			}
+			
 		]]>
-	</mx:Script>
+	</fx:Script>
+	
+	<s:Rect width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" />
+		</s:fill>
+	</s:Rect>
+	
 	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
-		scaleContent="false" httpStatus="handleBGHTTP(event)"
-		loaderContext="{PalaceClient.loaderContext}" 
-		visible="{room.backgroundFile != null}" />
-	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}" hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
+		dragEnter="handleLoosePropDragEnter(event)"
+		dragDrop="handleLoosePropDragDrop(event)"
+		dragOver="handleLoosePropDragOver(event)"
+		smoothBitmapContent="true"
+		scaleContent="false" complete="handleBackgroundLoadComplete(event)"
+		loaderContext="{PalaceClient.loaderContext}" ioError="handleBGioERROR(event);"
+		visible="false" />
+	
+	<s:Label text="Unable to load background {room.backgroundFile}." width="90%"
+			 mouseEnabled="false"
+			 color="#AAAAAA" fontSize="15"
+			 includeIn="unableToLoadBackground"
+			 textAlign="center"
+			 verticalCenter="0" horizontalCenter="0" />
+	
+	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}"
+							hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0"
+							dragEnter="handleLoosePropDragEnter(event)"
+							dragDrop="handleLoosePropDragDrop(event)"
+							dragOver="handleLoosePropDragOver(event)"
+							/>
+	
+	<view:PaintLayer dataProvider="{room.drawBackCommands}" />
+	
+	<s:Group id="loosePropsGroup" top="0" right="0" bottom="0" left="0">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+<!--	
 	<mx:Canvas id="loosePropsCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="0" right="0" bottom="0" left="0">
 		<mx:Repeater id="loosePropsRepeater" dataProvider="{room.looseProps}">
-			<mx:Image source="{loosePropsRepeater.currentItem.prop.bitmap}"
+			<mx:Image smoothBitmapContent="true" source="{loosePropsRepeater.currentItem.prop.bitmap}"
 				alpha="{loosePropsRepeater.currentItem.prop.ghost ? 0.5 : 1.0}"
 				x="{loosePropsRepeater.currentItem.x}"
 				y="{loosePropsRepeater.currentItem.y}" />
 		</mx:Repeater>
 	</mx:Canvas>
+-->	
+	<s:Group id="avatarsGroup" top="0" right="0" bottom="0" left="0">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
 	
-	<mx:Canvas id="avatarsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
 <!--	<mx:Canvas id="nameTagsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off"  /> -->
-	<mx:Canvas id="textCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off" />
-</mx:Canvas>
+
+	<view:PaintLayer dataProvider="{room.drawFrontCommands}" />
+
+	<s:Group id="nameTagGroup" mouseEnabled="false"
+			 dragEnter="handleLoosePropDragEnter(event)"
+			 dragDrop="handleLoosePropDragDrop(event)"
+			 dragOver="handleLoosePropDragOver(event)">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+	
+	<s:Group id="textGroup" mouseEnabled="false" top="0" right="0" bottom="0" left="0">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+	
+	<mx:ProgressBar bottom="0" width="100%"
+		source="{backgroundImage}"
+		visible="{!backgroundImage.visible &amp;&amp; backgroundImage.source != null &amp;&amp; progressBar.percentComplete &lt; 100}"
+		labelPlacement="center"
+		id="progressBar"
+		label="Downloading Background... {Math.ceil(progressBar.percentComplete)}%" />
+
+</s:Group>

@@ -17,10 +17,13 @@ You should have received a copy of the GNU General Public License
 along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml"
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo"
+	clipAndEnableScrolling="true"
 	creationComplete="handleCreationComplete()" xmlns:view="net.codecomposer.palace.view.*">
-	<mx:Script>
+	<fx:Script>
 		<![CDATA[
+			import net.codecomposer.palace.model.PalaceAsset;
+			import net.codecomposer.palace.event.HotspotEvent;
 			import net.codecomposer.palace.model.PalaceImageOverlay;
 			import net.codecomposer.palace.model.PalaceHotspotState;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
@@ -38,6 +41,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			public var mediaServer:String;
 			
 			private var viewsByHotSpot:Dictionary = new Dictionary();
+			private var nameTagsByHotSpot:Dictionary = new Dictionary();
 			
 			
 			private function handleCreationComplete():void {
@@ -45,65 +49,115 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			
 			private function handleHotSpotsChange(event:CollectionEvent):void {
+				var hotSpot:PalaceHotspot;
 				if (event.kind == CollectionEventKind.ADD) {
-					for each (var hotSpot:Object in event.items) {
-						addHotSpot(PalaceHotspot(hotSpot));
+					for each (hotSpot in event.items) {
+						addHotSpot(hotSpot);
 					}
 				}
 				else if (event.kind == CollectionEventKind.REMOVE) {
-					trace("Removing hotspot: " + event.items[0]);
+					for each (hotSpot in event.items) {
+						removeHotSpot(hotSpot);
+					}
 				}
 				else if (event.kind == CollectionEventKind.RESET) {
 					trace("Resetting hotspots");
 					resetHotSpots();
 				}
-				else {
-					trace("HotSpot CollectionEventKind: " + event.kind);
-				}
 			}
 			
 			private function addHotSpot(hotSpot:PalaceHotspot):void {
-				trace("DRAWING HOTSPOT");
 				
 				var hotSpotSprite:HotSpotSprite = new HotSpotSprite(hotSpot, true);
-				
 				hotspotCanvas.rawChildren.addChild(hotSpotSprite);
 				viewsByHotSpot[hotSpot] = hotSpotSprite;
 				
-				if (hotSpot.state < hotSpot.states.length) { // Sanity check
-					var state:PalaceHotspotState = PalaceHotspotState(hotSpot.states.getItemAt(hotSpot.state));
-					var pictureId:int = state.pictureId;
-					var imageOverlay:PalaceImageOverlay = PalaceImageOverlay(room.images[pictureId]);
+				if (hotSpot.showName) {
+					var nameTag:HotSpotNameTag = new HotSpotNameTag();
+					nameTag.hotSpot = hotSpot;
+					nameTagsByHotSpot[hotSpot] = nameTag;
+					hotspotNames.addElement(nameTag);
+				}
+				
+				hotSpot.addEventListener(HotspotEvent.STATE_CHANGED, handleHotspotStateChanged);
+				
+				for (var i:int = 0; i < hotSpot.states.length; i ++) {
+					var isCurrentState:Boolean = Boolean(hotSpot.state == i);
+					
+					var state:PalaceHotspotState = PalaceHotspotState(hotSpot.states.getItemAt(i));
+					var imageOverlay:PalaceImageOverlay = PalaceImageOverlay(room.images[state.pictureId]);
 					
 					if (imageOverlay && imageOverlay.filename != null) {
 						var hotSpotImage:HotSpotImage = new HotSpotImage();
 						hotSpotImage.state = state;
 						hotSpotImage.hotspot = hotSpot;
-						hotSpotImage.transparencyColor = imageOverlay.transparencyColor;
 						hotSpotImage.transparencyIndex = imageOverlay.transparencyIndex;
 						hotSpotImage.filename = imageOverlay.filename;
 						hotSpotImage.mediaServer = mediaServer;
-						imageCanvas.addChild(hotSpotImage);
+						hotSpotImage.visible = isCurrentState;
+						state.hotspotImage = hotSpotImage;
+						imageGroup.addElement(hotSpotImage);
 					}
 				}
+
+			}
+			
+			private function removeHotSpot(hotSpot:PalaceHotspot):void {
+				trace("Removing hotspot " + hotSpot.name + " - " + hotSpot.id);
+				
 			}
 			
 			private function resetHotSpots():void {
 				viewsByHotSpot = new Dictionary();
+				nameTagsByHotSpot = new Dictionary();
 				while (hotspotCanvas.rawChildren.numChildren > 0) {
 					hotspotCanvas.rawChildren.removeChildAt(0);
 				}
-				while (imageCanvas.numChildren > 0) {
-					imageCanvas.removeChildAt(0);
+				imageGroup.removeAllElements();
+				hotspotNames.removeAllElements();
+			}
+			
+			private function handleHotspotStateChanged(event:HotspotEvent):void {
+				var hotspot:PalaceHotspot = PalaceHotspot(event.target);
+				if (hotspot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
+				    hotspot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR) {
+			    	if (hotspot.state == PalaceHotspot.STATE_LOCKED) {
+			    		PalaceSoundPlayer.getInstance().playDoorLock();
+			    	}
+			    	if (hotspot.state == PalaceHotspot.STATE_UNLOCKED) {
+			    		PalaceSoundPlayer.getInstance().playDoorUnlock();
+			    	}
+			    }
+				for (var i:int = 0; i < hotspot.states.length; i++) {
+					var hotspotState:PalaceHotspotState = PalaceHotspotState(hotspot.states.getItemAt(i));
+					if (hotspotState.hotspotImage != null) {
+						hotspotState.hotspotImage.visible = Boolean(i == event.state);
+					}
 				}
 			}
 			
 		]]>
-	</mx:Script>
+	</fx:Script>
+	
+	<s:layout>
+		<s:BasicLayout />
+	</s:layout>
 
-	<mx:Canvas id="imageCanvas" top="0" left="0" bottom="0" right="0" 
-		verticalScrollPolicy="off" horizontalScrollPolicy="off"/>
+	<s:Group id="imageGroup" top="0" left="0" bottom="0" right="0"
+		mouseEnabled="false">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+
+	<s:Group id="hotspotNames" top="0" left="0" bottom="0" right="0"
+		mouseEnabled="false">
+		<s:layout>
+			<s:BasicLayout />
+		</s:layout>
+	</s:Group>
+	
 	<mx:Canvas id="hotspotCanvas" top="0" left="0" bottom="0" right="0" 
 		verticalScrollPolicy="off" horizontalScrollPolicy="off"/>
 	
-</mx:Canvas>
+</s:Group>

@@ -1,29 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<!--
-This file is part of OpenPalace.
-
-OpenPalace is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-OpenPalace is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
--->
-
-<application xmlns="http://ns.adobe.com/air/application/1.5">
+<application xmlns="http://ns.adobe.com/air/application/1.5.1">
 
 <!-- Adobe AIR Application Descriptor File Template.
 
 	Specifies parameters for identifying, installing, and launching AIR applications.
 
-	xmlns - The Adobe AIR namespace: http://ns.adobe.com/air/application/1.5
+	xmlns - The Adobe AIR namespace: http://ns.adobe.com/air/application/1.5.1
 			The last segment of the namespace specifies the version 
 			of the AIR runtime required for this application to run.
 			
@@ -32,17 +14,17 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 	<!-- The application identifier string, unique to this application. Required. -->
-	<id>OpenPalace</id>
+	<id>AirPalace</id>
 
 	<!-- Used as the filename for the application. Required. -->
-	<filename>OpenPalace</filename>
+	<filename>AirPalace</filename>
 
 	<!-- The name that is displayed in the AIR application installer. 
 	     May have multiple values for each language. See samples or xsd schema file. Optional. -->
-	<name>OpenPalace</name>
+	<name>AirPalace</name>
 
 	<!-- An application version designator (such as "v1", "2.5", or "Alpha 1"). Required. -->
-	<version>0.953</version>
+	<version>v1</version>
 
 	<!-- Description, displayed in the AIR application installer.
 	     May have multiple values for each language. See samples or xsd schema file. Optional. -->
@@ -55,7 +37,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	<initialWindow>
 		<!-- The main SWF or HTML file of the application. Required. -->
 		<!-- Note: In Flex Builder, the SWF reference is set automatically. -->
-		<content>[This value will be overwritten by Flex Builder in the output app.xml]</content>
+		<content>[This value will be overwritten by Flash Builder in the output app.xml]</content>
 		
 		<!-- The title of the main window. Optional. -->
 		<!-- <title></title> -->
@@ -73,10 +55,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		<!-- <minimizable></minimizable> -->
 
 		<!-- Whether the user can maximize the window. Optional. Default true. -->
-		<maximizable>false</maximizable>
+		<!-- <maximizable></maximizable> -->
 
 		<!-- Whether the user can resize the window. Optional. Default true. -->
-		<resizable>false</resizable>
+		<!-- <resizable></resizable> -->
 
 		<!-- The window's initial width. Optional. -->
 		<!-- <width></width> -->
@@ -85,10 +67,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		<!-- <height></height> -->
 
 		<!-- The window's initial x position. Optional. -->
-		<x>15</x>
+		<!-- <x></x> -->
 
 		<!-- The window's initial y position. Optional. -->
-		<y>0</y>
+		<!-- <y></y> -->
 
 		<!-- The window's minimum size, specified as a width/height pair, such as "400 200". Optional. -->
 		<!-- <minSize></minSize> -->

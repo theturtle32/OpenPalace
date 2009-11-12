@@ -65,6 +65,12 @@ package net.codecomposer.palace.message
 		public static const GOT_REPLY_OF_ALL_ROOMS:int = 1917612916;
 		public static const GOT_REPLY_OF_ALL_USERS:int = 1967944564;
 		
+		public static const DOOR_LOCK:int = 1819239275;
+		public static const DOOR_UNLOCK:int = 1970170991;
+		public static const SPOT_STATE:int = 1934849121;
+		public static const SPOT_MOVE:int = 1668238451;
+		public static const PICT_MOVE:int = 1884057443;
+		public static const DRAW_CMD:int = 1685217655;
 		// Loose Props
 		public static const PROP_MOVE:int = 1833988720;
 		public static const PROP_DELETE:int = 1682993776;
@@ -76,6 +82,9 @@ package net.codecomposer.palace.message
 		// Status...
 		public static const NAV_ERROR:int = 1933931122;
 		public static const SERVER_DOWN:int = 1685026670;
+		
+		// Blowthru...
+		public static const BLOWTHRU:int = 1651273591;
 		
 	}
 }

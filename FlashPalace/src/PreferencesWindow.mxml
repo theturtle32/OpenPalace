@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<code:MDIWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:code="http://code.google.com/p/flexlib/"
+	width="400" height="100"
+	layout="absolute"
+	label="Preferences"
+	resizable="false"
+	creationComplete="handleCreationComplete()">
+	
+	<fx:Script>
+		<![CDATA[
+			import net.codecomposer.palace.rpc.PalaceClient;
+			[Bindable]
+			private var preferences:Preferences = Preferences.getInstance();
+		
+			[Bindable]
+			private var palace:PalaceClient = PalaceClient.getInstance();
+		
+			private function handleCreationComplete():void {
+				
+			}
+			
+			private function handleSave():void {
+				preferences.userName = userName.text;
+				palace.changeName(preferences.userName);
+				close();
+			}
+		]]>
+	</fx:Script>
+
+	<s:Group left="5" top="5" right="5">
+		<s:layout>
+			<s:HorizontalLayout gap="3" verticalAlign="middle" />
+		</s:layout>
+		<s:Label text="Name:" />
+		<s:TextInput id="userName" text="{preferences.userName}" />
+	</s:Group>
+	
+	<s:Button bottom="5" right="5" label="Save" click="handleSave()" />
+	
+	
+</code:MDIWindow>

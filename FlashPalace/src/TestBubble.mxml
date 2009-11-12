@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:local="*" xmlns:view="net.codecomposer.palace.view.*"
+	backgroundColor="0xCCCCCC"
+	creationComplete="handleCreationComplete()">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.ColorPickerEvent;
+			import net.codecomposer.palace.view.ChatBubbleSkin;
+			import net.codecomposer.palace.model.PalaceUser;
+			[Bindable]
+			private var user:PalaceUser = new PalaceUser();
+			private function handleCreationComplete():void {
+				user.x = 400;
+				user.y = 350;
+				user.name = "Test User";
+				user.color = 10;
+			}
+			
+			private function handleColorChange(event:ColorPickerEvent):void {
+				chatBubble.tintColor = event.color;
+			}
+		]]>
+	</fx:Script>
+	
+	<s:TextArea
+		left="10" top="10"
+		width="300"
+		id="textInput"
+		text="Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Morbi commodo, ipsum sed pharetra gravida, orci magna rhoncus neque, id pulvinar odio lorem non turpis. Nullam sit amet enim." />
+
+	<view:Avatar user="{user}" />
+
+	<view:ChatBubble id="chatBubble" skinClass="{ChatBubbleSkin}" x="400" y="350" text="{textInput.text}"
+		isWhisper="{whisperCheckbox.selected}"
+		click="trace('Click');" />
+	
+	<mx:ColorPicker left="10" bottom="80" id="colorPicker" change="handleColorChange(event)" />
+	
+	<s:Button bottom="10" left="10" label="Try Next Position" 
+		click="chatBubble.tryNextPosition()" />
+		
+	<s:CheckBox bottom="40" left="10" label="Whisper" id="whisperCheckbox" />
+	
+</s:Application>

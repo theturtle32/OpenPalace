@@ -3,6 +3,7 @@
 	<name>FlashPalace</name>
 	<comment></comment>
 	<projects>
+		<project>PalaceClient</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
