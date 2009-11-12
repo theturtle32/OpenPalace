@@ -56,6 +56,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			import net.codecomposer.palace.model.ChatMessage;
 			import net.codecomposer.palace.model.PalaceConfig;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
+			import net.codecomposer.palace.model.PalaceHotspot;
 			import net.codecomposer.palace.model.PalaceLooseProp;
 			import net.codecomposer.palace.model.PalaceUser;
 			import net.codecomposer.palace.rpc.PalaceClient;
@@ -118,8 +119,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function handleCreationComplete():void {
 				initializeLoosePropContextMenu();
-				//this.addEventListener(MouseEvent.CLICK, handleClick);
-				//addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown);
+				this.addEventListener(MouseEvent.CLICK, handleClick);
 			}
 			
 			private function initializeLoosePropContextMenu():void {
@@ -337,6 +337,11 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				}
 				systemManager.getSandboxRoot().removeEventListener(MouseEvent.MOUSE_UP, handleStageMouseUp);
 				removeEventListener(MouseEvent.MOUSE_MOVE, handleAvatarDragMouseMove);
+			}
+			
+			private function handleClick(event:MouseEvent):void {
+				updateSelfPosition();
+				sendCurrentPositionToServer();
 			}
 			
 			private function sendCurrentPositionToServer():void {
@@ -705,6 +710,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					currentState = "normal";
 				}
 				backgroundImage.visible = true;
+				backgroundImage.smoothBitmapContent = false;
 				backgroundImage.smoothBitmapContent = true;
 			}
 			
@@ -737,7 +743,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	</s:Rect>
 	
 	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
-		mouseDown="handleAvatarDragMouseDown(event)"
 		dragEnter="handleLoosePropDragEnter(event)"
 		dragDrop="handleLoosePropDragDrop(event)"
 		dragOver="handleLoosePropDragOver(event)"
@@ -758,7 +763,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 							dragEnter="handleLoosePropDragEnter(event)"
 							dragDrop="handleLoosePropDragDrop(event)"
 							dragOver="handleLoosePropDragOver(event)"
-							mouseDown="handleAvatarDragMouseDown(event)"
 							/>
 	
 	<view:PaintLayer dataProvider="{room.drawBackCommands}" />
