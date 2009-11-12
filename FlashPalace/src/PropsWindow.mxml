@@ -326,16 +326,31 @@
 			<s:itemRenderer>
 				<fx:Component>
 					<s:ItemRenderer doubleClick="outerDocument.handleWearClick()"
+									mouseDown="handleMouseDown(event)"
 									mouseMove="handleMouseMove(event)">
 						<fx:Script>
 							<![CDATA[
 								import mx.core.DragSource;
+								import mx.core.FlexGlobals;
 								import mx.managers.DragManager;
+								
 								[Bindable]
 								private var loaderContext:LoaderContext = new LoaderContext(true);
 								
+								private var readyForDrag:Boolean = false;
+								
+								private function handleMouseDown(event:MouseEvent):void {
+									systemManager.getSandboxRoot().addEventListener(MouseEvent.MOUSE_UP, handleStageMouseUp);
+									readyForDrag = true;
+								}
+								
+								private function handleStageMouseUp(event:MouseEvent):void {
+									systemManager.getSandboxRoot().removeEventListener(MouseEvent.MOUSE_UP, handleStageMouseUp);
+									readyForDrag = false;
+								}
+								
 								private function handleMouseMove(event:MouseEvent):void {
-									if (event.buttonDown) {
+									if (event.buttonDown && readyForDrag) {
 										var dragSource:DragSource = new DragSource();
 										dragSource.addData({
 											startMouseX: event.stageX,
