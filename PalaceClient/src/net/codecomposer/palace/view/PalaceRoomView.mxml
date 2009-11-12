@@ -118,7 +118,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function handleCreationComplete():void {
 				initializeLoosePropContextMenu();
-				this.addEventListener(MouseEvent.CLICK, handleClick);
+				//this.addEventListener(MouseEvent.CLICK, handleClick);
+				//addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown);
 			}
 			
 			private function initializeLoosePropContextMenu():void {
@@ -302,18 +303,78 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				enableLoosePropsInteractivePNG();
 			}
 			
-			private function handleClick(event:MouseEvent):void {
+			private var draggingAvatar:Boolean = false;
+			private var liveDraggingAvatar:Boolean = false;
+			private var liveDraggingTimer:Timer = new Timer(100, 0);
+			
+			private function handleAvatarDragMouseDown(event:MouseEvent):void {
+				if (event.currentTarget is Avatar) {
+					var user:PalaceUser = Avatar(event.currentTarget).user;
+					if (!user.isSelf) { return; }
+				}
+				if (event.shiftKey) {
+					liveDraggingTimer.reset();
+					liveDraggingTimer.start();
+					liveDraggingTimer.addEventListener(TimerEvent.TIMER, handleLiveDraggingTimer);
+					liveDraggingAvatar = true;
+				}
+				startAvatarDrag();
+				updateSelfPosition();
+			}
+			
+			private function startAvatarDrag(event:MouseEvent = null):void {
+				draggingAvatar = true;
+				systemManager.getSandboxRoot().addEventListener(MouseEvent.MOUSE_UP, handleStageMouseUp);
+				addEventListener(MouseEvent.MOUSE_MOVE, handleAvatarDragMouseMove);
+			}
+
+			private function stopAvatarDrag():void {
+				draggingAvatar = false;
+				if (liveDraggingAvatar) {
+					liveDraggingAvatar = false;
+					liveDraggingTimer.stop();
+					liveDraggingTimer.removeEventListener(TimerEvent.TIMER, handleLiveDraggingTimer);
+				}
+				systemManager.getSandboxRoot().removeEventListener(MouseEvent.MOUSE_UP, handleStageMouseUp);
+				removeEventListener(MouseEvent.MOUSE_MOVE, handleAvatarDragMouseMove);
+			}
+			
+			private function sendCurrentPositionToServer():void {
+				var self:PalaceUser = room.getSelfUser();
+				PalaceClient.getInstance().move(self.x, self.y);
+			}
+			
+			private function updateSelfPosition():void {
+				var self:PalaceUser = room.getSelfUser();
 				var x:int = this.contentMouseX;
 				var y:int = this.contentMouseY;
 				if (x < 22) { x = 22; }
 				if (y < 22) { y = 22; }
 				if (x > width - 22) { x = width - 22; }
 				if (y > height - 22) { y = height - 22; }
-				trace("Movement requested x:" + x + " y:" + y);
-				var socket:PalaceClient = PalaceClient.getInstance();
-				socket.move(x, y);
+				self.x = x;
+				self.y = y;
 			}
 			
+			private function handleLiveDraggingTimer(event:TimerEvent):void {
+				if (liveDraggingAvatar) {
+					sendCurrentPositionToServer();
+				}
+			}
+			
+			private function handleAvatarDragMouseMove(event:MouseEvent):void {
+				if (draggingAvatar) {
+					updateSelfPosition();
+				}
+			}
+						
+			private function handleStageMouseUp(event:MouseEvent):void {
+				stopAvatarDrag();
+				updateSelfPosition();
+				sendCurrentPositionToServer();
+			}
+			
+
 			private function handleAvatarClick(event:MouseEvent):void {
 				if (event.currentTarget is Avatar) {
 					var user:PalaceUser = Avatar(event.currentTarget).user;
@@ -529,6 +590,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				avatar.user = event.user;
 				avatar.alpha = 1;
 				avatar.addEventListener(MouseEvent.CLICK, handleAvatarClick);
+				avatar.addEventListener(MouseEvent.MOUSE_DOWN, handleAvatarDragMouseDown);
 				avatar.addEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
 				avatar.addEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
 				avatar.addEventListener(DragEvent.DRAG_OVER, handleLoosePropDragOver);
@@ -555,6 +617,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				var avatar:Avatar = avatarsByUser[event.user];
 				if (avatar != null) {
 					avatar.removeEventListener(MouseEvent.CLICK, handleAvatarClick);
+					avatar.removeEventListener(MouseEvent.MOUSE_DOWN, handleAvatarDragMouseDown);
+					avatar.removeEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
+					avatar.removeEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
+					avatar.removeEventListener(DragEvent.DRAG_OVER, handleLoosePropDragOver);
 					avatarsGroup.removeElement(avatar);
 					delete avatarsByUser[event.user];
 				}
@@ -672,6 +738,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	</s:Rect>
 	
 	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
+		mouseDown="handleAvatarDragMouseDown(event)"
 		dragEnter="handleLoosePropDragEnter(event)"
 		dragDrop="handleLoosePropDragDrop(event)"
 		dragOver="handleLoosePropDragOver(event)"
@@ -692,6 +759,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 							dragEnter="handleLoosePropDragEnter(event)"
 							dragDrop="handleLoosePropDragDrop(event)"
 							dragOver="handleLoosePropDragOver(event)"
+							mouseDown="handleAvatarDragMouseDown(event)"
 							/>
 	
 	<view:PaintLayer dataProvider="{room.drawBackCommands}" />

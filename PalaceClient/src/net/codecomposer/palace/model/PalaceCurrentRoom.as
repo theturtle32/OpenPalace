@@ -121,6 +121,10 @@ package net.codecomposer.palace.model
 			return PalaceUser(usersHash[id]);
 		}
 		
+		public function getSelfUser():PalaceUser {
+			return getUserById(selfUserId);
+		}
+		
 		public function removeUser(user:PalaceUser):void {
 			removeUserById(user.id);
 		}
