@@ -24,6 +24,7 @@
 			[Bindable]
 			public var palace:PalaceClient = PalaceClient.getInstance();
 
+			private var directoryWindow:DirectoryWindow;
 			private var connectWindow:ConnectWindow;
 			private var roomListWindow:RoomListWindow;
 			private var userListWindow:UserListWindow;
@@ -65,7 +66,7 @@
 				handleBrowserURLChange();
 				
 				ChangeWatcher.watch(palace, ['currentRoom','name'], handleRoomChange);
-				showConnectWindow();
+				showDirectoryWindow();
 				
 				palace.addEventListener(PalaceEvent.CONNECT_COMPLETE, handleConnectComplete);
 				palace.addEventListener(PalaceEvent.CONNECT_FAILED, handleConnectFailed);
@@ -85,6 +86,7 @@
 			
 			private function handleConnectStart(event:PalaceEvent):void {
 				hideConnectWindow();
+				hideDirectoryWindow();
 				chatWindow.currentState = "connecting";
 			}
 			
@@ -260,6 +262,36 @@
 					hidePreferences();
 				}
 			}
+			
+			private function showDirectoryWindow():void {
+				directoryWindow = new DirectoryWindow();
+				directoryWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					directoryButton.selected = false;
+				});
+				mdic.windowManager.add(directoryWindow);
+			}
+			
+			private function hideDirectoryWindow():void {
+				if (directoryWindow) {
+					try {
+						mdic.windowManager.remove(directoryWindow);
+					}
+					catch(e:Error) {
+						// do nothing
+					}
+					directoryWindow = null;
+					directoryButton.selected = false;
+				}
+			}
+			
+			private function handleDirectoryClick(event:MouseEvent):void {
+				if (ToggleButton(event.target).selected) {
+					showDirectoryWindow();
+				}
+				else {
+					hideDirectoryWindow();
+				}
+			}
 						
 			private function showRoomList():void {
 				palace.requestRoomList();
@@ -308,6 +340,7 @@
 	<s:HGroup top="5" right="5" verticalAlign="middle">
 		<s:Label text="{palace.currentRoom.users.length}/{palace.population}" />
 		<s:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
+		<s:ToggleButton selected="true" label="Directory" id="directoryButton" click="handleDirectoryClick(event)" />
 		<s:Button label="Connect" click="showConnectWindow()" />
 	</s:HGroup>
 
