@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/halo" width="500" height="350"
+		 creationComplete="load()">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			
+			import net.codecomposer.palace.rpc.PalaceClient;
+			import net.codecomposer.palace.rpc.webservice.OPWSEvent;
+			import net.codecomposer.palace.rpc.webservice.OPWSGetDirectory;
+			
+			[Bindable]
+			public var directory:Array = [];
+			
+			[Bindable]
+			public var loading:Boolean = false;
+			
+			public function load():void {
+				var directoryRequest:OPWSGetDirectory = new OPWSGetDirectory();
+				directoryRequest.addEventListener(OPWSEvent.RESULT_EVENT, handleDirectoryResult);
+				directoryRequest.addEventListener(OPWSEvent.FAULT_EVENT, handleDirectoryFault);
+				directoryRequest.send();
+				loading = true;
+			}
+			
+			private function handleDirectoryResult(event:OPWSEvent):void {
+				loading = false;
+				if (event.result && event.result.directory) {
+					directory = event.result.directory;
+				}
+			}
+			
+			private function handleDirectoryFault(event:OPWSEvent):void {
+				Alert.show("Unable to load directory data.", "Error");
+				loading = false;
+			}
+			
+			private function handleConnectClick():void {
+				if (directoryList.selectedItem) {
+					var address:String = directoryList.selectedItem.address;
+					
+					if (address != null) {
+						var url:String = String(address).toLowerCase();
+						var match:Array = url.match(/^palace:\/\/(.*)$/);
+						if (match && match.length > 0) {
+							url = match[1];
+						}
+						
+						var parts:Array = url.split(':');
+						var hostName:String = parts[0];
+						var port:Number = 9998;
+						if ( parts[1] && String(parts[1]).length > 0 ) {
+							port = uint(parts[1]);
+						} 
+						trace("palace = " + hostName + " port " + port);
+						
+						if (hostName && hostName.length > 0) {
+							PalaceClient.getInstance().connect(Preferences.getInstance().userName, hostName, port);
+						}
+					}
+
+				}
+			}
+							
+		]]>
+	</fx:Script>
+	
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="right" />
+	</s:layout>
+
+	<mx:DataGrid itemDoubleClick="handleConnectClick()" id="directoryList" dataProvider="{directory}" width="100%" height="100%" enabled="{!loading}">
+		
+		<mx:columns>
+			<mx:DataGridColumn headerText="Name" dataField="name" width="200" />
+			<mx:DataGridColumn headerText="Category" dataField="category" width="100" />
+			<mx:DataGridColumn headerText="Language" dataField="language" width="100" />
+			<mx:DataGridColumn headerText="Rooms" dataField="roomCount" width="50" />
+			<mx:DataGridColumn headerText="Users" dataField="population" width="50" />
+		</mx:columns>
+	</mx:DataGrid>
+	
+	<s:Group right="0">
+		<s:layout>
+			<s:HorizontalLayout paddingBottom="5" paddingLeft="5" paddingRight="5" paddingTop="5" /> 
+		</s:layout>
+		<s:Button enabled="{!loading}" label="Refresh" click="load()" />
+		<s:Button enabled="{!loading}" label="Connect" click="handleConnectClick()" />
+	</s:Group>
+	
+</s:Group>
