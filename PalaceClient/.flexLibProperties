@@ -56,6 +56,13 @@
     <classEntry path="net.codecomposer.palace.view.AlphaHitAreaImage"/>
     <classEntry path="net.codecomposer.palace.model.SavedPropRecord"/>
     <classEntry path="net.codecomposer.palace.rpc.webservice.OPWSGetDirectory"/>
+    <classEntry path="net.codecomposer.palace.script.IptVariable"/>
+    <classEntry path="net.codecomposer.palace.script.IScriptMgr"/>
+    <classEntry path="net.codecomposer.palace.script.IptscraeError"/>
+    <classEntry path="net.codecomposer.palace.script.IptGVariable"/>
+    <classEntry path="net.codecomposer.palace.script.IptFrame"/>
+    <classEntry path="net.codecomposer.palace.script.IptAtom"/>
+    <classEntry path="net.codecomposer.palace.script.IptscraeMgr"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
