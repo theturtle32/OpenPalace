@@ -214,6 +214,14 @@ package net.codecomposer.palace.script
 			}
 		}
 		
+		public function sf_STRLEN():void {
+			pushInt(popString().length);
+		}
+		
+		public function sf_STACKDEPTH():void {
+			pushInt(pStack.length);
+		}
+		
 		public function sf_DIMROOM():void
 		{
 			pc.dimRoom(popInt());
@@ -1414,6 +1422,7 @@ package net.codecomposer.palace.script
 				case "GLOBALMSG":
 					sf_GLOBALMSG();
 					break;
+				case "CHAT":
 				case "SAY":
 					sf_SAY();
 					break;
@@ -1578,6 +1587,19 @@ package net.codecomposer.palace.script
 					break;
 				case "CLIENTTYPE":
 					sf_CLIENTTYPE();
+					break;
+				case "IPTVERSION":
+					sf_IPTVERSION();
+					break;
+				case "STRLEN":
+					sf_STRLEN();
+					break;
+				case "TOPTYPE":
+					sf_TOPTYPE();
+					break;
+				case "VARTYPE":
+					sf_VARTYPE();
+					break;
 				case "LAUNCHPPA":
 					sf_LAUNCHPPA();
 					break;
@@ -1595,12 +1617,33 @@ package net.codecomposer.palace.script
 			}
 		}
 		
+		public function sf_TOPTYPE():void {
+			var atom:IptAtom = popAtom();
+			pushAtom(atom);
+			pushInt(atom.type);
+		}
+		
+		public function sf_VARTYPE():void {
+			var atom:IptAtom = popAtom();
+			pushAtom(atom);
+			if (atom.type == IptAtom.TYPE_VARIABLE) {
+				var v1:IptVariable = getVariableByAtom(atom);
+				pushInt(v1.type);
+			}
+			else {
+				pushInt(atom.type);
+			}
+		}
+		
+		public function sf_IPTVERSION():void {
+			pushInt(1);
+		}
+		
 		public function sf_CLIENTTYPE():void {
 			pushString("OPENPALACE");
 		}
 		
 		public function sf_SETPICLOC():void
-		
 		{
 			var id:int = popInt();
 			var y:int = popInt();
@@ -1761,7 +1804,7 @@ package net.codecomposer.palace.script
 					result = a1.value != a2.value ? 1 : 0;
 					break;
 				
-				case 38: // '&'
+				case "&": // '&'
 					if(a1.type == IptAtom.TYPE_STRING && a2.type == IptAtom.TYPE_STRING)
 					{
 						result = addToStringTable(getString(a1.value) + getString(a2.value));

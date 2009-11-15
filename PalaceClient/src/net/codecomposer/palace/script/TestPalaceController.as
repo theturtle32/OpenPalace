@@ -205,7 +205,7 @@ package net.codecomposer.palace.script
 		
 		public function doMacro(macro:int):void
 		{
-			logResult("doMacro");
+			logResult("doMacro macro: " + macro);
 		}
 		
 		public function changeColor(colorNumber:int):void
