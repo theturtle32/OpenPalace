@@ -35,7 +35,7 @@ package net.codecomposer.palace.script
 		public function sf_EXEC():void
 		{
 			var a1:IptAtom = popValue();
-			if(a1.type == 3)
+			if(a1.type == IptAtom.TYPE_ATOMLIST)
 				callSubroutine(a1.value);
 		}
 		
@@ -147,7 +147,7 @@ package net.codecomposer.palace.script
 		public function getVariableByAtom(a1:IptAtom):IptVariable
 		{
 			if(a1.type != IptAtom.TYPE_VARIABLE)
-				invalidArg();
+				forceAbort("Variable expected.")
 			return getVariableByString(getString(a1.value));
 		}
 		
@@ -216,6 +216,12 @@ package net.codecomposer.palace.script
 		
 		public function sf_STRLEN():void {
 			pushInt(popString().length);
+		}
+		
+		public function sf_STRINDEX():void {
+			var s2:String = popString();
+			var s1:String = popString();
+			pushInt(s1.indexOf(s2));
 		}
 		
 		public function sf_STACKDEPTH():void {
@@ -1219,6 +1225,7 @@ package net.codecomposer.palace.script
 		public function parseNumber():void
 		{
 			var numString:String = "";
+			var char:String;
 			
 			if(currentChar() == "-")
 			{
@@ -1226,10 +1233,12 @@ package net.codecomposer.palace.script
 				so++;
 			}
 			
-			while(currentChar() >= '0' && currentChar() <= '9')
+			char = currentChar();
+			while(char != null && char >= '0' && char <= '9')
 			{
-				numString += currentChar();
+				numString += char;
 				so++;
+				char = currentChar();
 			}
 			
 			pushInt(parseInt(numString));
@@ -1585,6 +1594,9 @@ package net.codecomposer.palace.script
 				case "ROOMID":
 					sf_ROOMID();
 					break;
+				case "SUBSTRING":
+					sf_SUBSTRING();
+					break;
 				case "CLIENTTYPE":
 					sf_CLIENTTYPE();
 					break;
@@ -1594,11 +1606,26 @@ package net.codecomposer.palace.script
 				case "STRLEN":
 					sf_STRLEN();
 					break;
+				case "STRINDEX":
+					sf_STRINDEX();
+					break;
 				case "TOPTYPE":
 					sf_TOPTYPE();
 					break;
 				case "VARTYPE":
 					sf_VARTYPE();
+					break;
+				case "STACKDEPTH":
+					sf_STACKDEPTH();
+					break;
+				case "TANGENT":
+					sf_TANGENT();
+					break;
+				case "SINE":
+					sf_SINE();
+					break;
+				case "COSINE":
+					sf_COSINE();
 					break;
 				case "LAUNCHPPA":
 					sf_LAUNCHPPA();
@@ -1615,6 +1642,35 @@ package net.codecomposer.palace.script
 				default:
 					pushNewAtom(IptAtom.TYPE_VARIABLE, addToStringTable(token));
 			}
+		}
+		
+		public function sf_TANGENT():void {
+			var degrees:int = popInt();
+			var radians:Number = degrees * Math.PI/180;
+			pushInt(Math.round(Math.tan(radians) * 1000));
+		}
+		
+		public function sf_SINE():void {
+			var degrees:int = popInt();
+			var radians:Number = degrees * Math.PI/180;
+			pushInt(Math.round(Math.sin(radians) * 1000));
+		}
+		
+		public function sf_COSINE():void {
+			var degrees:int = popInt();
+			var radians:Number = degrees * Math.PI/180;
+			pushInt(Math.round(Math.cos(radians) * 1000));
+		}
+		
+		public function sf_SUBSTRING():void {
+			var length:int = popInt();
+			var offset:int = popInt();
+			var string:String = popString();
+			if (offset < 0) {
+				forceAbort("SUBSTRING: offset cannot be negative");
+				return;
+			}
+			pushString(string.substr(offset, length));
 		}
 		
 		public function sf_TOPTYPE():void {
@@ -1994,6 +2050,7 @@ package net.codecomposer.palace.script
 			so = iFrame.offset;
 			si = iFrame.index;
 			scriptStr = getString(si);
+			
 			if(abortScriptCode == 2)
 				abortScriptCode = 0;
 		}

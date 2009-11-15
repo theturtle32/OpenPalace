@@ -12,7 +12,6 @@
   <applications>
     <application path="TestBubble.mxml"/>
     <application path="FlashPalace.mxml"/>
-    <application path="ScriptTest.mxml"/>
   </applications>
   <modules/>
   <buildCSSFiles/>
