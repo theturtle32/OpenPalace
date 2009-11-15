@@ -65,6 +65,7 @@
     <classEntry path="net.codecomposer.palace.script.IptscraeMgr"/>
     <classEntry path="net.codecomposer.palace.script.IPalaceController"/>
     <classEntry path="net.codecomposer.palace.script.PalaceErrorHandler"/>
+    <classEntry path="net.codecomposer.palace.script.TestPalaceController"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

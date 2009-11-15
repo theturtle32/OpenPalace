@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/halo"
+			   creationComplete="initEngine()">
+	<fx:Script>
+		<![CDATA[
+			import net.codecomposer.palace.script.IptscraeMgr;
+			import net.codecomposer.palace.script.TestPalaceController;
+			
+			[Bindable]
+			private var palaceController:TestPalaceController;
+			private var iptscraeManager:IptscraeMgr;
+			
+			private function initEngine():void {
+				palaceController = new TestPalaceController();
+				iptscraeManager = new IptscraeMgr(palaceController);
+			}
+			
+			private function runScript():void {
+				iptscraeManager.doScript(scriptInput.text);
+			}
+		]]>
+	</fx:Script>
+	
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="left"
+						  paddingLeft="10" paddingRight="10"
+						  paddingBottom="10" paddingTop="10"/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:Label text="Script:" />
+	<s:TextArea id="scriptInput" width="100%" height="50%" />
+	<mx:Spacer height="10" />
+	<s:HGroup gap="5">
+		<s:Button label="Execute!" click="runScript()" />
+		<s:Button label="Reset Engine" click="initEngine()" />
+	</s:HGroup>
+	
+	<mx:Spacer height="10" />
+	
+	<s:Label text="Result:" />
+	<mx:TextArea text="{palaceController.output}" editable="false" id="result" width="100%" height="50%" />
+	
+	
+	
+	
+</s:Application>

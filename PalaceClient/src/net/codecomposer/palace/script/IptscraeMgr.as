@@ -146,7 +146,7 @@ package net.codecomposer.palace.script
 		
 		public function getVariableByAtom(a1:IptAtom):IptVariable
 		{
-			if(a1.type != 2)
+			if(a1.type != IptAtom.TYPE_VARIABLE)
 				invalidArg();
 			return getVariableByString(getString(a1.value));
 		}
@@ -307,11 +307,13 @@ package net.codecomposer.palace.script
 		
 		public function sf_SAY():void
 		{
-			var atom:IptAtom = popValue();
-			if(atom.type == 4 || atom.type == 3)
-				pc.chat(getString(atom.value));
-			else
-				pc.chat(int(atom.value).toString());
+			// this is too permissive.  Should force ITOA for integers
+//			var atom:IptAtom = popValue();
+//			if(atom.type == 4 || atom.type == 3)
+//				pc.chat(getString(atom.value));
+//			else
+//				pc.chat(int(atom.value).toString());
+			pc.chat(popString());
 		}
 		
 		public function runMessageScript(msg:String):int
@@ -370,11 +372,11 @@ package net.codecomposer.palace.script
 			var v:IptVariable;
 			while((char = currentChar()) != null && abortScriptCode == 0) { 
 				
-				if(char == " " || char == "\t" || char == "\r" || char == "\n" || char == ";") {
+				if(char == " " || char == "\t" || char == "\r" || char == "\n") { // || char == "'"
 					so++;
 				}
 				
-				else if(char == '#') {
+				else if(char == '#' || char == ";") {
 					while((char = currentChar()) != null && char != '\r' && char != '\n') {
 						so++;
 					}
@@ -559,7 +561,7 @@ package net.codecomposer.palace.script
 			}
 			if(ary == null)
 				invalidArg();
-			if(idx >= 0 && idx < ary.size()) {
+			if(idx >= 0 && idx < ary.length) {
 				if(isGlobal) {
 					ary[idx] = atomToGVariable(idx.toString() + "_" + gv.name, atom);
 				}
@@ -642,7 +644,7 @@ package net.codecomposer.palace.script
 			}
 			if(ary == null)
 				invalidArg();
-			if(idx >= 0 && idx < ary.size())
+			if(idx >= 0 && idx < ary.length)
 			{
 				if(isGlobal)
 					pushAtom(gVariableToAtom(IptGVariable(ary[idx])));
@@ -765,10 +767,7 @@ package net.codecomposer.palace.script
 			for(var i:int = 0; i < lAry.length; i++)
 			{
 				var atom:IptAtom = IptAtom(lAry[i]);
-				// TODO: Port
-				//var vName = (new StringBuilder(String.valueOf(i))).append("_").append(arrayName).toString();
-				var vName:String = "";
-				gAry.addElement(atomToGVariable(vName, atom));
+				gAry.push(atomToGVariable(i.toString + "_" + arrayName, atom));
 			}
 			
 			return gAry;
@@ -855,9 +854,13 @@ package net.codecomposer.palace.script
 		
 		public function completeAbort(msg:String):void
 		{
-			if(mErrorHandler != null)
-				mErrorHandler.reportError("Aborting script: " + msg, PalaceErrorHandler.LEVEL_INFO);
+			var message:String = ""
+			if(mErrorHandler != null) {
+				message = "Aborting script: " + msg;
+				mErrorHandler.reportError(message, PalaceErrorHandler.LEVEL_INFO);
+			}
 			abortScriptCode = 5;
+			pc.logError(message);
 		}
 		
 		public function sf_SUBSTR():void
@@ -1004,6 +1007,7 @@ package net.codecomposer.palace.script
 					if(currentChar() == 'x')
 					{
 						var hexNumChars:String = "0x";
+						so++;
 						while (hexNumberTest.test(currentChar())) {
 							hexNumChars += currentChar();
 							so ++;
@@ -1057,7 +1061,8 @@ package net.codecomposer.palace.script
 
 			if (grepMatchData) {
 				for (var i:int = 0; i < grepMatchData.length; i++) {
-					result = result.replace(new RegExp("\$" + i.toString(), "g"), grepMatchData[i]); 
+					var regexp:RegExp = new RegExp("\\$" + i.toString(), "g");
+					result = result.replace(regexp, grepMatchData[i]); 
 				}
 			}
 
@@ -1095,7 +1100,7 @@ package net.codecomposer.palace.script
 			if(ary == null) {
 				invalidArg();
 			}
-			pushInt(ary.size());
+			pushInt(ary.length);
 		}
 		
 		public function globalToArray(gAry:Array):int // Vector
@@ -1105,7 +1110,7 @@ package net.codecomposer.palace.script
 			{
 				var gvar:IptGVariable = IptGVariable(gAry[i]);
 				var atom:IptAtom = gVariableToAtom(gvar);
-				lAry.addElement(atom);
+				lAry.push(atom);
 			}
 			
 			return addToArrayTable(lAry);
@@ -1226,14 +1231,15 @@ package net.codecomposer.palace.script
 		
 		{
 			var dp:int = 0;
-			var sc:String; // Char
+			var sc:String = currentChar(); // Char
 			var token:String = "";
 			
-			while((sc = currentChar()) >= 'a' && sc <= 'z' || sc >= 'A' && sc <= 'Z' || sc >= '0' && sc <= '9' || sc == '_')
-			//while(tokenTest.test(sc = currentChar()))
+			//while(sc != null && ((sc >= 'a' && sc <= 'z') || (sc >= 'A' && sc <= 'Z') || (sc >= '0' && sc <= '9') || sc == '_'))
+			while(tokenTest.test(sc = currentChar()))
 			{
-				so++;
 				token += sc.toUpperCase();
+				so++;
+				sc = currentChar()
 			}
 			
 			switch (token) {
@@ -1570,6 +1576,8 @@ package net.codecomposer.palace.script
 				case "ROOMID":
 					sf_ROOMID();
 					break;
+				case "CLIENTTYPE":
+					sf_CLIENTTYPE();
 				case "LAUNCHPPA":
 					sf_LAUNCHPPA();
 					break;
@@ -1585,6 +1593,10 @@ package net.codecomposer.palace.script
 				default:
 					pushNewAtom(IptAtom.TYPE_VARIABLE, addToStringTable(token));
 			}
+		}
+		
+		public function sf_CLIENTTYPE():void {
+			pushString("OPENPALACE");
 		}
 		
 		public function sf_SETPICLOC():void
@@ -1928,7 +1940,7 @@ package net.codecomposer.palace.script
 		{
 			if(abortScriptCode != 0)
 				return;
-			if(tsp.size() >= 16)
+			if(tsp.length >= 16)
 				return;
 			tsp.push(new IptFrame(si, so));
 			si = index;

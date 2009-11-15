@@ -2,6 +2,7 @@ package net.codecomposer.palace.script
 {
 	public interface IPalaceController
 	{
+		function logError(message:String):void;
 		function gotoURL(url:String):void;
 		function launchApp(app:String):void;
 		function getWhoChat():int;
