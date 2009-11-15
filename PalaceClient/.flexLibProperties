@@ -63,6 +63,8 @@
     <classEntry path="net.codecomposer.palace.script.IptFrame"/>
     <classEntry path="net.codecomposer.palace.script.IptAtom"/>
     <classEntry path="net.codecomposer.palace.script.IptscraeMgr"/>
+    <classEntry path="net.codecomposer.palace.script.IPalaceController"/>
+    <classEntry path="net.codecomposer.palace.script.PalaceErrorHandler"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

@@ -1,31 +1,35 @@
 package net.codecomposer.palace.script
 {
 	import flash.utils.Dictionary;
-	
-	import net.codecomposer.palace.rpc.PalaceClient;
 
 	public class IptscraeMgr implements IScriptMgr
 	{
-		public var pStack:Array; //Stack
+		public var pStack:Vector.<IptAtom>; //Stack
 		public var tsp:Array; // Stack
-		public var strTable:Array; // Vector.<String>?
-		public var aryTable:Array; // Vector.<Vector>?  Vector.<Array>?
+		public var strTable:Vector.<String>; // Vector.<String>?
+		public var aryTable:Vector.<Array>; // Vector.<Vector>?  Vector.<Array>?
 		public var vList:Dictionary;
 		public var gList:Dictionary;
-		public var tbuf:Vector.<uint>; // char tbuf[]
 		public var scriptStr:String;
 		public var so:int;
 		public var si:int;
+		public var pc:IPalaceController;
+		public var abortScriptCode:Number = NaN;
+		public var scriptRunning:Boolean = false;
+		public var grepPattern:RegExp;
+		public var grepMatchData:Array;
+		public var mErrorHandler:PalaceErrorHandler = new PalaceErrorHandler();
+		private var tokenTest:RegExp = /^[a-zA-Z0-9_]{1}$/;
 		
 		public function sf_NETGOTO():void
 		{
-			if(pc.pc_GotoURL(popString()) != 0)
-				forceAbort("script contains bad URL");
+			pc.gotoURL(popString());
 		}
 		
 		public function sf_SHELLCMD():void
 		{
-			pc.pc_LaunchApp(popString());
+			// Unsupported
+			popString();
 		}
 		
 		public function sf_EXEC():void
@@ -39,57 +43,57 @@ package net.codecomposer.palace.script
 		{
 			var nest:int = 0;
 			var qFlag:Boolean = false;
-			var dp:int = 0;
-			if(sc() == '{')
+			var atomListString:String = "";
+			if(currentChar() == '{')
 				so++;
-			while(sc() != 0 && (sc() != '}' || nest > 0)) 
+			while(currentChar() != null && (currentChar() != '}' || nest > 0)) 
 			{
 				if(qFlag)
 				{
-					if(sc() == '\\')
+					if(currentChar() == '\\')
 					{
-						tbuf[dp++] = sc();
+						atomListString += currentChar();
 						so++;
 					} else
-						if(sc() == '"')
+						if(currentChar() == '"')
 							qFlag = false;
 				} else
 				{
-					switch(sc())
+					switch(currentChar())
 					{
-						case 34: // '"'
+						case "\"": // '"'
 							qFlag = true;
 							break;
 						
-						case 123: // '{'
+						case "{": // '{'
 							nest++;
 							break;
 						
-						case 125: // '}'
+						case "}": // '}'
 							nest--;
 							break;
 					}
 				}
-				tbuf[dp++] = sc();
+				atomListString += currentChar();
 				so++;
 			}
-			if(sc() == '}')
+			if(currentChar() == '}')
 				so++;
-			var index:int = addToStringTable(new String(tbuf, 0, dp));
-			pushAtom(3, index);
+			var index:int = addToStringTable(atomListString);
+			pushNewAtom(IptAtom.TYPE_ATOMLIST, index);
 		}
 		
 		public function sf_DEF():void
 		{
 			var s1:IptAtom = popAtom();
-			var v:IptVariable = getVariable(s1);
+			var v:IptVariable = getVariableByAtom(s1);
 			var t:IptAtom = popAtom();
 			assignVariable(v, t);
 		}
 		
 		public function sf_ITOA():void
 		{
-			pushString(Integer.toString(popInt()));
+			pushString(popInt().toString());
 		}
 		
 		public function newGlobal(variable:IptVariable):void
@@ -98,26 +102,23 @@ package net.codecomposer.palace.script
 			var data:Object;
 			switch(variable.type)
 			{
-				case 3: // '\003'
-				case 4: // '\004'
-				data = getString(variable.value);
+				case IptAtom.TYPE_ATOMLIST: // '\003'
+				case IptAtom.TYPE_STRING: // '\004'
+					data = getString(variable.value);
+					break;
+				case IptAtom.TYPE_ARRAY: // '\006'
+					data = arrayToGlobal(variable.name, variable.value);
 				break;
-				
-				case 6: // '\006'
-				data = arrayToGlobal(variable.name, variable.value);
-				break;
-				
-				case 5: // '\005'
+				case IptAtom.TYPE_ARRAY_MARK: // '\005'
 				default:
-				data = null;
-				break;
+					data = null;
+					break;
 			}
 			var gv:IptGVariable = new IptGVariable(variable.name, variable.type, variable.value, variable.flags, data);
-			gList.put(((IptVariable) (gv)).name, gv);
+			gList[gv.name] = gv;
 		}
 		
 		public function updateGlobal(variable:IptVariable):void 
-		
 		{
 			var gv:IptGVariable = IptGVariable(gList[variable.name]);
 			if(gv != null)
@@ -147,7 +148,7 @@ package net.codecomposer.palace.script
 		{
 			if(a1.type != 2)
 				invalidArg();
-			return getVariable(getString(a1.value));
+			return getVariableByString(getString(a1.value));
 		}
 		
 		public function getVariableByString(sym:String):IptVariable
@@ -160,35 +161,35 @@ package net.codecomposer.palace.script
 		
 		public function sf_WHOCHAT():void
 		{
-			pushInt(pc.pc_GetWhoChat());
+			pushInt(pc.getWhoChat());
 		}
 		
 		public function sf_MIDILOOP():void
 		{
 			var name:String = popString();
 			var loopNbr:int = popInt();
-			pc.pc_MidiLoop(loopNbr, name);
+			pc.midiLoop(loopNbr, name);
 		}
 		
 		public function sf_SELECT():void
 		{
-			pc.pc_SelectHotspot(popInt());
+			pc.selectHotSpot(popInt());
 		}
 		
 		public function sf_NBRDOORS():void
 		{
-			pushInt(pc.pc_GetNbrDoors());
+			pushInt(pc.getNumDoors());
 		}
 		
 		public function sf_ISGUEST():void
 		{
-			pushInt(pc.pc_IsGuest() ? 1 : 0);
+			pushInt(pc.isGuest() ? 1 : 0);
 		}
 		
 		public function forceAbort(msg:String):void
 		{
 			abortScriptCode = 5;
-			throw new IptscraeException(msg);
+			throw new IptscraeError(msg);
 		}
 		
 		public function pushNewAtom(type:int, value:int):void
@@ -203,7 +204,7 @@ package net.codecomposer.palace.script
 		
 		public function popAtom():IptAtom
 		{
-			if(pStack.size() > 0)
+			if(pStack.length > 0)
 			{
 				return IptAtom(pStack.pop());
 			} else
@@ -215,8 +216,7 @@ package net.codecomposer.palace.script
 		
 		public function sf_DIMROOM():void
 		{
-			var dimLevel:int = popInt();
-			pc.pc_DimRoom(dimLevel);
+			pc.dimRoom(popInt());
 		}
 		
 		public function popInt():int
@@ -234,83 +234,84 @@ package net.codecomposer.palace.script
 		
 		public function sf_POSY():void
 		{
-			pushInt(pc.pc_GetPosY());
+			pushInt(pc.getSelfPosY());
 		}
 		
 		public function sf_TICKS():void
 		{
-			// TODO: Implement
+			var date:Date = new Date();
+			pushInt(int(date.valueOf() / Number(17) % 0x4F1A00));
 			// pushInt((int)((System.currentTimeMillis() / 17L) % 0x4f1a00L));
 		}
 		
 		public function sf_ISWIZARD():void
 		{
-			pushInt(pc.pc_IsWizard() ? 1 : 0);
+			pushInt(pc.isWizard() ? 1 : 0);
 		}
 		
 		public function sf_SETPOS():void
 		{
 			var y:int = popInt();
 			var x:int = popInt();
-			pc.pc_MoveUserAbs(x, y);
+			pc.moveUserAbs(x, y);
 		}
 		
 		public function sf_TOPPROP():void
 		{
-			pushInt(pc.pc_GetTopProp());
+			pushInt(pc.getTopProp());
 		}
 		
 		public function sf_DROPPROP():void
 		{
 			var y:int = popInt();
 			var x:int = popInt();
-			pc.pc_DropProp(x, y);
+			pc.dropProp(x, y);
 		}
 		
 		public function sf_REMOVEPROP():void
 		{
 			var a:IptAtom = popValue();
-			if(a.type == 1)
-				pc.pc_DoffProp(a.value);
+			if(a.type == 1) // int?
+				pc.doffPropById(int(a.value));
 			else
-				pc.pc_DoffProp(getString(a.value));
+				pc.doffPropByName(getString(a.value));
 		}
 		
 		public function sf_CLEARPROPS():void
 		{
-			pc.pc_Naked();
+			pc.naked();
 		}
 		
 		public function sf_USERPROP():void
 		{
-			pushInt(pc.pc_GetUserProp(popInt()));
+			pushInt(pc.getUserProp(popInt()));
 		}
 		
 		public function sf_MOUSEPOS():void
 		{
-			pushInt(pc.pc_GetMouseX());
-			pushInt(pc.pc_GetMouseY());
+			pushInt(pc.getMouseX());
+			pushInt(pc.getMouseY());
 		}
 		
 		public function sf_MOVE():void
 		{
 			var yDelta:int = popInt();
 			var xDelta:int = popInt();
-			pc.pc_MoveUserRel(xDelta, yDelta);
+			pc.moveUserRel(xDelta, yDelta);
 		}
 		
 		public function sf_GETSPOTSTATE():void
 		{
-			pushInt(pc.pc_GetSpotState(popInt()));
+			pushInt(pc.getSpotState(popInt()));
 		}
 		
 		public function sf_SAY():void
 		{
 			var atom:IptAtom = popValue();
 			if(atom.type == 4 || atom.type == 3)
-				pc.pc_Chat(getString(atom.value));
+				pc.chat(getString(atom.value));
 			else
-				pc.pc_Chat(Integer.toString(atom.value));
+				pc.chat(int(atom.value).toString());
 		}
 		
 		public function runMessageScript(msg:String):int
@@ -328,9 +329,9 @@ package net.codecomposer.palace.script
 					abortScriptCode = 0;
 					runScript();
 					if(abortScriptCode >= 4)
-						pc.pc_ClearAlarms();
+						pc.clearAlarms();
 					scriptRunning = false;
-					if(pStack.size() > 0)
+					if(pStack.length > 0)
 					{
 						var atom:IptAtom = popValue();
 						if(atom.type == 1)
@@ -344,9 +345,15 @@ package net.codecomposer.palace.script
 			}
 			catch(ie:IptscraeError)
 			{
-				pc.pc_ClearAlarms();
+				pc.clearAlarms();
 				scriptRunning = false;
-				completeAbort(ie.getMessage());
+				completeAbort(ie.message);
+				initInterpreter();
+			}
+			catch(e:Error) {
+				pc.clearAlarms();
+				scriptRunning = false;
+				completeAbort(e.message);
 				initInterpreter();
 			}
 			return retVal;
@@ -356,175 +363,169 @@ package net.codecomposer.palace.script
 		{
 			if(abortScriptCode != 0)
 				return;
-			var sc:uint; // char
-			while((sc = sc()) != 0 && abortScriptCode == 0) 
-				if(sc == ' ' || sc == '\t' || sc == '\r' || sc == '\n' || sc == ';')
+			var char:String; // char
+			var oper:String;
+			var a1:IptAtom;
+			var a2:IptAtom;
+			var v:IptVariable;
+			while((char = currentChar()) != null && abortScriptCode == 0) { 
+				
+				if(char == " " || char == "\t" || char == "\r" || char == "\n" || char == ";") {
 					so++;
-				else
-					if(sc == '#')
-						while((sc = sc()) != 0 && sc != '\r' && sc != '\n') 
+				}
+				
+				else if(char == '#') {
+					while((char = currentChar()) != null && char != '\r' && char != '\n') {
+						so++;
+					}
+				}
+				
+				else if(char == '{') {
+					parseAtomList();
+				}
+				
+				else if(char == '"') {
+					parseStringLiteral();
+				}
+				
+				else {
+					if(char == '}') {
+						return;
+					}
+					if(char == '[') {
+						so++;
+						pushNewAtom(IptAtom.TYPE_ARRAY_MARK, 0);
+					} else
+					if(char == ']') {
+						so++;
+						pushNewAtom(IptAtom.TYPE_ARRAY, popArrayDef());
+					}
+					else if(char == '!') {
+						if(sc(1) == '=') {
+							a2 = popAtom();
+							a1 = popAtom();
+							binaryOp('a', a1, a2);
+								so++;
+								so++;
+						}
+						else {
+							a1 = popAtom();
+							unaryOp('!', a1);
 							so++;
-					else
-						if(sc == '{')
-							parseAtomList();
-						else
-							if(sc == '"')
-							{
-								parseStringLiteral();
-							} else
-							{
-								if(sc == '}')
-									return;
-								if(sc == '[')
-								{
-									so++;
-									pushAtom(5, 0);
-								} else
-									if(sc == ']')
-									{
-										so++;
-										pushAtom(6, popArrayDef());
-									} else
-										if(sc == '!')
-										{
-											if(sc(1) == '=')
-											{
-												var a2:IptAtom = popAtom();
-												var a1:IptAtom = popAtom();
-												binaryOp('a', a1, a2);
-												so++;
-												so++;
-											} else
-											{
-												var a1:IptAtom = popAtom();
-												unaryOp('!', a1);
-												so++;
-											}
-										} else
-											if(sc == '=')
-											{
-												if(sc(1) == '=')
-												{
-													var a2:IptAtom = popAtom();
-													var a1:IptAtom = popAtom();
-													binaryOp('=', a1, a2);
-													so++;
-													so++;
-												} else
-												{
-													var a2:IptAtom = popAtom();
-													var a1:IptAtom = popAtom();
-													var v:IptVariable = getVariable(a2);
-													assignVariable(v, a1);
-													so++;
-												}
-											} else
-												if(sc == '+')
-												{
-													if(sc(1) == '+')
-													{
-														var a1:IptAtom = popAtom();
-														unaryAssignment('+', a1);
-														so++;
-														so++;
-													} else
-														if(sc(1) == '=')
-														{
-															var a2:IptAtom = popAtom();
-															var a1:IptAtom = popAtom();
-															binaryAssignment('+', a1, a2);
-															so++;
-															so++;
-														} else
-														{
-															var a2:IptAtom = popAtom();
-															var a1:IptAtom = popAtom();
-															binaryOp('+', a1, a2);
-															so++;
-														}
-												} else
-													if(sc == '-' && (sc(1) < '0' || sc(1) > '9'))
-													{
-														if(sc(1) == '-')
-														{
-															var a1:IptAtom = popAtom();
-															unaryAssignment('-', a1);
-															so++;
-															so++;
-														} else
-															if(sc(1) == '=')
-															{
-																var a2:IptAtom = popAtom();
-																var a1:IptAtom = popAtom();
-																binaryAssignment('-', a1, a2);
-																so++;
-																so++;
-															} else
-															{
-																var a2:IptAtom = popAtom();
-																var a1:IptAtom = popAtom();
-																binaryOp('-', a1, a2);
-																so++;
-															}
-													} else
-														if(sc == '<')
-														{
-															var oper:String = '<'; // char
-															if(sc(1) == '>')
-															{
-																oper = 'a';
-																so++;
-															} else
-																if(sc(1) == '=')
-																{
-																	oper = 'b';
-																	so++;
-																}
-															var a2:IptAtom = popAtom();
-															var a1:IptAtom = popAtom();
-															binaryOp(oper, a1, a2);
-															so++;
-														} else
-															if(sc == '>')
-															{
-																var oper:String = '>';
-																if(sc(1) == '=')
-																{
-																	oper = 'c';
-																	so++;
-																}
-																var a2:IptAtom = popAtom();
-																var a1:IptAtom = popAtom();
-																binaryOp(oper, a1, a2);
-																so++;
-															} else
-																if(sc == '*' || sc == '/' || sc == '&' || sc == '%')
-																{
-																	var oper:String = sc;
-																	var a2:IptAtom = popAtom();
-																	var a1:IptAtom = popAtom();
-																	if(sc(1) == '=')
-																	{
-																		binaryAssignment(oper, a1, a2);
-																		so++;
-																	} else
-																	{
-																		binaryOp(oper, a1, a2);
-																	}
-																	so++;
-																} else
-																	if(sc == '-' || sc >= '0' && sc <= '9')
-																		parseNumber();
-																	else
-																		if(sc == '_' || sc >= 'a' && sc <= 'z' || sc >= 'A' && sc <= 'Z')
-																			parseSymbol();
-																		else
-																			forceAbort((new StringBuilder("Unexpected character: '")).append((new Character(sc)).toString()).append("'").toString());
-							}
+						}
+					}
+					else if(char == '=') {
+						if(sc(1) == '=') {
+							a2 = popAtom();
+							a1 = popAtom();
+							binaryOp('=', a1, a2);
+							so++;
+							so++;
+						}
+						else {
+							a2 = popAtom();
+							a1 = popAtom();
+							v = getVariableByAtom(a2);
+							assignVariable(v, a1);
+							so++;
+						}
+					}
+					else if(char == '+') {
+						if(sc(1) == '+') {
+							a1 = popAtom();
+							unaryAssignment('+', a1);
+							so++;
+							so++;
+						}
+						else if(sc(1) == '=') {
+							a2 = popAtom();
+							a1 = popAtom();
+							binaryAssignment('+', a1, a2);
+							so++;
+							so++;
+						}
+						else {
+							a2 = popAtom();
+							a1 = popAtom();
+							binaryOp('+', a1, a2);
+							so++;
+						}
+					}
+					else if(char == '-' && (sc(1) < '0' || sc(1) > '9')) {
+						if(sc(1) == '-') {
+							a1 = popAtom();
+							unaryAssignment('-', a1);
+							so++;
+							so++;
+						}
+						else if(sc(1) == '=') {
+							a2 = popAtom();
+							a1 = popAtom();
+							binaryAssignment('-', a1, a2);
+							so++;
+							so++;
+						}
+						else {
+							a2 = popAtom();
+							a1 = popAtom();
+							binaryOp('-', a1, a2);
+							so++;
+						}
+					}
+					else if(char == '<') {
+						oper = '<'; // char
+						if(sc(1) == '>') {
+							oper = 'a';
+							so++;
+						}
+						else if(sc(1) == '=') {
+							oper = 'b';
+							so++;
+						}
+						a2 = popAtom();
+						a1 = popAtom();
+						binaryOp(oper, a1, a2);
+						so++;
+					}
+					else if(char == '>') {
+						oper = '>';
+						if(sc(1) == '=')
+						{
+							oper = 'c';
+							so++;
+						}
+						a2 = popAtom();
+						a1 = popAtom();
+						binaryOp(oper, a1, a2);
+						so++;
+					}
+					else if(char == '*' || char == '/' || char == '&' || char == '%') {
+						oper = char;
+						a2 = popAtom();
+						a1 = popAtom();
+						if(sc(1) == '=') {
+							binaryAssignment(oper, a1, a2);
+							so++;
+						}
+						else {
+							binaryOp(oper, a1, a2);
+						}
+						so++;
+					}
+					else if(char == '-' || char >= '0' && char <= '9') {
+						parseNumber();
+					}
+					else if(char == '_' || char >= 'a' && char <= 'z' || char >= 'A' && char <= 'Z') {
+						parseSymbol();
+					}
+					else {
+						forceAbort("Unexpected character: '" + char + "'");
+					}
+				}
+			}
 		}
 		
 		public function sf_PUT():void
-		
 		{
 			var idx:int = popInt();
 			var a:IptAtom = popAtom();
@@ -532,21 +533,22 @@ package net.codecomposer.palace.script
 			var atom:IptAtom = popValue();
 			var isGlobal:Boolean = false;
 			var gv:IptGVariable = null;
+		
 			switch(a.type)
 			{
-				case 6: // '\006'
+				case IptAtom.TYPE_ARRAY: // '\006'
 					ary = getArray(a.value);
 					break;
 				
-				case 2: // '\002'
-					var vt:IptGVariable = getVariable(a);
+				case IptAtom.TYPE_VARIABLE: // '\002'
+					var vt:IptVariable = getVariableByAtom(a);
 					if(vt != null)
 						if((vt.flags & 1) > 0)
 						{
 							gv = IptGVariable(gList[vt.name]);
 							if(gv != null)
 							{
-								ary = Array(gv.data);
+								ary = gv.data as Array;
 								isGlobal = true;
 							}
 						} else
@@ -557,23 +559,26 @@ package net.codecomposer.palace.script
 			}
 			if(ary == null)
 				invalidArg();
-			if(idx >= 0 && idx < ary.size())
-				if(isGlobal)
-					ary.setElementAt(atomToGVariable((new StringBuilder(String.valueOf(idx))).append("_").append(((IptVariable) (gv)).name).toString(), atom), idx);
-				else
-					ary.setElementAt(atom, idx);
+			if(idx >= 0 && idx < ary.size()) {
+				if(isGlobal) {
+					ary[idx] = atomToGVariable(idx.toString() + "_" + gv.name, atom);
+				}
+				else {
+					ary[idx] = atom;
+				}
+			}
 		}
 		
 		public function sf_DOORIDX():void
 		{
-			pushInt(pc.pc_GetDoorIdx(popInt()));
+			pushInt(pc.getDoorIdByIndex(popInt()));
 		}
 		
 		public function sf_FOREACH():void
 		{
 			var ary:Array = popArray();
 			var atomList:IptAtom = popValue();
-			if(atomList.type != 3)
+			if(atomList.type != IptAtom.TYPE_ATOMLIST)
 				return;
 			for(var i:int = 0; i < ary.length && abortScriptCode == 0; i++)
 			{
@@ -587,12 +592,13 @@ package net.codecomposer.palace.script
 		
 		public function sf_DELAY():void
 		{
-			pc.pc_Delay(popInt());
+			// should never be implemented
+			//pc.pc_Delay(popInt());
 		}
 		
 		public function stop():void
 		{
-			pc.pc_ClearAlarms();
+			pc.clearAlarms();
 			scriptRunning = false;
 			completeAbort("application stopped");
 			initInterpreter();
@@ -602,7 +608,7 @@ package net.codecomposer.palace.script
 		{
 			var id:int = popInt();
 			var state:int = popInt();
-			pc.pc_SetSpotStateLocal(id, state);
+			pc.setSpotStateLocal(id, state);
 		}
 		
 		public function sf_GET():void
@@ -613,19 +619,19 @@ package net.codecomposer.palace.script
 			var isGlobal:Boolean = false;
 			switch(a.type)
 			{
-				case 6: // '\006'
+				case IptAtom.TYPE_ARRAY: // '\006' Array
 					ary = getArray(a.value);
 					break;
 				
-				case 2: // '\002'
-					var vt:IptVariable = getVariable(a);
+				case IptAtom.TYPE_VARIABLE: // '\002'  Atom?
+					var vt:IptVariable = getVariableByAtom(a);
 					if(vt != null)
-						if((vt.flags & 1) > 0)
+						if((vt.flags & IptVariable.FLAG_GLOBAL) > 0)
 						{
 							var gv:IptGVariable = IptGVariable(gList[vt.name]);
 							if(gv != null)
 							{
-								ary = Array(gv.data); // Vector
+								ary = gv.data as Array; // Vector
 								isGlobal = true;
 							}
 						} else
@@ -650,7 +656,7 @@ package net.codecomposer.palace.script
 		
 		public function sf_WHOTARGET():void
 		{
-			pushInt(pc.pc_GetWhoTarget());
+			pushInt(pc.getWhoTarget());
 		}
 		
 		public function sf_BREAK():void
@@ -660,22 +666,22 @@ package net.codecomposer.palace.script
 		
 		public function sf_BEEP():void
 		{
-			pc.pc_Beep();
+			pc.beep();
 		}
 		
 		public function sf_SPOTDEST():void
 		{
-			pushInt(pc.pc_GetSpotDest(popInt()));
+			pushInt(pc.getSpotDest(popInt()));
 		}
 		
 		public function sf_LAUNCHAPP():void
 		{
-			pc.pc_LaunchApp(popString());
+			pc.launchApp(popString());
 		}
 		
 		public function sf_MACRO():void
 		{
-			pc.pc_DoMacro(popInt());
+			pc.doMacro(popInt());
 		}
 		
 		public function sf_IF():void
@@ -685,34 +691,34 @@ package net.codecomposer.palace.script
 			if(expResult != 0)
 			{
 				atomToValue(s1);
-				if(s1.type == 3)
+				if(s1.type == IptAtom.TYPE_ATOMLIST) // 3 -- Atomlist?
 					callSubroutine(s1.value);
 			}
 		}
 		
 		public function sf_SETCOLOR():void
 		{
-			pc.pc_ChangeColor(popInt());
+			pc.changeColor(popInt());
 		}
 		
 		public function sf_SPOTNAME():void
 		{
-			pushString(pc.pc_GetSpotName(popInt()));
+			pushString(pc.getSpotName(popInt()));
 		}
 		
 		public function sf_WHONAME():void
 		{
-			pushString(pc.pc_GetUserName(popInt()));
+			pushString(pc.getUserName(popInt()));
 		}
 		
 		public function sf_USERNAME():void
 		{
-			pushString(pc.pc_GetUserName());
+			pushString(pc.getSelfUserName());
 		}
 		
 		public function sf_STRTOATOM():void
 		{
-			pushAtom(3, addToStringTable(popString()));
+			pushNewAtom(IptAtom.TYPE_ATOMLIST, addToStringTable(popString()));
 		}
 		
 		public function sf_RANDOM():void
@@ -723,9 +729,9 @@ package net.codecomposer.palace.script
 		public function sf_DUP():void
 		
 		{
-			if(pStack.size() > 0)
+			if(pStack.length > 0)
 			{
-				var p1:IptAtom = IptAtom(pStack.peek());
+				var p1:IptAtom = IptAtom(pStack[pStack.length-1]);
 				pushAtom(p1.cloneAtom());
 			}
 		}
@@ -735,17 +741,17 @@ package net.codecomposer.palace.script
 			var gv:IptGVariable = IptGVariable(gList[variable.name]);
 			if(gv != null)
 			{
-				variable.type = IptVariable(gv).type;
-				variable.value = IptVariable(gv).value;
-				variable.flags = IptVariable(gv).flags;
+				variable.type = gv.type;
+				variable.value = gv.value;
+				variable.flags = gv.flags;
 				switch(variable.type)
 				{
-					case 3: // '\003'
-					case 4: // '\004'
+					case IptAtom.TYPE_ATOMLIST: // '\003'
+					case IptAtom.TYPE_STRING: // '\004'
 						variable.value = addToStringTable(String(gv.data));
 						break;
 					
-					case 6: // '\006'
+					case IptAtom.TYPE_ARRAY: // '\006'
 						variable.value = globalToArray(gv.data as Array);
 					break;
 				}
@@ -761,7 +767,7 @@ package net.codecomposer.palace.script
 				var atom:IptAtom = IptAtom(lAry[i]);
 				// TODO: Port
 				//var vName = (new StringBuilder(String.valueOf(i))).append("_").append(arrayName).toString();
-				var vName = "";
+				var vName:String = "";
 				gAry.addElement(atomToGVariable(vName, atom));
 			}
 			
@@ -770,12 +776,14 @@ package net.codecomposer.palace.script
 		
 		public function sf_LAUNCHEVENT():void
 		{
-			pc.pc_LaunchEvent(popString());
+			// PalacePresents: not supported, ever.
+			popString();
 		}
 		
 		public function sf_LOADJAVA():void
 		{
-			pc.pc_LoadJava(popString());
+			// LOADJAVA?  InstantPalace didn't even support this.
+			popString();
 		}
 		
 		public function sf_IFELSE():void
@@ -800,30 +808,31 @@ package net.codecomposer.palace.script
 		{
 			var ary:Array = []; // Vector
 			var a:IptAtom;
-			do
-			{
+			do {
 				a = popValue();
-				if(a.type != 5)
-					ary.insertElementAt(a, 0);
-			} while(pStack.size() > 0 && a.type != 5);
+				if (a.type != IptAtom.TYPE_ARRAY_MARK) {
+					ary.unshift(a);
+				}
+			}
+			while (pStack.length > 0 && a.type != IptAtom.TYPE_ARRAY_MARK);
+			
 			return addToArrayTable(ary);
 		}
 		
 		public function sf_NBRROOMUSERS():void
 		
 		{
-			pushInt(pc.pc_GetNbrRoomUsers());
+			pushInt(pc.getNumRoomUsers());
 		}
 		
-		public function IptscraeMgr(pc:PalaceClient) // PalaceCommander
+		public function IptscraeMgr(pc:IPalaceController) // PalaceCommander
 		{
-			pStack = []; // Stack
+			pStack = new Vector.<IptAtom>(); // Stack
 			tsp = []; // Stack
-			strTable = []; // Vector
-			aryTable = []; // Vector
+			strTable = new Vector.<String>(); // Vector
+			aryTable = new Vector.<Array>(); // Vector
 			vList = new Dictionary();
 			gList = new Dictionary();
-			tbuf = []; // new char[4086];
 			scriptStr = "";
 			so = 0;
 			si = 0;
@@ -832,7 +841,7 @@ package net.codecomposer.palace.script
 			//grepCompiler = new Perl5Compiler();
 			//grepMatcher = new Perl5Matcher();
 			//grepPattern = null;
-			grepInput = "";
+			grepPattern = null;
 			this.pc = pc;
 			pc.setScriptManager(this);
 			initInterpreter();
@@ -840,14 +849,14 @@ package net.codecomposer.palace.script
 		
 		public function sf_DATETIME():void
 		{
-			//TODO: Port
-			//pushInt((int)(System.currentTimeMillis() / 1000L));
+			var date:Date = new Date();
+			pushInt(int(date.valueOf() / 1000));
 		}
 		
 		public function completeAbort(msg:String):void
 		{
 			if(mErrorHandler != null)
-				mErrorHandler.reportError((new StringBuilder("Aborting script: ")).append(msg).toString(), 0);
+				mErrorHandler.reportError("Aborting script: " + msg, PalaceErrorHandler.LEVEL_INFO);
 			abortScriptCode = 5;
 		}
 		
@@ -864,12 +873,12 @@ package net.codecomposer.palace.script
 			var val:int = gVar.value;
 			switch(gVar.type)
 			{
-				case 3: // '\003'
-				case 4: // '\004'
+				case IptAtom.TYPE_ATOMLIST: // '\003'
+				case IptAtom.TYPE_STRING: // '\004'
 					val = addToStringTable(String(gVar.data));
 					break;
 				
-				case 6: // '\006'
+				case IptAtom.TYPE_ARRAY: // '\006'
 					val = globalToArray(gVar.data as Array);
 					break;
 			}
@@ -878,143 +887,143 @@ package net.codecomposer.palace.script
 		
 		public function sf_WHOME():void
 		{
-			pushInt(pc.pc_GetUserID());
+			pushInt(pc.getSelfUserId());
 		}
 		
 		public function sf_LOCK():void
 		{
-			var id:int = popInt();
-			pc.pc_Lock(id);
+			pc.lock(popInt());
 		}
 		
 		public function sf_MIDISTOP():void
 		{
-			pc.pc_MidiStop();
+			pc.midiStop();
 		}
 		
 		public function sf_GOTOROOM():void
 		{
-			var dest:int = popInt();
-			pc.pc_GotoRoom(dest);
+			pc.gotoRoom(popInt());
 		}
 		
 		public function sf_INSPOT():void
 		{
-			pushInt(pc.pc_InSpot(popInt()) ? 1 : 0);
+			pushInt(pc.inSpot(popInt()) ? 1 : 0);
 		}
 		
 		public function sf_GLOBALMSG():void
 		{
-			pc.pc_GlobalMsg(popString());
+			pc.sendGlobalMessage(popString());
 		}
 		
 		public function sf_ROOMMSG():void
 		{
-			pc.pc_RoomMsg(popString());
+			pc.sendRoomMessage(popString());
 		}
 		
 		public function sf_SUSRMSG():void
 		{
-			pc.pc_SusrMsg(popString());
+			pc.sendSusrMessage(popString());
 		}
 		
 		public function sf_LOCALMSG():void
 		{
-			pc.pc_LocalMsg(popString());
+			pc.sendLocalMsg(popString());
 		}
 		
 		public function sf_DONPROP():void
 		{
 			var a:IptAtom = popValue();
-			if(a.type == 1)
-				pc.pc_DonProp(a.value);
+			if(a.type == IptAtom.TYPE_INTEGER) // 0x01
+				pc.donPropById(a.value);
 			else
-				pc.pc_DonProp(getString(a.value));
+				pc.donPropByName(getString(a.value));
 		}
 		
 		public function sf_SETPROPS():void
 		{
-			var ary:Array = popArray(); // Vector
-			pc.pc_SetProps(ary);
+			pc.setProps(popArray());
 		}
 		
 		public function sf_HASPROP():void
 		{
 			var a:IptAtom = popValue();
-			if(a.type == 1)
-				pushInt(pc.pc_HasProp(a.value) ? 1 : 0);
+			if(a.type == IptAtom.TYPE_INTEGER)
+				pushInt(pc.hasPropById(int(a.value)) ? 1 : 0);
 			else
-				if(a.type == 4)
-					pushInt(pc.pc_HasProp(getString(a.value)) ? 1 : 0);
+				if(a.type == IptAtom.TYPE_STRING)
+					pushInt(pc.hasPropByName(getString(a.value)) ? 1 : 0);
 				else
 					pushInt(0);
 		}
 		
 		public function sf_ROOMNAME():void
 		{
-			pushString(pc.pc_GetRoomName());
+			pushString(pc.getRoomName());
 		}
 		
 		public function sf_ISLOCKED():void
 		{
-			pushInt(pc.pc_IsLocked(popInt()) ? 1 : 0);
+			pushInt(pc.isLocked(popInt()) ? 1 : 0);
 		}
 		
 		public function sf_SETSPOTSTATE():void
 		{
 			var id:int = popInt();
 			var state:int = popInt();
-			pc.pc_SetSpotState(id, state);
+			pc.setSpotState(id, state);
 		}
 		
 		public function sf_MIDIPLAY():void
 		{
-			pc.pc_MidiPlay(popString());
+			pc.midiPlay(popString());
 		}
 		
 		public function sf_DOFFPROP():void
 		{
-			pc.pc_DoffProp();
+			pc.doffProp();
 		}
 		
 		public function sf_ISGOD():void
 		{
-			pushInt(pc.pc_IsGod() ? 1 : 0);
+			pushInt(pc.isGod() ? 1 : 0);
 		}
+		
+		private var hexNumberTest:RegExp = /^[0-9a-fA-F]{1}$/;
 		
 		public function parseStringLiteral():void
 		{
-			// TODO: Port
+			var result:String = "";
+			
 			var dp:int = 0;
-			if(sc() == '"')
+			if(currentChar() == '"') {
 				so++;
-			while(sc() != 0 && sc() != '"') 
-				if(sc() == '\\')
-				{
+			}
+			while(currentChar() != null && currentChar() != '"') { 
+				if(currentChar() == '\\') {
 					so++;
-					if(sc() == 'x')
+					if(currentChar() == 'x')
 					{
-						var c:String = '\0'; // char
-						so++;
-						c = (char)(sc() >= '0' && sc() <= '9' ? sc() - 48 : sc() >= 'a' && sc() <= 'f' ? (10 + sc()) - 97 : sc() >= 'A' && sc() <= 'F' ? (10 + sc()) - 65 : 0);
-						c <<= '\004';
-						so++;
-						c |= sc() >= '0' && sc() <= '9' ? (char)(sc() - 48) : sc() >= 'a' && sc() <= 'f' ? (char)((10 + sc()) - 97) : sc() >= 'A' && sc() <= 'F' ? (char)((10 + sc()) - 65) : '\0';
-						so++;
-						tbuf[dp++] = c;
+						var hexNumChars:String = "0x";
+						while (hexNumberTest.test(currentChar())) {
+							hexNumChars += currentChar();
+							so ++;
+						}
+						result += String.fromCharCode(hexNumChars);
 					} else
 					{
-						tbuf[dp++] = sc();
+						result += currentChar();
 						so++;
 					}
 				} else
 				{
-					tbuf[dp++] = sc();
+					result += currentChar();
 					so++;
 				}
-			if(sc() == '"')
+			}
+			if(currentChar() == '"') {
 				so++;
-			pushString(new String(tbuf, 0, dp));
+			}
+			pushString(result);
 		}
 		
 		public function sf_UPPERCASE():void
@@ -1022,33 +1031,54 @@ package net.codecomposer.palace.script
 			pushString(popString().toUpperCase());
 		}
 		
+		public function sf_GREPSTR():void
+			
+		{
+			var pattern:String = popString();
+			var stringToSearch:String = popString();
+			try
+			{
+				grepPattern = new RegExp(pattern);
+			}
+			catch(e:Error)
+			{
+				grepPattern = null;
+				forceAbort("Bad GREPSTR Pattern");
+			}
+			
+			grepMatchData = stringToSearch.match(grepPattern);
+			
+			pushInt( (grepMatchData == null) ? 0 : 1 );
+		}
+		
 		public function sf_GREPSUB():void
 		{
-			var replaceStr:String = popString();
-			var result:String = "";
-			if(grepPattern != null)
-			{
-				replaceSubst = new Perl5Substitution(replaceStr);
-				result = Util.substitute(grepMatcher, grepPattern, replaceSubst, grepInput, -1);
+			var result:String = popString();
+
+			if (grepMatchData) {
+				for (var i:int = 0; i < grepMatchData.length; i++) {
+					result = result.replace(new RegExp("\$" + i.toString(), "g"), grepMatchData[i]); 
+				}
 			}
+
 			pushString(result);
 		}
 		
 		public function sf_LENGTH():void
 		{
 			var a:IptAtom = popAtom();
-			var ary:Array = null; // Vector
+			var ary:Array = null;
 			var isGlobal:Boolean = false;
 			switch(a.type)
 			{
-				case 6: // '\006'
+				case IptAtom.TYPE_ARRAY:
 					ary = getArray(a.value);
 					break;
 				
-				case 2: // '\002'
-					var vt:IptVariable = getVariable(a);
+				case IptAtom.TYPE_VARIABLE:
+					var vt:IptVariable = getVariableByAtom(a);
 					if(vt != null)
-						if((vt.flags & 1) > 0)
+						if((vt.flags & IptVariable.FLAG_GLOBAL) > 0)
 						{
 							var gv:IptGVariable = IptGVariable(gList[vt.name]);
 							if(gv != null)
@@ -1062,8 +1092,9 @@ package net.codecomposer.palace.script
 						}
 					break;
 			}
-			if(ary == null)
+			if(ary == null) {
 				invalidArg();
+			}
 			pushInt(ary.size());
 		}
 		
@@ -1083,16 +1114,15 @@ package net.codecomposer.palace.script
 		public function atomToValue(atom:IptAtom):IptAtom
 		
 		{
-			if(atom.type == 2)
+			if(atom.type == IptAtom.TYPE_VARIABLE)
 			{
-				var vt:IptVariable = getVariable(atom);
+				var vt:IptVariable = getVariableByAtom(atom);
 				if(vt != null)
 				{
-					if((vt.flags & 1) > 0)
+					if((vt.flags & IptVariable.FLAG_GLOBAL) > 0)
 						retrieveGlobal(vt);
-					else
-						if((vt.flags & 2) > 0)
-							retrieveExternStringGlobalByName(vt);
+					else if((vt.flags & IptVariable.FLAG_SPECIAL_VARIABLE) > 0)
+						retrieveExternStringGlobalByName(vt);
 					atom.type = vt.type;
 					atom.value = vt.value;
 				}
@@ -1105,50 +1135,49 @@ package net.codecomposer.palace.script
 			return atomToValue(popAtom());
 		}
 		
-		public function pushInt(v:int):void
+		public function pushInt(value:int):void
 		{
-			pushAtom(1, v);
+			pushNewAtom(IptAtom.TYPE_INTEGER, value);
 		}
 		
 		public function initInterpreter():void
 		{
 			scriptRunning = false;
-			tsp.removeAllElements();
-			pStack.removeAllElements();
-			vList.clear();
-			strTable.removeAllElements();
-			aryTable.removeAllElements();
+			tsp = [];
+			pStack = new Vector.<IptAtom>();
+			vList = new Dictionary();
+			strTable = new Vector.<String>();
+			aryTable = new Vector.<Array>();
 		}
 		
 		public function sf_NBRUSERPROPS():void
-		
 		{
-			pushInt(pc.pc_GetNbrUserProps());
+			pushInt(pc.getNumUserProps());
 		}
 		
-		public function retrieveExternStringGlobalByName(variable:IptVariable ):void
+		public function retrieveExternStringGlobalByName(variable:IptVariable):void
 		{
-			if(variable.name.equals("CHATSTR"))
+			if(variable.name == "CHATSTR")
 				retrieveExternStringGlobal(variable, 0);
 		}
 		
-		public function sc():String // char
-		{
+		public function currentChar():String { 
 			return sc(0);
 		}
 		
-		public function scByOffset(offset:int):String // char
+		public function sc(offset:int):String
 		{
-			if(so + offset < 0 || so + offset >= scriptStr.length())
-				return '\0';
+			var pos:int = so + offset;
+			if(pos < 0 || pos >= scriptStr.length)
+				return null;
 			else
-				return scriptStr.charAt(so + offset);
+				return scriptStr.charAt(pos);
 		}
 		
 		public function popAtomList():String
 		{
 			var a:IptAtom = popValue();
-			if(a.type == 3)
+			if(a.type == IptAtom.TYPE_ATOMLIST)
 			{
 				return getString(a.value);
 			} else
@@ -1161,37 +1190,36 @@ package net.codecomposer.palace.script
 		public function sf_STATUSMSG():void
 		{
 			var statStr:String = popString();
-			pc.pc_StatusMsg(statStr);
+			pc.statusMessage(statStr);
 		}
 		
 		public function sf_SOUND():void
 		{
-			pc.pc_PlaySound(popString());
+			pc.playSound(popString());
 		}
 		
 		public function sf_POSX():void
 		{
-			pushInt(pc.pc_GetPosX());
+			pushInt(pc.getSelfPosX());
 		}
 		
 		public function parseNumber():void
 		{
-			var n:int = 0;
-			var negFlag:Boolean = false;
-			if(sc() == '-')
+			var numString:String = "";
+			
+			if(currentChar() == "-")
 			{
-				negFlag = true;
+				numString += "-";
 				so++;
 			}
-			while(sc() >= '0' && sc() <= '9') 
+			
+			while(currentChar() >= '0' && currentChar() <= '9')
 			{
-				n *= 10;
-				n += sc() - 48;
+				numString += currentChar();
 				so++;
 			}
-			if(negFlag)
-				n = -n;
-			pushInt(n);
+			
+			pushInt(parseInt(numString));
 		}
 		
 		public function parseSymbol():void
@@ -1199,360 +1227,364 @@ package net.codecomposer.palace.script
 		{
 			var dp:int = 0;
 			var sc:String; // Char
-			while((sc = sc()) >= 'a' && sc <= 'z' || sc >= 'A' && sc <= 'Z' || sc >= '0' && sc <= '9' || sc == '_') 
+			var token:String = "";
+			
+			while((sc = currentChar()) >= 'a' && sc <= 'z' || sc >= 'A' && sc <= 'Z' || sc >= '0' && sc <= '9' || sc == '_')
+			//while(tokenTest.test(sc = currentChar()))
 			{
 				so++;
-				if(Character.isLowerCase(sc))
-					sc = Character.toUpperCase(sc);
-				tbuf[dp++] = sc;
+				token += sc.toUpperCase();
 			}
-			var token:String = new String(tbuf, 0, dp);
-			if(token.equals("NOT"))
-				sf_NOT();
-			else
-				if(token.equals("AND"))
+			
+			switch (token) {
+				case "NOT":
+					sf_NOT();
+					break;
+				case "AND":
 					sf_AND();
-				else
-					if(token.equals("OR"))
-						sf_OR();
-					else
-						if(token.equals("EXEC"))
-							sf_EXEC();
-						else
-							if(token.equals("IF"))
-								sf_IF();
-							else
-								if(token.equals("IFELSE"))
-									sf_IFELSE();
-								else
-									if(token.equals("WHILE"))
-										sf_WHILE();
-									else
-										if(token.equals("GLOBAL"))
-											sf_GLOBAL();
-										else
-											if(token.equals("DEF"))
-												sf_DEF();
-											else
-												if(token.equals("RETURN"))
-													sf_RETURN();
-												else
-													if(token.equals("BREAK"))
-														sf_BREAK();
-													else
-														if(token.equals("DUP"))
-															sf_DUP();
-														else
-															if(token.equals("SWAP"))
-																sf_SWAP();
-															else
-																if(token.equals("POP"))
-																	sf_POP();
-																else
-																	if(token.equals("STRTOATOM"))
-																		sf_STRTOATOM();
-																	else
-																		if(token.equals("SUBSTR"))
-																			sf_SUBSTR();
-																		else
-																			if(token.equals("ITOA"))
-																				sf_ITOA();
-																			else
-																				if(token.equals("ATOI"))
-																					sf_ATOI();
-																				else
-																					if(token.equals("UPPERCASE"))
-																						sf_UPPERCASE();
-																					else
-																						if(token.equals("LOWERCASE"))
-																							sf_LOWERCASE();
-																						else
-																							if(token.equals("DELAY"))
-																								sf_DELAY();
-																							else
-																								if(token.equals("RANDOM"))
-																									sf_RANDOM();
-																								else
-																									if(token.equals("RND"))
-																										sf_RANDOM();
-																									else
-																										if(token.equals("GREPSTR"))
-																											sf_GREPSTR();
-																										else
-																											if(token.equals("GREPSUB"))
-																												sf_GREPSUB();
-																											else
-																												if(token.equals("BEEP"))
-																													sf_BEEP();
-																												else
-																													if(token.equals("DATETIME"))
-																														sf_DATETIME();
-																													else
-																														if(token.equals("TICKS"))
-																															sf_TICKS();
-																														else
-																															if(token.equals("SETALARM"))
-																																sf_SETALARM();
-																															else
-																																if(token.equals("ALARMEXEC"))
-																																	sf_ALARMEXEC();
-																																else
-																																	if(token.equals("GET"))
-																																		sf_GET();
-																																	else
-																																		if(token.equals("PUT"))
-																																			sf_PUT();
-																																		else
-																																			if(token.equals("ARRAY"))
-																																				sf_ARRAY();
-																																			else
-																																				if(token.equals("FOREACH"))
-																																					sf_FOREACH();
-																																				else
-																																					if(token.equals("LENGTH"))
-																																						sf_LENGTH();
-																																					else
-																																						if(token.equals("LOGMSG"))
-																																							sf_LOGMSG();
-																																						else
-																																							if(token.equals("GOTOROOM"))
-																																								sf_GOTOROOM();
-																																							else
-																																								if(token.equals("LOCK"))
-																																									sf_LOCK();
-																																								else
-																																									if(token.equals("SETPICLOC"))
-																																										sf_SETPICLOC();
-																																									else
-																																										if(token.equals("SETLOC"))
-																																											sf_SETLOC();
-																																										else
-																																											if(token.equals("SETSPOTSTATE"))
-																																												sf_SETSPOTSTATE();
-																																											else
-																																												if(token.equals("SETSPOTSTATELOCAL"))
-																																													sf_SETSPOTSTATELOCAL();
-																																												else
-																																													if(token.equals("GETSPOTSTATE"))
-																																														sf_GETSPOTSTATE();
-																																													else
-																																														if(token.equals("ADDLOOSEPROP"))
-																																															sf_ADDLOOSEPROP();
-																																														else
-																																															if(token.equals("TOPPROP"))
-																																																sf_TOPPROP();
-																																															else
-																																																if(token.equals("DROPPROP"))
-																																																	sf_DROPPROP();
-																																																else
-																																																	if(token.equals("DOFFPROP"))
-																																																		sf_DOFFPROP();
-																																																	else
-																																																		if(token.equals("DONPROP"))
-																																																			sf_DONPROP();
-																																																		else
-																																																			if(token.equals("REMOVEPROP"))
-																																																				sf_REMOVEPROP();
-																																																			else
-																																																				if(token.equals("CLEARPROPS"))
-																																																					sf_CLEARPROPS();
-																																																				else
-																																																					if(token.equals("NAKED"))
-																																																						sf_CLEARPROPS();
-																																																					else
-																																																						if(token.equals("CLEARLOOSEPROPS"))
-																																																							sf_CLEARLOOSEPROPS();
-																																																						else
-																																																							if(token.equals("SETCOLOR"))
-																																																								sf_SETCOLOR();
-																																																							else
-																																																								if(token.equals("SETFACE"))
-																																																									sf_SETFACE();
-																																																								else
-																																																									if(token.equals("UNLOCK"))
-																																																										sf_UNLOCK();
-																																																									else
-																																																										if(token.equals("ISLOCKED"))
-																																																											sf_ISLOCKED();
-																																																										else
-																																																											if(token.equals("GLOBALMSG"))
-																																																												sf_GLOBALMSG();
-																																																											else
-																																																												if(token.equals("SAY"))
-																																																													sf_SAY();
-																																																												else
-																																																													if(token.equals("ROOMMSG"))
-																																																														sf_ROOMMSG();
-																																																													else
-																																																														if(token.equals("SUSRMSG"))
-																																																															sf_SUSRMSG();
-																																																														else
-																																																															if(token.equals("LOCALMSG"))
-																																																																sf_LOCALMSG();
-																																																															else
-																																																																if(token.equals("DEST"))
-																																																																	sf_DEST();
-																																																																else
-																																																																	if(token.equals("ME"))
-																																																																		sf_ME();
-																																																																	else
-																																																																		if(token.equals("ID"))
-																																																																			sf_ME();
-																																																																		else
-																																																																			if(token.equals("LAUNCHAPP"))
-																																																																				sf_LAUNCHAPP();
-																																																																			else
-																																																																				if(token.equals("SHELLCMD"))
-																																																																					sf_SHELLCMD();
-																																																																				else
-																																																																					if(token.equals("KILLUSER"))
-																																																																						sf_KILLUSER();
-																																																																					else
-																																																																						if(token.equals("NETGOTO"))
-																																																																							sf_NETGOTO();
-																																																																						else
-																																																																							if(token.equals("GOTOURL"))
-																																																																								sf_NETGOTO();
-																																																																							else
-																																																																								if(token.equals("MACRO"))
-																																																																									sf_MACRO();
-																																																																								else
-																																																																									if(token.equals("MOVE"))
-																																																																										sf_MOVE();
-																																																																									else
-																																																																										if(token.equals("SETPOS"))
-																																																																											sf_SETPOS();
-																																																																										else
-																																																																											if(token.equals("INSPOT"))
-																																																																												sf_INSPOT();
-																																																																											else
-																																																																												if(token.equals("SHOWLOOSEPROPS"))
-																																																																													sf_SHOWLOOSEPROPS();
-																																																																												else
-																																																																													if(token.equals("SERVERNAME"))
-																																																																														sf_SERVERNAME();
-																																																																													else
-																																																																														if(token.equals("USERNAME"))
-																																																																															sf_USERNAME();
-																																																																														else
-																																																																															if(token.equals("SETPROPS"))
-																																																																																sf_SETPROPS();
-																																																																															else
-																																																																																if(token.equals("SELECT"))
-																																																																																	sf_SELECT();
-																																																																																else
-																																																																																	if(token.equals("NBRSPOTS"))
-																																																																																		sf_NBRSPOTS();
-																																																																																	else
-																																																																																		if(token.equals("NBRDOORS"))
-																																																																																			sf_NBRDOORS();
-																																																																																		else
-																																																																																			if(token.equals("DOORIDX"))
-																																																																																				sf_DOORIDX();
-																																																																																			else
-																																																																																				if(token.equals("SPOTIDX"))
-																																																																																					sf_SPOTIDX();
-																																																																																				else
-																																																																																					if(token.equals("WHOCHAT"))
-																																																																																						sf_WHOCHAT();
-																																																																																					else
-																																																																																						if(token.equals("WHOME"))
-																																																																																							sf_WHOME();
-																																																																																						else
-																																																																																							if(token.equals("POSX"))
-																																																																																								sf_POSX();
-																																																																																							else
-																																																																																								if(token.equals("POSY"))
-																																																																																									sf_POSY();
-																																																																																								else
-																																																																																									if(token.equals("PRIVATEMSG"))
-																																																																																										sf_PRIVATEMSG();
-																																																																																									else
-																																																																																										if(token.equals("STATUSMSG"))
-																																																																																											sf_STATUSMSG();
-																																																																																										else
-																																																																																											if(token.equals("SPOTDEST"))
-																																																																																												sf_SPOTDEST();
-																																																																																											else
-																																																																																												if(token.equals("ISGUEST"))
-																																																																																													sf_ISGUEST();
-																																																																																												else
-																																																																																													if(token.equals("ISWIZARD"))
-																																																																																														sf_ISWIZARD();
-																																																																																													else
-																																																																																														if(token.equals("ISGOD"))
-																																																																																															sf_ISGOD();
-																																																																																														else
-																																																																																															if(token.equals("DIMROOM"))
-																																																																																																sf_DIMROOM();
-																																																																																															else
-																																																																																																if(token.equals("SPOTNAME"))
-																																																																																																	sf_SPOTNAME();
-																																																																																																else
-																																																																																																	if(token.equals("SOUND"))
-																																																																																																		sf_SOUND();
-																																																																																																	else
-																																																																																																		if(token.equals("MIDIPLAY"))
-																																																																																																			sf_MIDIPLAY();
-																																																																																																		else
-																																																																																																			if(token.equals("MIDILOOP"))
-																																																																																																				sf_MIDILOOP();
-																																																																																																			else
-																																																																																																				if(token.equals("MIDISTOP"))
-																																																																																																					sf_MIDISTOP();
-																																																																																																				else
-																																																																																																					if(token.equals("HASPROP"))
-																																																																																																						sf_HASPROP();
-																																																																																																					else
-																																																																																																						if(token.equals("NBRUSERPROPS"))
-																																																																																																							sf_NBRUSERPROPS();
-																																																																																																						else
-																																																																																																							if(token.equals("USERPROP"))
-																																																																																																								sf_USERPROP();
-																																																																																																							else
-																																																																																																								if(token.equals("USERID"))
-																																																																																																									sf_USERID();
-																																																																																																								else
-																																																																																																									if(token.equals("WHOPOS"))
-																																																																																																										sf_WHOPOS();
-																																																																																																									else
-																																																																																																										if(token.equals("NBRROOMUSERS"))
-																																																																																																											sf_NBRROOMUSERS();
-																																																																																																										else
-																																																																																																											if(token.equals("ROOMUSER"))
-																																																																																																												sf_ROOMUSER();
-																																																																																																											else
-																																																																																																												if(token.equals("MOUSEPOS"))
-																																																																																																													sf_MOUSEPOS();
-																																																																																																												else
-																																																																																																													if(token.equals("SAYAT"))
-																																																																																																														sf_SAYAT();
-																																																																																																													else
-																																																																																																														if(token.equals("WHONAME"))
-																																																																																																															sf_WHONAME();
-																																																																																																														else
-																																																																																																															if(token.equals("WHOTARGET"))
-																																																																																																																sf_WHOTARGET();
-																																																																																																															else
-																																																																																																																if(token.equals("ROOMNAME"))
-																																																																																																																	sf_ROOMNAME();
-																																																																																																																else
-																																																																																																																	if(token.equals("ROOMID"))
-																																																																																																																		sf_ROOMID();
-																																																																																																																	else
-																																																																																																																		if(token.equals("LAUNCHPPA"))
-																																																																																																																			sf_LAUNCHPPA();
-																																																																																																																		else
-																																																																																																																			if(token.equals("LOADJAVA"))
-																																																																																																																				sf_LOADJAVA();
-																																																																																																																			else
-																																																																																																																				if(token.equals("TALKPPA"))
-																																																																																																																					sf_TALKPPA();
-																																																																																																																				else
-																																																																																																																					if(token.equals("LAUNCHEVENT"))
-																																																																																																																						sf_LAUNCHEVENT();
-																																																																																																																					else
-																																																																																																																						pushAtom(2, addToStringTable(token));
+					break;
+				case "OR":
+					sf_OR();
+					break;
+				case "EXEC":
+					sf_EXEC();
+					break;
+				case "IF":
+					sf_IF();
+					break;
+				case "IFELSE":
+					sf_IFELSE();
+					break;
+				case "WHILE":
+					sf_WHILE();
+					break;
+				case "GLOBAL":
+					sf_GLOBAL();
+					break;
+				case "DEF":
+					sf_DEF();
+					break;
+				case "RETURN":
+					sf_RETURN();
+					break;
+				case "BREAK":
+					sf_BREAK();
+					break;
+				case "DUP":
+					sf_DUP();
+					break;
+				case "SWAP":
+					sf_SWAP();
+					break;
+				case "POP":
+					sf_POP();
+					break;
+				case "STRTOATOM":
+					sf_STRTOATOM();
+					break;
+				case "SUBSTR":
+					sf_SUBSTR();
+					break;
+				case "ITOA":
+					sf_ITOA();
+					break;
+				case "ATOI":
+					sf_ATOI();
+					break;
+				case "UPPERCASE":
+					sf_UPPERCASE();
+					break;
+				case "LOWERCASE":
+					sf_LOWERCASE();
+					break;
+				case "DELAY":
+					sf_DELAY();
+					break;
+				case "RANDOM":
+					sf_RANDOM();
+					break;
+				case "RND":
+					sf_RANDOM();
+					break;
+				case "GREPSTR":
+					sf_GREPSTR();
+					break;
+				case "GREPSUB":
+					sf_GREPSUB();
+					break;
+				case "BEEP":
+					sf_BEEP();
+					break;
+				case "DATETIME":
+					sf_DATETIME();
+					break;
+				case "TICKS":
+					sf_TICKS();
+					break;
+				case "SETALARM":
+					sf_SETALARM();
+					break;
+				case "ALARMEXEC":
+					sf_ALARMEXEC();
+					break;
+				case "GET":
+					sf_GET();
+					break;
+				case "PUT":
+					sf_PUT();
+					break;
+				case "ARRAY":
+					sf_ARRAY();
+					break;
+				case "FOREACH":
+					sf_FOREACH();
+					break;
+				case "LENGTH":
+					sf_LENGTH();
+					break;
+				case "LOGMSG":
+					sf_LOGMSG();
+					break;
+				case "GOTOROOM":
+					sf_GOTOROOM();
+					break;
+				case "LOCK":
+					sf_LOCK();
+					break;
+				case "SETPICLOC":
+					sf_SETPICLOC();
+					break;
+				case "SETLOC":
+					sf_SETLOC();
+					break;
+				case "SETSPOTSTATE":
+					sf_SETSPOTSTATE();
+					break;
+				case "SETSPOTSTATELOCAL":
+					sf_SETSPOTSTATELOCAL();
+					break;
+				case "GETSPOTSTATE":
+					sf_GETSPOTSTATE();
+					break;
+				case "ADDLOOSEPROP":
+					sf_ADDLOOSEPROP();
+					break;
+				case "TOPPROP":
+					sf_TOPPROP();
+					break;
+				case "DROPPROP":
+					sf_DROPPROP();
+					break;
+				case "DOFFPROP":
+					sf_DOFFPROP();
+					break;
+				case "DONPROP":
+					sf_DONPROP();
+					break;
+				case "REMOVEPROP":
+					sf_REMOVEPROP();
+					break;
+				case "CLEARPROPS":
+					sf_CLEARPROPS();
+					break;
+				case "NAKED":
+					sf_CLEARPROPS();
+					break;
+				case "CLEARLOOSEPROPS":
+					sf_CLEARLOOSEPROPS();
+					break;
+				case "SETCOLOR":
+					sf_SETCOLOR();
+					break;
+				case "SETFACE":
+					sf_SETFACE();
+					break;
+				case "UNLOCK":
+					sf_UNLOCK();
+					break;
+				case "ISLOCKED":
+					sf_ISLOCKED();
+					break;
+				case "GLOBALMSG":
+					sf_GLOBALMSG();
+					break;
+				case "SAY":
+					sf_SAY();
+					break;
+				case "ROOMMSG":
+					sf_ROOMMSG();
+					break;
+				case "SUSRMSG":
+					sf_SUSRMSG();
+					break;
+				case "LOCALMSG":
+					sf_LOCALMSG();
+					break;
+				case "DEST":
+					sf_DEST();
+					break;
+				case "ME":
+					sf_ME();
+					break;
+				case "ID":
+					sf_ME();
+					break;
+				case "LAUNCHAPP":
+					sf_LAUNCHAPP();
+					break;
+				case "SHELLCMD":
+					sf_SHELLCMD();
+					break;
+				case "KILLUSER":
+					sf_KILLUSER();
+					break;
+				case "NETGOTO":
+					sf_NETGOTO();
+					break;
+				case "GOTOURL":
+					sf_NETGOTO();
+					break;
+				case "MACRO":
+					sf_MACRO();
+					break;
+				case "MOVE":
+					sf_MOVE();
+					break;
+				case "SETPOS":
+					sf_SETPOS();
+					break;
+				case "INSPOT":
+					sf_INSPOT();
+					break;
+				case "SHOWLOOSEPROPS":
+					sf_SHOWLOOSEPROPS();
+					break;
+				case "SERVERNAME":
+					sf_SERVERNAME();
+					break;
+				case "USERNAME":
+					sf_USERNAME();
+					break;
+				case "SETPROPS":
+					sf_SETPROPS();
+					break;
+				case "SELECT":
+					sf_SELECT();
+					break;
+				case "NBRSPOTS":
+					sf_NBRSPOTS();
+					break;
+				case "NBRDOORS":
+					sf_NBRDOORS();
+					break;
+				case "DOORIDX":
+					sf_DOORIDX();
+					break;
+				case "SPOTIDX":
+					sf_SPOTIDX();
+					break;
+				case "WHOCHAT":
+					sf_WHOCHAT();
+					break;
+				case "WHOME":
+					sf_WHOME();
+					break;
+				case "POSX":
+					sf_POSX();
+					break;
+				case "POSY":
+					sf_POSY();
+					break;
+				case "PRIVATEMSG":
+					sf_PRIVATEMSG();
+					break;
+				case "STATUSMSG":
+					sf_STATUSMSG();
+					break;
+				case "SPOTDEST":
+					sf_SPOTDEST();
+					break;
+				case "ISGUEST":
+					sf_ISGUEST();
+					break;
+				case "ISWIZARD":
+					sf_ISWIZARD();
+					break;
+				case "ISGOD":
+					sf_ISGOD();
+					break;
+				case "DIMROOM":
+					sf_DIMROOM();
+					break;
+				case "SPOTNAME":
+					sf_SPOTNAME();
+					break;
+				case "SOUND":
+					sf_SOUND();
+					break;
+				case "MIDIPLAY":
+					sf_MIDIPLAY();
+					break;
+				case "MIDILOOP":
+					sf_MIDILOOP();
+					break;
+				case "MIDISTOP":
+					sf_MIDISTOP();
+					break;
+				case "HASPROP":
+					sf_HASPROP();
+					break;
+				case "NBRUSERPROPS":
+					sf_NBRUSERPROPS();
+					break;
+				case "USERPROP":
+					sf_USERPROP();
+					break;
+				case "USERID":
+					sf_USERID();
+					break;
+				case "WHOPOS":
+					sf_WHOPOS();
+					break;
+				case "NBRROOMUSERS":
+					sf_NBRROOMUSERS();
+					break;
+				case "ROOMUSER":
+					sf_ROOMUSER();
+					break;
+				case "MOUSEPOS":
+					sf_MOUSEPOS();
+					break;
+				case "SAYAT":
+					sf_SAYAT();
+					break;
+				case "WHONAME":
+					sf_WHONAME();
+					break;
+				case "WHOTARGET":
+					sf_WHOTARGET();
+					break;
+				case "ROOMNAME":
+					sf_ROOMNAME();
+					break;
+				case "ROOMID":
+					sf_ROOMID();
+					break;
+				case "LAUNCHPPA":
+					sf_LAUNCHPPA();
+					break;
+				case "LOADJAVA":
+					sf_LOADJAVA();
+					break;
+				case "TALKPPA":
+					sf_TALKPPA();
+					break;
+				case "LAUNCHEVENT":
+					sf_LAUNCHEVENT();
+					break;
+				default:
+					pushNewAtom(IptAtom.TYPE_VARIABLE, addToStringTable(token));
+			}
 		}
 		
 		public function sf_SETPICLOC():void
@@ -1561,29 +1593,29 @@ package net.codecomposer.palace.script
 			var id:int = popInt();
 			var y:int = popInt();
 			var x:int = popInt();
-			pc.pc_SetPicOffset(id, x, y);
+			pc.setPicOffset(id, x, y);
 		}
 		
 		public function sf_KILLUSER():void
 		{
 			var userID:int = popInt();
-			pc.pc_KillUser(userID);
+			pc.killUser(userID);
 		}
 		
 		public function sf_SPOTIDX():void
 		{
-			pushInt(pc.pc_GetSpotIdx(popInt()));
+			pushInt(pc.getSpotIdByIndex(popInt()));
 		}
 		
 		public function updateExternStringGlobal(variable:IptVariable):void
 		{
-			if(variable.name.equals("CHATSTR"))
-				pc.pc_SetChatString(getString(variable.value));
+			if(variable.name == "CHATSTR")
+				pc.setChatString(getString(variable.value));
 			else
 				return;
 		}
 		
-		public function assignVariable(variable:IptVariable , atom:IptAtom ):void
+		public function assignVariable(variable:IptVariable, atom:IptAtom):void
 		
 		{
 			atomToValue(atom);
@@ -1602,16 +1634,16 @@ package net.codecomposer.palace.script
 			var data:Object;
 			switch(atom.type)
 			{
-				case 3: // '\003'
-				case 4: // '\004'
+				case IptAtom.TYPE_ATOMLIST: // '\003'
+				case IptAtom.TYPE_STRING: // '\004'  String
 					data = getString(atom.value);
 					break;
 				
-				case 6: // '\006'
+				case IptAtom.TYPE_ARRAY: // '\006'  Array
 					data = arrayToGlobal(vName, atom.value);
 					break;
 				
-				case 5: // '\005'
+				case 5: // '\005'  Unknown type??
 				default:
 					data = null;
 					break;
@@ -1621,23 +1653,23 @@ package net.codecomposer.palace.script
 		
 		public function addToStringTable(s:String):int
 		{
-			var size:int = strTable.size();
+			var size:int = strTable.length;
 			var n:int;
 			for(n = 0; n < size; n++)
 			{
-				var ts:String = String(strTable[n]);
-				if(ts.equals(s))
+				var ts:String = strTable[n];
+				if(ts == s)
 					return n;
 			}
 			
-			strTable.addElement(s);
+			strTable.push(s);
 			return n;
 		}
 		
 		public function addToArrayTable(v:Array):int // Vector
 		{
 			var n:int = aryTable.length;
-			aryTable.addElement(v);
+			aryTable.push(v);
 			return n;
 		}
 		
@@ -1645,7 +1677,7 @@ package net.codecomposer.palace.script
 		
 		{
 			var result:int = 0;
-			var resultType:int = 1;
+			var resultType:int = IptAtom.TYPE_INTEGER;
 			atomToValue(a1);
 			atomToValue(a2);
 			switch(opType)
@@ -1653,101 +1685,100 @@ package net.codecomposer.palace.script
 				default:
 					break;
 				
-				case 61: // '='
-					if(a1.type == 1 && a2.type == 1)
+				case "=": // '=' 61
+					if(a1.type == IptAtom.TYPE_INTEGER && a2.type == IptAtom.TYPE_INTEGER)
 					{
 						result = a1.value == a2.value ? 1 : 0;
 						break;
 					}
-					if(a1.type == 4 && a2.type == 4)
-						result = getString(a1.value).equalsIgnoreCase(getString(a2.value)) ? 1 : 0;
+					if(a1.type == IptAtom.TYPE_STRING && a2.type == IptAtom.TYPE_STRING)
+						result = (getString(a1.value).toLocaleLowerCase() == getString(a2.value).toLocaleLowerCase()) ? 1 : 0;
 					else
 						result = 0;
 					break;
 				
-				case 43: // '+'
-					if(a1.type == 1 && a2.type == 1)
+				case "+": // '+' 43
+					if(a1.type == IptAtom.TYPE_INTEGER && a2.type == IptAtom.TYPE_INTEGER)
 					{
 						result = a1.value + a2.value;
 						break;
 					}
-					if(a1.type == 4 && a2.type == 4)
+					if(a1.type == IptAtom.TYPE_STRING && a2.type == IptAtom.TYPE_STRING)
 					{
-						result = addToStringTable((new StringBuilder(String.valueOf(getString(a1.value)))).append(getString(a2.value)).toString());
-						resultType = 4;
+						result = addToStringTable(getString(a1.value) + getString(a2.value));
+						resultType = IptAtom.TYPE_STRING;
 					} else
 					{
 						result = 0;
 					}
 					break;
 				
-				case 45: // '-'
+				case "-": // '-' 45
 					result = a1.value - a2.value;
 					break;
 				
-				case 42: // '*'
+				case "*": // '*' 42
 					result = a1.value * a2.value;
 					break;
 				
-				case 47: // '/'
-					result = a2.value == 0 ? 0 : a1.value / a2.value;
+				case "/": // '/' 47
+					result = a2.value == 0 ? 0 : Math.floor(a1.value / a2.value);
 					break;
 				
-				case 37: // '%'
-					result = a2.value == 0 ? 0 : a1.value % a2.value;
+				case "%": // '%' 37
+					result = a2.value == 0 ? 0 : int(a1.value % a2.value);
 					break;
 				
-				case 60: // '<'
+				case "<": // '<' 60
 					result = a1.value < a2.value ? 1 : 0;
 					break;
 				
-				case 62: // '>'
+				case ">": // '>' 62
 					result = a1.value > a2.value ? 1 : 0;
 					break;
 				
-				case 98: // 'b'
+				case "b": // 'b' 98 (<=)
 					result = a1.value <= a2.value ? 1 : 0;
 					break;
 				
-				case 99: // 'c'
+				case "c": // 'c' 99 (>=)
 					result = a1.value >= a2.value ? 1 : 0;
 					break;
 				
-				case 97: // 'a'
+				case "a": // 'a' 97 (!=)
 					result = a1.value != a2.value ? 1 : 0;
 					break;
 				
 				case 38: // '&'
-					if(a1.type == 4 && a2.type == 4)
+					if(a1.type == IptAtom.TYPE_STRING && a2.type == IptAtom.TYPE_STRING)
 					{
-						result = addToStringTable((new StringBuilder(String.valueOf(getString(a1.value)))).append(getString(a2.value)).toString());
-						resultType = 4;
+						result = addToStringTable(getString(a1.value) + getString(a2.value));
+						resultType = IptAtom.TYPE_STRING;
 					} else
 					{
 						result = 0;
 					}
 					break;
 			}
-			pushAtom(resultType, result);
+			pushNewAtom(resultType, result);
 		}
 		
 		public function unaryOp(opType:String, a1:IptAtom):void
 		{
 			var result:int = 0;
-			var resultType:int = 1;
+			var resultType:int = IptAtom.TYPE_INTEGER;
 			atomToValue(a1);
-			switch(opType)
-			{
-				case 33: // '!'
-					result = a1.value > 0 ? 0 : 1;
-					break;
+			
+			if (opType == "!") {
+				result = a1.value > 0 ? 0 : 1;
 			}
-			pushAtom(resultType, result);
+			
+			pushNewAtom(resultType, result);
 		}
 		
 		public function globalizeVariable(variable:IptVariable ):void
 		{
-			variable.flags |= 1;
+			variable.flags |= IptVariable.FLAG_GLOBAL;
 		}
 		
 		public function assignVariableNewAtom(variable:IptVariable, type:int, value:int):void
@@ -1762,22 +1793,22 @@ package net.codecomposer.palace.script
 		
 		public function sf_NBRSPOTS():void
 		{
-			pushInt(pc.pc_GetNbrSpots());
+			pushInt(pc.getNumSpots());
 		}
 		
 		public function unaryAssignment(opType:String, a1:IptAtom):void // char opType
 		{
 			var v1:IptAtom = new IptAtom(a1.type, a1.value);
 			atomToValue(v1);
-			var v:IptVariable = getVariable(a1);
+			var v:IptVariable = getVariableByAtom(a1);
 			switch(opType)
 			{
-				case 43: // '+'
-					assignVariable(v, v1.type, v1.value + 1);
+				case "+": // '+'
+					assignVariableNewAtom(v, v1.type, v1.value + 1);
 					break;
 				
-				case 45: // '-'
-					assignVariable(v, v1.type, v1.value - 1);
+				case "-": // '-'
+					assignVariableNewAtom(v, v1.type, v1.value - 1);
 					break;
 			}
 		}
@@ -1787,44 +1818,44 @@ package net.codecomposer.palace.script
 			atomToValue(n1);
 			var v1:IptAtom = new IptAtom(a1.type, a1.value);
 			atomToValue(v1);
-			var v:IptVariable = getVariable(a1);
+			var v:IptVariable = getVariableByAtom(a1);
 			switch(opType)
 			{
-				case 43: // '+'
-					assignVariable(v, v1.type, v1.value + n1.value);
+				case "+": // '+'
+					assignVariableNewAtom(v, v1.type, v1.value + n1.value);
 					break;
 				
-				case 45: // '-'
-					assignVariable(v, v1.type, v1.value - n1.value);
+				case "-": // '-'
+					assignVariableNewAtom(v, v1.type, v1.value - n1.value);
 					break;
 				
-				case 42: // '*'
-					assignVariable(v, v1.type, v1.value * n1.value);
+				case "*": // '*'
+					assignVariableNewAtom(v, v1.type, v1.value * n1.value);
 					break;
 				
-				case 47: // '/'
-					assignVariable(v, v1.type, n1.value == 0 ? 0 : v1.value / n1.value);
+				case "/": // '/'
+					assignVariableNewAtom(v, v1.type, n1.value == 0 ? 0 : v1.value / n1.value);
 					break;
 				
-				case 37: // '%'
-					assignVariable(v, v1.type, n1.value == 0 ? 0 : v1.value % n1.value);
+				case "%": // '%'
+					assignVariableNewAtom(v, v1.type, n1.value == 0 ? 0 : v1.value % n1.value);
 					break;
 				
-				case 38: // '&'
-					assignVariable(v, 4, addToStringTable((new StringBuilder(String.valueOf(getString(v1.value)))).append(getString(n1.value)).toString()));
+				case "&": // '&'
+					assignVariableNewAtom(v, 4, addToStringTable(getString(v1.value) + getString(n1.value)));
 					break;
 			}
 		}
 		
 		public function pushString(s:String):void
 		{
-			pushAtom(4, addToStringTable(s));
+			pushNewAtom(4, addToStringTable(s));
 		}
 		
 		public function popString():String
 		{
 			var a:IptAtom = popValue();
-			if(a.type == 4)
+			if(a.type == IptAtom.TYPE_STRING)
 			{
 				return getString(a.value);
 			} else
@@ -1836,24 +1867,22 @@ package net.codecomposer.palace.script
 		
 		public function getString(index:int):String
 		{
-			if(index >= 0 && index < strTable.length)
-				return String(strTable[index]);
+			if (index >= 0 && index < strTable.length)
+				return strTable[index];
 			else
-			return "";
+				return "";
 		}
 		
 		public function sf_GLOBAL():void
-		
 		{
 			var s1:IptAtom = popAtom();
-			var v:IptVariable = getVariable(s1);
+			var v:IptVariable = getVariableByAtom(s1);
 			globalizeVariable(v);
 		}
 		
 		public function sf_UNLOCK():void
 		{
-			var id:int = popInt();
-			pc.pc_Unlock(id);
+			pc.unlock(popInt());
 		}
 		
 		public function sf_SAYAT():void
@@ -1861,14 +1890,14 @@ package net.codecomposer.palace.script
 			var y:int = popInt();
 			var x:int = popInt();
 			var chatStr:String = popString();
-			// TODO: Port
-			//pc.pc_Chat((new StringBuilder("@")).append(x).append(",").append(y).append(" ").append(chatStr).toString());
+			
+			pc.chat("@" + x + "," + y + " " + chatStr);
 		}
 		
 		public function popArray():Array // Vector
 		{
 			var a:IptAtom = popValue();
-			if(a.type == 6)
+			if(a.type == IptAtom.TYPE_ARRAY)
 			{
 				return getArray(a.value);
 			} else
@@ -1878,14 +1907,13 @@ package net.codecomposer.palace.script
 			}
 		}
 		
-		public function getArray(index:int) // Vector
+		public function getArray(index:int):Array // Vector
 		{
 			if(index >= 0 && index < aryTable.length)
 			{
-				return aryTable[index] as Array;
-				//return (Vector)(Vector)aryTable.elementAt(index);
-			} else
-			{
+				return aryTable[index];
+			}
+			else {
 				forceAbort("Internal Error: Bad Array Reference");
 				return null;
 			}
@@ -1893,7 +1921,7 @@ package net.codecomposer.palace.script
 		
 		public function sf_SETFACE():void
 		{
-			pc.pc_ChangeFace(popInt());
+			pc.setFace(popInt());
 		}
 		
 		public function callSubroutine(index:int):void
@@ -1918,17 +1946,17 @@ package net.codecomposer.palace.script
 		public function sf_LOGMSG():void
 		{
 			var atom:IptAtom = popValue();
-			if(atom.type == 4 || atom.type == 3)
-				pc.pc_LogMessage(getString(atom.value));
+			if(atom.type == IptAtom.TYPE_STRING || atom.type == IptAtom.TYPE_ATOMLIST)
+				pc.logMessage(getString(atom.value));
 			else
-				pc.pc_LogMessage(Integer.toString(atom.value));
+				pc.logMessage(int(atom.value).toString());
 		}
 		
 		public function sf_PRIVATEMSG():void
 		{
 			var whoID:int = popInt();
 			var chatStr:String = popString();
-			pc.pc_PrivateMsg(whoID, chatStr);
+			pc.sendPrivateMessage(chatStr, whoID);
 		}
 		
 		public function sf_ADDLOOSEPROP():void
@@ -1937,23 +1965,23 @@ package net.codecomposer.palace.script
 			var x:int = popInt();
 			var id:int = 0;
 			var p:IptAtom = popValue();
-			if(p.type == 1)
+			if(p.type == IptAtom.TYPE_INTEGER)
 				id = p.value;
 			else
-				if(p.type == 4)
-					id = pc.pc_GetPropIDByName(getString(p.value));
+				if(p.type == IptAtom.TYPE_STRING)
+					id = pc.getPropIdByName(getString(p.value));
 			if(id != 0)
-				pc.pc_AddLooseProp(id, x, y);
+				pc.addLooseProp(id, x, y);
 		}
 		
 		public function sf_CLEARLOOSEPROPS():void
 		{
-			pc.pc_DelLooseProp(-1);
+			pc.removeLooseProp(-1);
 		}
 		
 		public function sf_SHOWLOOSEPROPS():void
 		{
-			pc.pc_ShowLooseProps();
+			pc.showLooseProps();
 		}
 		
 		public function sf_WHOPOS():void
@@ -1962,15 +1990,15 @@ package net.codecomposer.palace.script
 			var x:int = 0;
 			var y:int = 0;
 			var id:int = 0;
-			if(a.type == 4)
-				id = pc.pc_GetUserByName(getString(a.value));
+			if(a.type == IptAtom.TYPE_STRING)
+				id = pc.getUserByName(getString(a.value));
 			else
-				if(a.type == 1)
+				if(a.type == IptAtom.TYPE_INTEGER)
 					id = a.value;
 			if(id != 0)
 			{
-				x = pc.pc_GetPosX(a.value);
-				y = pc.pc_GetPosY(a.value);
+				x = pc.getPosX(a.value);
+				y = pc.getPosY(a.value);
 			}
 			pushInt(x);
 			pushInt(y);
@@ -1979,7 +2007,7 @@ package net.codecomposer.palace.script
 		public function sf_ROOMID():void
 		
 		{
-			pushInt(pc.pc_GetRoomID());
+			pushInt(pc.getRoomId());
 		}
 		
 		public function sf_SWAP():void
@@ -1993,35 +2021,37 @@ package net.codecomposer.palace.script
 		
 		public function sf_LAUNCHPPA():void
 		{
-			pc.pc_LaunchPPA(popString());
+			// No PalacePresents Support
+			popString();
 		}
 		
 		public function sf_TALKPPA():void
 		{
-			pc.pc_TalkPPA(popString());
+			// No PalacePresents Support
+			popString();
 		}
 		
 		public function sf_ME():void
 		{
-			pushInt(pc.pc_GetCurSpotID());
+			pushInt(pc.getCurrentSpotId());
 		}
 		
 		public function sf_ALARMEXEC():void
 		{
 			var futureTime:int = popInt();
 			var aList:String = popAtomList();
-			pc.pc_SetScriptAlarm(aList, pc.pc_GetCurSpotID(), futureTime);
+			pc.setScriptAlarm(aList, pc.getCurrentSpotId(), futureTime);
 		}
 		
 		public function newVariable(sym:String):IptVariable
 		{
 			var vp:IptVariable = new IptVariable(sym, 1, 0, 0);
-			if(sym.equals("CHATSTR"))
+			if(sym == "CHATSTR")
 			{
-				vp.flags |= 2;
+				vp.flags |= IptVariable.FLAG_SPECIAL_VARIABLE;
 				retrieveExternStringGlobal(vp, 0);
 			}
-			vList.put(sym, vp);
+			vList[sym] = vp;
 			return vp;
 		}
 		
@@ -2032,7 +2062,7 @@ package net.codecomposer.palace.script
 		
 		public function sf_USERID():void
 		{
-			pushInt(pc.pc_GetUserID());
+			pushInt(pc.getSelfUserId());
 		}
 		
 		public function sf_SETLOC():void
@@ -2040,19 +2070,19 @@ package net.codecomposer.palace.script
 			var id:int = popInt();
 			var y:int = popInt();
 			var x:int = popInt();
-			pc.pc_SetLoc(id, x, y);
+			pc.moveSpot(id, x, y);
 		}
 		
 		public function sf_ROOMUSER():void
 		{
-			pushInt(pc.pc_GetRoomUser(popInt()));
+			pushInt(pc.getRoomUserIdByIndex(popInt()));
 		}
 		
 		public function retrieveExternStringGlobal(variable:IptVariable, index:int):void
 		{
 			var s:String = "";
 			if(index == 0)
-				s = pc.pc_GetChatString();
+				s = pc.getChatString();
 			variable.value = addToStringTable(s);
 			variable.type = 4;
 		}
@@ -2065,30 +2095,13 @@ package net.codecomposer.palace.script
 		public function sf_DEST():void
 		
 		{
-			pushInt(pc.pc_GetSpotDest());
+			pushInt(pc.getCurSpotDest());
 		}
 		
 		public function invalidArg():void
 		
 		{
 			forceAbort("Invalid argument");
-		}
-		
-		public function sf_GREPSTR():void
-		
-		{
-			var pat:String = popString();
-			var grepInput:String = popString();
-			try
-			{
-				grepPattern = grepCompiler.compile(pat);
-			}
-			catch(e:Error)
-			{
-				grepPattern = null;
-				forceAbort("Bad GREPSTR Pattern");
-			}
-			pushInt(grepMatcher.contains(grepInput, grepPattern) ? 1 : 0);
 		}
 		
 		public function sf_LOWERCASE():void
@@ -2105,7 +2118,7 @@ package net.codecomposer.palace.script
 			var expResult:int;
 			do
 			{
-				if(e1.type == 3)
+				if(e1.type == IptAtom.TYPE_ATOMLIST)
 				{
 					callSubroutine(e1.value);
 					expResult = popInt();
@@ -2113,7 +2126,7 @@ package net.codecomposer.palace.script
 				{
 					expResult = e1.value;
 				}
-				if(expResult != 0 && s1.type == 3)
+				if(expResult != 0 && s1.type == IptAtom.TYPE_ATOMLIST)
 					callSubroutine(s1.value);
 			} while(expResult != 0 && abortScriptCode == 0);
 			if(abortScriptCode == 1)
@@ -2125,7 +2138,7 @@ package net.codecomposer.palace.script
 			var v:int;
 			try
 			{
-				v = Integer.parseInt(popString());
+				v = parseInt(popString());
 			}
 			catch(nfe:Error)
 			{
@@ -2136,13 +2149,11 @@ package net.codecomposer.palace.script
 		
 		public function sf_SETALARM():void
 		{
-			var spotId:int;
-			var futureTime:int;
 			var spotID:int = popInt();
 			var futureTime:int = popInt();
 			if(spotID == 0)
-				spotID = pc.pc_GetCurSpotID();
-			pc.pc_SetSpotAlarm(spotID, futureTime);
+				spotID = pc.getCurrentSpotId();
+			pc.setSpotAlarm(spotID, futureTime);
 		}
 		
 		public function sf_RETURN():void
@@ -2152,12 +2163,12 @@ package net.codecomposer.palace.script
 		
 		public function sf_SERVERNAME():void
 		{
-			pushString(pc.pc_GetServerName());
+			pushString(pc.getServerName());
 		}
 		
 		public function sf_AND():void
 		{
-			pushInt(popInt() > 0 && popInt() > 0 ? 1 : 0);
+			pushInt( (popInt() > 0 && popInt() > 0) ? 1 : 0 );
 		}
 		
 		public function sf_ARRAY():void
@@ -2168,13 +2179,13 @@ package net.codecomposer.palace.script
 				var ary:Array = []; //Vector ary = new Vector(idx);
 				for(var n:int = 0; n < idx; n++)
 				{
-					ary.addElement(new IptAtom(1, 0));
-					pushAtom(6, addToArrayTable(ary));
+					ary.push(new IptAtom(IptAtom.TYPE_INTEGER, 0));
+					pushNewAtom(IptAtom.TYPE_ARRAY, addToArrayTable(ary));
 				}
 				
 			} else
 			{
-				pushAtom(1, 0);
+				pushNewAtom(IptAtom.TYPE_INTEGER, 0);
 			}
 		}
 
