@@ -46,7 +46,7 @@ package net.codecomposer.palace.script
 			var atomListString:String = "";
 			if(currentChar() == '{')
 				so++;
-			while(currentChar() != null && (currentChar() != '}' || nest > 0)) 
+			while(currentChar() != null && currentChar().charCodeAt(0) != 0 && (currentChar() != '}' || nest > 0)) 
 			{
 				if(qFlag)
 				{
@@ -350,7 +350,7 @@ package net.codecomposer.palace.script
 					if(pStack.length > 0)
 					{
 						var atom:IptAtom = popValue();
-						if(atom.type == 1)
+						if(atom.type == IptAtom.TYPE_INTEGER)
 							retVal = atom.value;
 					}
 					initInterpreter();
@@ -384,8 +384,8 @@ package net.codecomposer.palace.script
 			var a1:IptAtom;
 			var a2:IptAtom;
 			var v:IptVariable;
-			while((char = currentChar()) != null && abortScriptCode == 0) { 
-				
+			while((char = currentChar()) != null && char.charCodeAt(0) != 0 && abortScriptCode == 0) { 
+
 				if(char == " " || char == "\t" || char == "\r" || char == "\n") { // || char == "'"
 					so++;
 				}
@@ -535,7 +535,7 @@ package net.codecomposer.palace.script
 						parseSymbol();
 					}
 					else {
-						forceAbort("Unexpected character: '" + char + "'");
+						forceAbort("Unexpected character, charcode: " + char.charCodeAt(0) + " -- '" + char + "'");
 					}
 				}
 			}
@@ -822,7 +822,9 @@ package net.codecomposer.palace.script
 			var ary:Array = []; // Vector
 			var a:IptAtom;
 			do {
-				a = popValue();
+				//a = popValue();
+				// We shouldn't dereference variables when adding to an array.
+				a = popAtom();
 				if (a.type != IptAtom.TYPE_ARRAY_MARK) {
 					ary.unshift(a);
 				}
@@ -958,7 +960,22 @@ package net.codecomposer.palace.script
 		
 		public function sf_SETPROPS():void
 		{
-			pc.setProps(popArray());
+			var propAtoms:Array = popArray();
+			var propIds:Array = [];
+			for each (var prop:IptAtom in propAtoms) {
+				atomToValue(prop); // dereference variables...
+				var propId:uint = 0;
+				if ( prop.type == IptAtom.TYPE_INTEGER ) {
+					propId = prop.value;
+				}
+				else {
+					forceAbort("Array of prop ids can contain only integer values.")
+				}
+				if (propId != 0) {
+					propIds.push(propId);
+				}
+			}
+			pc.setProps(propIds);
 		}
 		
 		public function sf_HASPROP():void
@@ -1015,7 +1032,7 @@ package net.codecomposer.palace.script
 			if(currentChar() == '"') {
 				so++;
 			}
-			while(currentChar() != null && currentChar() != '"') { 
+			while(currentChar() != null && currentChar().charCodeAt(0) != 0 && currentChar() != '"') { 
 				if(currentChar() == '\\') {
 					so++;
 					if(currentChar() == 'x')
@@ -1026,7 +1043,8 @@ package net.codecomposer.palace.script
 							hexNumChars += currentChar();
 							so ++;
 						}
-						result += String.fromCharCode(hexNumChars);
+						
+						result += String.fromCharCode(parseInt(hexNumChars));
 					} else
 					{
 						result += currentChar();
@@ -1252,7 +1270,7 @@ package net.codecomposer.palace.script
 			var token:String = "";
 			
 			//while(sc != null && ((sc >= 'a' && sc <= 'z') || (sc >= 'A' && sc <= 'Z') || (sc >= '0' && sc <= '9') || sc == '_'))
-			while(tokenTest.test(sc = currentChar()))
+			while(tokenTest.test(sc = currentChar()) && currentChar().charCodeAt(0) != 0)
 			{
 				token += sc.toUpperCase();
 				so++;

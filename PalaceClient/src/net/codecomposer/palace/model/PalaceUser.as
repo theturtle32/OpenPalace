@@ -117,6 +117,17 @@ package net.codecomposer.palace.model
 			updatePropsOnServer();
 		}
 		
+		public function setProps(props:Vector.<PalaceProp>):void {
+			this.props.removeAll();
+			for each (var prop:PalaceProp in props) {
+				prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
+				this.props.addItem(prop);
+			}
+			syncPropIdsToProps();
+			checkFaceProps();
+			updatePropsOnServer();
+		}
+		
 		public function removeProp(prop:PalaceProp):void {
 			var propIndex:int = props.getItemIndex(prop);
 			if (propIndex != -1) {

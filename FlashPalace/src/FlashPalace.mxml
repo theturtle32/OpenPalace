@@ -14,6 +14,7 @@
 			import mx.binding.utils.ChangeWatcher;
 			import mx.controls.Alert;
 			import mx.events.BrowserChangeEvent;
+			import mx.events.CloseEvent;
 			import mx.events.PropertyChangeEvent;
 			import mx.managers.BrowserManager;
 			import mx.managers.IBrowserManager;
@@ -72,6 +73,21 @@
 				palace.addEventListener(PalaceEvent.CONNECT_FAILED, handleConnectFailed);
 				palace.addEventListener(PalaceEvent.CONNECT_START, handleConnectStart);
 				palace.addEventListener(PalaceEvent.DISCONNECTED, handleDisconnected);
+				palace.addEventListener(PalaceEvent.GOTO_URL, handleGotoURL);
+			}
+			
+			private function handleGotoURL(event:PalaceEvent):void {
+				var url:String = event.url;
+				Alert.show("Do you want to visit this url in your browser?\n\n" + event.url,
+						   "External Link",
+						   Alert.YES | Alert.NO,
+						   null,
+						   function(event:CloseEvent):void {
+							  if (event.detail == Alert.YES) {
+								  var req:URLRequest = new URLRequest(url);
+								  navigateToURL(req, "_BLANK");
+							  }
+						   });
 			}
 			
 			private function handleConnectComplete(event:PalaceEvent):void {

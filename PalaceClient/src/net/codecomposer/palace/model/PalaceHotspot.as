@@ -24,6 +24,7 @@ package net.codecomposer.palace.model
 	import mx.collections.ArrayCollection;
 	
 	import net.codecomposer.palace.event.HotspotEvent;
+	import net.codecomposer.palace.script.IptEventHandler;
 
 	[Event(name="stateChanged",type="net.codecomposer.palace.event.HotspotEvent")]
 	[Event(name="moved",type="net.codecomposer.palace.event.HotspotEvent")]
@@ -42,13 +43,17 @@ package net.codecomposer.palace.model
 		public var name:String = null;
 		public var location:FlexPoint;
 		public var scriptEventMask:int = 0;
-		public var numScripts:int = 0;
-		public var script:String = "";
+		public var nbrScripts:int = 0;
+		public var scriptString:String = "";
+		public var scriptCursor:int = 0;
+		private var ungetFlag:Boolean = false;
+		private var gToken:String;
 		public var secureInfo:int;
 		public var refCon:int;
 		public var groupId:int;
 		public var scriptRecordOffset:int;
 		public var states:ArrayCollection = new ArrayCollection();
+		public var eventHandlers:Vector.<IptEventHandler> = new Vector.<IptEventHandler>();
 		
 		[Bindable('flagsChanged')]
 		public function set flags(newValue:int):void {
@@ -115,7 +120,6 @@ package net.codecomposer.palace.model
 		}
 		
 		public function changeState(newState:int):void {
-			trace("CHANGING STATE TO " + newState);
 			if (newState != state) {
 				state = newState;
 			}
@@ -166,7 +170,7 @@ package net.codecomposer.palace.model
 			trace("Points offset: " + pointsOffset);
 			type = ba.readShort();
 			groupId = ba.readShort();
-			numScripts = ba.readShort();
+			nbrScripts = ba.readShort();
 			scriptRecordOffset = ba.readShort();
 			state = ba.readShort();
 			numStates = ba.readShort();
@@ -191,13 +195,14 @@ package net.codecomposer.palace.model
 				var currentByte:int = -1;
 				var counter:int = scriptTextOffset;
 				var maxLength:int = roomBytes.length;
-				script = "";
+				scriptString = "";
 				while (currentByte != 0 && counter < maxLength) {
 					currentByte = roomBytes[counter++];
-					script += String.fromCharCode(currentByte);
+					scriptString += String.fromCharCode(currentByte);
 				}
 			}
-			trace("Script: " + script);
+			trace("Script: " + scriptString);
+			loadScripts();
 
 			ba = new ByteArray();
 			var endPos:int = pointsOffset+(numPoints*4);
@@ -228,6 +233,194 @@ package net.codecomposer.palace.model
 			}
 			
 			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + numPoints);
+		}
+		
+		private function initScriptParser(script:String):void {
+			scriptCursor = 0;
+		}
+		
+		public function getEventHandler(eventType:int):String {
+			if(nbrScripts > 0 && (scriptEventMask & 1 << eventType) != 0)
+			{
+				for(var i:int = 0; i < nbrScripts; i++)
+				{
+					var eventHandler:IptEventHandler = eventHandlers[i];
+					if (eventHandler.eventType == eventType) {
+						return eventHandler.script;
+					}
+				}
+				
+			}
+			return null;
+		}
+		
+		private function parseSpotEventHandler():void {
+			var script:String = "";
+			if(!getScriptToken()) {
+				return;
+			}
+			
+			var eventType:int = IptEventHandler.getEventType(gToken);
+			if(eventType == IptEventHandler.TYPE_UNHANDLED) {
+				trace("Invalid Event Handler: ON " + gToken);
+			}
+			
+			getScriptToken();
+			var braceCnt:int = 1;
+			for(var doneParse:Boolean = false; !doneParse && getScriptToken();)
+				switch(gToken.charAt(0))
+				{
+					case "(": // '(' 40
+					case ")": // ')' 41
+						break;
+					
+					case "}": // '}' 125
+						if(--braceCnt == 0) {
+							doneParse = true;
+						}
+						else {
+							script = script + "} ";
+						}
+						break;
+					
+					case "{": // '{' 123
+						braceCnt++;
+						script = script + "{ ";
+						break;
+					
+					default:
+						script = script + gToken + " ";
+						break;
+				}
+			
+			var eventHandler:IptEventHandler = new IptEventHandler(eventType, script);
+			eventHandlers.push(eventHandler);
+			trace("Got event handler.  Type: " + eventHandler.eventType + " Script: \n" + eventHandler.script);
+			nbrScripts++;
+			scriptEventMask |= 1 << eventType;
+		}
+
+		private var char:String;
+		
+		private function getNextChar():void {
+			scriptCursor ++;
+			getCurrentChar();
+		}
+		
+		private function getCurrentChar():void {
+			char = sc(0);
+		}
+		
+		private function sc(offset:int):String {
+			var pos:int = scriptCursor + offset;
+			if(pos < 0 || pos >= scriptString.length)
+				return null;
+			else
+				return scriptString.charAt(pos);
+		}
+		
+		private function myIsSpace(c:String):Boolean {
+			return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
+		}
+		
+		private var symbolTest:RegExp = /^[a-zA-Z0-9_\.]{1}|-\d$/;
+		private var symbolTest2:RegExp = /^[a-zA-Z0-9_\.]{1}$/;
+		private var notLetterOrDigitTest:RegExp = /^[^a-zA-Z0-9]{1}$/;
+		
+		private function getScriptToken():Boolean
+		{
+			getCurrentChar();
+			if(ungetFlag)
+			{
+				ungetFlag = false;
+				return true;
+			}
+			while(char != null) 
+			{
+				if (char == null) {
+					return false;
+				}
+				
+				if(myIsSpace(char)) {
+					getNextChar();
+				}
+				else if(char == "#" || char == ";") {
+					for(; char != null && char != "\n" && char != "\r"; getNextChar());
+				}
+				else {
+					if (symbolTest.test(char)) {
+							gToken = "";
+							
+							if(char == "-")
+							{
+								gToken += char;
+								getNextChar();
+							}
+							for(; symbolTest2.test(char); getNextChar()) {
+								gToken += char;
+							}
+							
+							return true;
+						}
+						if(char == "\"")
+						{
+							gToken = char;
+							for(getNextChar(); char != null && char != "\"";)
+								if(char == "\\")
+								{
+									gToken += char;
+									getNextChar();
+									if(char != null)
+									{
+										gToken += char
+										getNextChar();
+									}
+								} else
+								{
+									gToken += char;
+									getNextChar();
+								}
+							
+							if(char == "\"")
+							{
+								gToken += char;
+								getNextChar();
+							}
+							return true;
+						}
+						if("{}[]()".indexOf(char) != -1)
+						{
+							gToken = char;
+							getNextChar();
+							return true;
+						}
+						if(char != null)
+						{
+							gToken = "";
+							for(; char != null && !myIsSpace(char) && notLetterOrDigitTest.test(char); getNextChar()) {
+								gToken += char;
+							}
+							return true;
+						}
+						trace("Script error");
+					}
+			}
+			return false;
+		}
+		
+		private function loadScripts():void {
+			nbrScripts = 0;
+			scriptEventMask = 0;
+			if(scriptString)
+			{
+				initScriptParser(scriptString);
+				while(getScriptToken()) { 
+					if(gToken == "ON") {
+						trace("Found event handler.");
+						parseSpotEventHandler();
+					}
+				}
+			}
 		}
 
 	}

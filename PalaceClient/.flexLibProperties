@@ -66,6 +66,9 @@
     <classEntry path="net.codecomposer.palace.script.IPalaceController"/>
     <classEntry path="net.codecomposer.palace.script.PalaceErrorHandler"/>
     <classEntry path="net.codecomposer.palace.script.TestPalaceController"/>
+    <classEntry path="net.codecomposer.palace.script.IptEventHandler"/>
+    <classEntry path="net.codecomposer.palace.script.PalaceController"/>
+    <classEntry path="net.codecomposer.palace.script.IptAlarm"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

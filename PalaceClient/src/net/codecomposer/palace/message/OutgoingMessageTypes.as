@@ -28,6 +28,7 @@ package net.codecomposer.palace.message
 		public static const WHISPER:int = 0x78776973;
 		public static const MOVE:int = 1967943523;
 		public static const USER_COLOR:int = 1970500163;
+		public static const USER_FACE:int = 0x75737246;
 		public static const REQUEST_ROOM_LIST:int = 0x724c7374;
 		public static const GOTO_ROOM:int = 0x6e617652;
 		public static const REQUEST_USER_LIST:int = 0x754c7374;
@@ -44,6 +45,9 @@ package net.codecomposer.palace.message
 		public static const PROP_DELETE:int = 1682993776;
 		public static const PROP_NEW:int = 1850765936;
 		public static const ASSET_REGI:int = 0x72417374;
+		public static const GLOBAL_MSG:int = 0x676d7367;
+		public static const ROOM_MSG:int = 0x726d7367;
+		public static const SUSR_MSG:int = 0x736d7367;
 		
 	}
 }

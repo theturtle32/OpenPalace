@@ -1,5 +1,7 @@
 package net.codecomposer.palace.script
 {
+	import net.codecomposer.palace.model.PalaceHotspot;
+
 	public interface IPalaceController
 	{
 		function logError(message:String):void;
@@ -54,8 +56,8 @@ package net.codecomposer.palace.script
 		function donPropById(propId:int):void;
 		function donPropByName(propName:String):void;
 		function setProps(propIds:Array):void;
-		function hasPropById(propId:int):void;
-		function hasPropByName(propName:String):void;
+		function hasPropById(propId:int):Boolean;
+		function hasPropByName(propName:String):Boolean;
 		function getRoomName():String;
 		function getServerName():String;
 		function isLocked(spotId:int):Boolean;
@@ -72,7 +74,6 @@ package net.codecomposer.palace.script
 		function setChatString(message:String):void;
 		function getNumSpots():int;
 		function unlock(spotId:int):void;
-		function sayAt(message:String, x:int, y:int):void;
 		function setFace(faceId:int):void;
 		function logMessage(message:String):void;
 		function sendPrivateMessage(message:String, userId:int):void;
@@ -89,5 +90,7 @@ package net.codecomposer.palace.script
 		function getChatString():String;
 		function getSelfSpotDest():int;
 		function setSpotAlarm(spotId:int, futureTime:int):void;
+		function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):void;
+		function executeScript(script:String):int;
 	}
 }

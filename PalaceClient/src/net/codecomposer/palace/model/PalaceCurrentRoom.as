@@ -25,6 +25,7 @@ package net.codecomposer.palace.model
 	import net.codecomposer.palace.event.ChatEvent;
 	import net.codecomposer.palace.event.PalaceRoomEvent;
 	import net.codecomposer.palace.util.PalaceUtil;
+	import net.codecomposer.palace.view.PalaceRoomView;
 
 	[Event(name="chatLogUpdated")]
 	[Event(name="chat",type="net.codecomposer.palace.event.ChatEvent")]
@@ -51,12 +52,22 @@ package net.codecomposer.palace.model
 		public var drawLayerHistory:Vector.<uint> = new Vector.<uint>();
 		public var selectedUser:PalaceUser;
 		public var selfUserId:int = -1;
+		public var roomView:PalaceRoomView;
+		public var dimLevel:Number = 1;
 		
 		public var chatLog:String = "";
 		
 		
 		public function PalaceCurrentRoom()
 		{
+		}
+		
+		public function getHotspotById(spotId:int):PalaceHotspot {
+			return PalaceHotspot(hotSpotsById[spotId]);
+		}
+		
+		public function dimRoom(level:int):void {
+			dimLevel = level / 100;
 		}
 		
 		public function addLooseProp(id:int, crc:uint, x:int, y:int, addToFront:Boolean = false):void {
@@ -121,6 +132,19 @@ package net.codecomposer.palace.model
 			return PalaceUser(usersHash[id]);
 		}
 		
+		public function getUserByName(name:String):PalaceUser {
+			for each (var user:PalaceUser in users) {
+				if (user.name == name) {
+					return user;
+				}
+			}
+			return null;
+		}
+		
+		public function getUserByIndex(userIndex:int):PalaceUser {
+			return PalaceUser(users.getItemAt(userIndex));
+		}
+		
 		public function getSelfUser():PalaceUser {
 			return getUserById(selfUserId);
 		}
@@ -162,11 +186,25 @@ package net.codecomposer.palace.model
 			dispatchEvent(event);
 		}
 		
+		public function localMessage(message:String):void {
+			roomMessage(message);
+		}
+		
 		public function roomMessage(message:String):void {
 			recordChat("<b>*** " + PalaceUtil.htmlEscape(message), "</b>\n");
 			dispatchEvent(new Event('chatLogUpdated'));
 			var event:ChatEvent = new ChatEvent(ChatEvent.ROOM_MESSAGE, message);
 			dispatchEvent(event);
+		}
+		
+		public function statusMessage(message:String):void {
+			recordChat("<i>" + message + "</i>\n");
+			dispatchEvent(new Event('chatLogUpdated'));
+		}
+		
+		public function logMessage(message:String):void {
+			recordChat("<i>" + message + "</i>\n");
+			dispatchEvent(new Event('chatLogUpdated'));
 		}
 		
 		public function roomWhisper(message:String):void {

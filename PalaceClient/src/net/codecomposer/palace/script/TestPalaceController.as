@@ -1,5 +1,7 @@
 package net.codecomposer.palace.script
 {
+	import net.codecomposer.palace.model.PalaceHotspot;
+
 	public class TestPalaceController implements IPalaceController
 	{
 		public var scriptManager:IptscraeMgr;
@@ -26,6 +28,23 @@ package net.codecomposer.palace.script
 		public function setScriptManager(manager:IptscraeMgr):void
 		{
 			scriptManager = manager;
+		}
+		
+		public function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):void {
+			
+		}
+		
+		public function executeScript(script:String):int {
+			return doScript(script);
+		}
+		
+		private function doScript(script:String):int {
+			if (scriptManager) {
+				return scriptManager.doScript(script);
+			}
+			else {
+				return -1;
+			}
 		}
 		
 		public function gotoURL(url:String):void
@@ -299,14 +318,16 @@ package net.codecomposer.palace.script
 			logResult("setProps propIds: " + propIds.join(", "));
 		}
 		
-		public function hasPropById(propId:int):void
+		public function hasPropById(propId:int):Boolean
 		{
 			logResult("hasPropById propId: " + propId);
+			return false;
 		}
 		
-		public function hasPropByName(propName:String):void
+		public function hasPropByName(propName:String):Boolean
 		{
 			logResult("hasPropByName propName: " + propName);
+			return false;
 		}
 		
 		public function getRoomName():String
@@ -397,11 +418,6 @@ package net.codecomposer.palace.script
 		public function unlock(spotId:int):void
 		{
 			logResult("unlock spotId: " + spotId);
-		}
-		
-		public function sayAt(message:String, x:int, y:int):void
-		{
-			logResult("sayAt message: " + message + " x: " + x + " y: " + y);
 		}
 		
 		public function setFace(faceId:int):void

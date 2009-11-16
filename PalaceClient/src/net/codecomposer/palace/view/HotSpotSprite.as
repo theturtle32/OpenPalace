@@ -25,6 +25,7 @@ package net.codecomposer.palace.view
 	import net.codecomposer.palace.event.HotspotEvent;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.rpc.PalaceClient;
+	import net.codecomposer.palace.script.IptEventHandler;
 
 	public class HotSpotSprite extends FlexSprite
 	{
@@ -99,13 +100,16 @@ package net.codecomposer.palace.view
 			if (hotSpot.dontMoveHere) {
 				event.stopImmediatePropagation();
 			}
+			
+			client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_SELECT);
+			
 			switch (hotSpot.type) {
 				case PalaceHotspot.TYPE_NORMAL:
-					checkForPalaceLinksInScript();
+					//checkForPalaceLinksInScript();
 					break;
 				case PalaceHotspot.TYPE_PASSAGE:
 					event.stopPropagation();
-					checkForPalaceLinksInScript();
+					//checkForPalaceLinksInScript();
 					if (hotSpot.dest != 0) {
 						client.gotoRoom(hotSpot.dest);
 					}
@@ -152,8 +156,8 @@ package net.codecomposer.palace.view
 		
 		private function checkForPalaceLinksInScript():void {
 			trace("Checking for palace links in script...");
-			trace(hotSpot.script);
-			var matchParts:Array = hotSpot.script.toLowerCase().match(/on select.*\{.*["']palace:\/\/(.+?):{0,1}([0-9]*)["'].*netgoto/ms); 
+			trace(hotSpot.scriptString);
+			var matchParts:Array = hotSpot.scriptString.toLowerCase().match(/on select.*\{.*["']palace:\/\/(.+?):{0,1}([0-9]*)["'].*netgoto/ms); 
 			if (matchParts && matchParts.length > 0) {
 				var port:int = int(matchParts[2]);
 				if (port < 1) { port = 9998; }
