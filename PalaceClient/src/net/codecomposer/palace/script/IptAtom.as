@@ -8,7 +8,7 @@ package net.codecomposer.palace.script
 		public static const TYPE_ERROR_OR_UNKNOWN_OR_STACK_EMPTY:int = 0;
 		public static const TYPE_INTEGER:int = 1;
 		public static const TYPE_VARIABLE:int = 2;
-		public static const TYPE_ATOMLIST:int = 3; // ??
+		public static const TYPE_ATOMLIST:int = 3;
 		public static const TYPE_STRING:int = 4;
 		public static const TYPE_ARRAY_MARK:int = 5;
 		public static const TYPE_ARRAY:int = 6;
