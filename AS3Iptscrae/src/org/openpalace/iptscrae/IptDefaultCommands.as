@@ -13,6 +13,8 @@ package org.openpalace.iptscrae
 			"FOREACH": FOREACHCommand,
 			"GET": GETCommand,
 			"GLOBAL": GLOBALCommand,
+			"IF": IFCommand,
+			"IFELSE": IFELSECommand,
 			"ITOA": ITOACommand,
 			"PUT": PUTCommand,
 			"RETURN": RETURNCommand,
