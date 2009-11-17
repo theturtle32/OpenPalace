@@ -1,7 +1,7 @@
 package org.openpalace.iptscrae.command
 {
 	import org.openpalace.iptscrae.IptExecutionContext;
-	import org.openpalace.iptscrae.token.IptTokenList;
+	import org.openpalace.iptscrae.IptTokenList;
 
 	public class EXECCommand extends IptCommand
 	{

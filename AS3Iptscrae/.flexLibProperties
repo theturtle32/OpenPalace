@@ -8,7 +8,7 @@
     <classEntry path="org.openpalace.iptscrae.token.IptToken"/>
     <classEntry path="org.openpalace.iptscrae.IptVariable"/>
     <classEntry path="org.openpalace.iptscrae.command.IptCommand"/>
-    <classEntry path="org.openpalace.iptscrae.token.IptTokenList"/>
+    <classEntry path="org.openpalace.iptscrae.IptTokenList"/>
     <classEntry path="org.openpalace.iptscrae.IptTokenStack"/>
     <classEntry path="org.openpalace.iptscrae.IptConstants"/>
     <classEntry path="org.openpalace.iptscrae.IptParser"/>
@@ -34,6 +34,12 @@
     <classEntry path="org.openpalace.iptscrae.command.operator.ConcatOperator"/>
     <classEntry path="org.openpalace.iptscrae.command.operator.AssignOperator"/>
     <classEntry path="org.openpalace.iptscrae.command.operator.LessThanOperator"/>
+    <classEntry path="org.openpalace.iptscrae.command.operator.PlusAssignOperator"/>
+    <classEntry path="org.openpalace.iptscrae.command.operator.UnaryIncrementOperator"/>
+    <classEntry path="org.openpalace.iptscrae.command.BREAKCommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.RETURNCommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.GETCommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.PUTCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

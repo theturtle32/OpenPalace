@@ -2,7 +2,6 @@ package org.openpalace.iptscrae
 {
 	import flash.events.EventDispatcher;
 	
-	import org.openpalace.iptscrae.token.IptTokenList;
 	
 	public class IptManager extends EventDispatcher implements IIptManager
 	{

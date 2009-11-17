@@ -5,7 +5,6 @@ package org.openpalace.iptscrae
 	import org.openpalace.iptscrae.token.ArrayToken;
 	import org.openpalace.iptscrae.token.IntegerToken;
 	import org.openpalace.iptscrae.token.IptToken;
-	import org.openpalace.iptscrae.token.IptTokenList;
 	import org.openpalace.iptscrae.token.StringToken;
 	import org.openpalace.iptscrae.token.VariableToken;
 

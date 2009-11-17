@@ -22,7 +22,7 @@ package org.openpalace.iptscrae
 		
 		public function popType(requestedType:Class):* {
 			var token:IptToken = pop();
-			if (requestedType != IptVariable) {
+			if (token is IptVariable && requestedType != IptVariable) {
 				token = token.dereference();
 			}
 			if (token is requestedType) {
