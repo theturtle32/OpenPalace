@@ -1,6 +1,5 @@
 package org.openpalace.iptscrae.command
 {
-	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.token.IntegerToken;
 	import org.openpalace.iptscrae.token.StringToken;

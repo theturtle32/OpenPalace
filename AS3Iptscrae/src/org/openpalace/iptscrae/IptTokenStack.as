@@ -1,5 +1,10 @@
 package org.openpalace.iptscrae
 {
+	import flash.net.getClassByAlias;
+	import flash.utils.getQualifiedClassName;
+	
+	import org.openpalace.iptscrae.token.IptToken;
+
 	public class IptTokenStack
 	{
 		internal var stack:Vector.<IptToken>;
@@ -15,14 +20,33 @@ package org.openpalace.iptscrae
 			return stackDepth;
 		}
 		
-		public function popType(type:Class):* {
+		public function popType(requestedType:Class):* {
 			var token:IptToken = pop();
-			if (token is type) {
+			if (requestedType != IptVariable) {
+				token = token.dereference();
+			}
+			if (token is requestedType) {
 				return token;
 			}
 			else {
-				throw new IptError("Expected a " + Class(type).toString() + " element.  Got a " + typeof(token) + " element instead."); 
+				throw new IptError("Expected " + IptUtil.className(requestedType) + " element.  Got " + IptUtil.className(token) + " element instead."); 
 			}
+		}
+		
+		public function pop():IptToken {
+			var token:IptToken;
+			if ( stackDepth == 0 ) {
+				throw new IptError("Cannot pop from an empty stack.");
+			}
+			try {
+				// Cannot use push/pop on fixed size vector
+				token = stack[--stackDepth];
+				stack[stackDepth] = null;
+			}
+			catch (e:Error) {
+				throw new IptError(e.message);
+			}
+			return token;
 		}
 		
 		public function push(token:IptToken):void {
@@ -36,21 +60,6 @@ package org.openpalace.iptscrae
 			catch (e:Error) {
 				throw new IptError("Unable to push element onto the stack.");
 			}
-		}
-		
-		public function pop():IptToken {
-			var token:IptToken;
-			if ( stackDepth == 0 ) {
-				throw new IptError("Cannot pop from an empty stack.");
-			}
-			try {
-				// Cannot use push/pop on fixed size vector
-				token = stack[stackDepth--];
-			}
-			catch (e:Error) {
-				throw new IptError(e.message);
-			}
-			return token;
 		}
 		
 		public function pick(position:uint):IptToken {

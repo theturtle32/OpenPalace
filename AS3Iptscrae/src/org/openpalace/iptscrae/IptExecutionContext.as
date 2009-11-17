@@ -1,39 +1,52 @@
 package org.openpalace.iptscrae
 {
-	import flash.utils.Dictionary;
-	
-	import org.openpalace.iptscrae.token.IntegerToken;
+	import org.openpalace.iptscrae.token.IptToken;
 
 	public class IptExecutionContext
 	{
 		public var manager:IptManager;
 		public var data:Object;
 		public var stack:IptTokenStack;
+		public var variableStore:IptVariableStore;
 		
-		internal var variables:Dictionary;
+		// Provide a means for handling loop exiting
+		public var breakRequested:Boolean = false;
+		public var returnRequested:Boolean = false;
+		public var exitRequested:Boolean = false;
 		
-		public function IptExecutionContext(manager:IptManager, stack:IptTokenStack = null)
+		public function resetExecutionControls():void {
+			breakRequested = returnRequested = exitRequested = false;
+		}
+		
+		public function IptExecutionContext(manager:IptManager, stack:IptTokenStack = null, variableStore:IptVariableStore = null)
 		{
-			data = {};
-			this.manager = manager;
 			if (stack == null) {
 				stack = new IptTokenStack();
 			}
+			if (variableStore == null) {
+				variableStore = new IptVariableStore(this);
+			}
+			
+			data = {};
+			this.manager = manager;
 			this.stack = stack;
-			variables = new Dictionary();
+			this.variableStore = variableStore;
 		}
 		
-		public function getVariable(variableName:String):IptVariable {
-			var variable:IptVariable = variables[variableName.toUpperCase()];
-			if (variable == null) {
-				variable = new IptVariable(variableName.toUpperCase(), new IntegerToken(0));
-			}
-			return variable;
+		public function isExternalVariable(name:String):Boolean {
+			return false;
+		}
+		
+		public function setExternalVariable(name:String, value:IptToken):void {
+			
+		}
+		
+		public function getExternalVariable(name:String):IptToken {
+			return new IptToken();
 		}
 		
 		public function clone():IptExecutionContext {
-			var context:IptExecutionContext = new IptExecutionContext(manager, stack);
-			context.variables = variables;
+			var context:IptExecutionContext = new IptExecutionContext(manager, stack, variableStore);
 			return context;
 		}
 	}

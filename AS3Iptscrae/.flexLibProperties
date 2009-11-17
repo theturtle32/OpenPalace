@@ -5,22 +5,35 @@
     <classEntry path="org.openpalace.iptscrae.Runnable"/>
     <classEntry path="org.openpalace.iptscrae.IptExecutionContext"/>
     <classEntry path="org.openpalace.iptscrae.IptError"/>
-    <classEntry path="org.openpalace.iptscrae.IptToken"/>
+    <classEntry path="org.openpalace.iptscrae.token.IptToken"/>
     <classEntry path="org.openpalace.iptscrae.IptVariable"/>
-    <classEntry path="org.openpalace.iptscrae.IptCommand"/>
-    <classEntry path="org.openpalace.iptscrae.IptTokenList"/>
+    <classEntry path="org.openpalace.iptscrae.command.IptCommand"/>
+    <classEntry path="org.openpalace.iptscrae.token.IptTokenList"/>
     <classEntry path="org.openpalace.iptscrae.IptTokenStack"/>
     <classEntry path="org.openpalace.iptscrae.IptConstants"/>
     <classEntry path="org.openpalace.iptscrae.IptParser"/>
     <classEntry path="org.openpalace.iptscrae.token.IntegerToken"/>
     <classEntry path="org.openpalace.iptscrae.token.StringToken"/>
-    <classEntry path="org.openpalace.iptscrae.IIptVariable"/>
+    <classEntry path="org.openpalace.iptscrae.token.IIptVariable"/>
     <classEntry path="org.openpalace.iptscrae.IIptManager"/>
     <classEntry path="org.openpalace.iptscrae.command.ITOACommand"/>
     <classEntry path="org.openpalace.iptscrae.command.ATOICommand"/>
     <classEntry path="org.openpalace.iptscrae.token.ArrayToken"/>
     <classEntry path="org.openpalace.iptscrae.command.FOREACHCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.WHILECommand"/>
+    <classEntry path="org.openpalace.iptscrae.IptVariableStore"/>
+    <classEntry path="org.openpalace.iptscrae.command.EXECCommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.operator.PlusOperator"/>
+    <classEntry path="org.openpalace.iptscrae.command.operator.MinusOperator"/>
+    <classEntry path="org.openpalace.iptscrae.IptUtil"/>
+    <classEntry path="org.openpalace.iptscrae.IptDefaultCommands"/>
+    <classEntry path="org.openpalace.iptscrae.token.ArrayMarkToken"/>
+    <classEntry path="org.openpalace.iptscrae.token.VariableToken"/>
+    <classEntry path="org.openpalace.iptscrae.command.GLOBALCommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.AS3TRACECommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.operator.ConcatOperator"/>
+    <classEntry path="org.openpalace.iptscrae.command.operator.AssignOperator"/>
+    <classEntry path="org.openpalace.iptscrae.command.operator.LessThanOperator"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

@@ -9,19 +9,24 @@
 
 	<fx:Script>
 		<![CDATA[
-			import net.codecomposer.palace.script.IptscraeMgr;
-			import net.codecomposer.palace.script.TestPalaceController;
-			private var palaceController:TestPalaceController;
+			
+			private var iptManager:TestIptscraeManager;
 			
 			private function doScript():void {
-				palaceController.executeScript(scriptInput.text);
-				scriptOutput.text = palaceController.output;
+				try {
+					iptManager.execute(scriptInput.text);
+					scriptOutput.text = iptManager.palaceController.output;
+				}
+				catch (e:Error) {
+					trace(e.message);
+					scriptOutput.text += (e.message + "\n");
+				}
 			}
 			
 			private function resetEngine():void {
-				palaceController = new TestPalaceController();
-				new IptscraeMgr(palaceController);
-				scriptOutput.text = palaceController.output;
+				iptManager = new TestIptscraeManager();
+				iptManager.parser.addCommand("SAY", SAYCommand);
+				scriptOutput.text = iptManager.palaceController.output;
 			}
 		]]>
 	</fx:Script>

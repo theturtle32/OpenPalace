@@ -1,9 +1,8 @@
 package org.openpalace.iptscrae.command
 {
-	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.IptExecutionContext;
-	import org.openpalace.iptscrae.IptToken;
-	import org.openpalace.iptscrae.IptTokenList;
+	import org.openpalace.iptscrae.token.IptToken;
+	import org.openpalace.iptscrae.token.IptTokenList;
 	import org.openpalace.iptscrae.token.ArrayToken;
 	
 	public class FOREACHCommand extends IptCommand

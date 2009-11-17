@@ -1,13 +1,21 @@
 package org.openpalace.iptscrae
 {
+	import org.openpalace.iptscrae.token.IIptVariable;
+	import org.openpalace.iptscrae.token.IptToken;
+
 	public class IptVariable extends IptToken implements IIptVariable
 	{
 		private var _value:IptToken;
 		private var _name:String;
+		private var context:IptExecutionContext;
+		private var _globalized:Boolean;
+		private var _globalVariable:IptVariable;
+		public var external:Boolean = false;
 		
-		public function IptVariable(name:String, value:IptToken)
+		public function IptVariable(context:IptExecutionContext, name:String, value:IptToken)
 		{
 			super();
+			this.context = context;
 			this._name = name;
 			this.value = value;
 		}
@@ -17,11 +25,38 @@ package org.openpalace.iptscrae
 		}
 		
 		public function get value():IptToken {
+			if (external) {
+				return context.getExternalVariable(_name); 
+			}
+			else if (_globalized) {
+				return _globalVariable.value;
+			}
 			return _value;
 		}
 		
 		public function set value(newValue:IptToken):void {
-			_value = newValue;
+			if (_globalized) {
+				_globalVariable.value = newValue;
+			}
+			else {
+				_value = newValue;
+			}
+		}
+		
+		override public function clone():IptToken {
+			var newVariable:IptVariable = new IptVariable(context, _name, _value);
+			newVariable._globalized = _globalized;
+			newVariable._globalVariable = _globalVariable;
+			return newVariable;
+		}
+		
+		public function globalize(globalVariable:IptVariable):void {
+			_globalVariable = globalVariable;
+			_globalized = true;
+		}
+		
+		override public function dereference():IptToken {
+			return value;
 		}
 	}
 }

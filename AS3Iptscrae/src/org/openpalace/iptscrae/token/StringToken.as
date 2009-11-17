@@ -1,6 +1,5 @@
 package org.openpalace.iptscrae.token
 {
-	import org.openpalace.iptscrae.IptToken;
 	
 	public class StringToken extends IptToken
 	{
