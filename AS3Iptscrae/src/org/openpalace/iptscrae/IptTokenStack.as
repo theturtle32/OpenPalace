@@ -58,7 +58,7 @@ package org.openpalace.iptscrae
 				stack[stackDepth++] = token;
 			}
 			catch (e:Error) {
-				throw new IptError("Unable to push element onto the stack.");
+				throw new IptError("Unable to push element onto the stack:" + e.message);
 			}
 		}
 		
