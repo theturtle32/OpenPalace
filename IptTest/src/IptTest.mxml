@@ -9,24 +9,23 @@
 
 	<fx:Script>
 		<![CDATA[
+			import org.openpalace.iptscrae.IptEngineEvent;
 			
 			private var iptManager:TestIptscraeManager;
 			
 			private function doScript():void {
-				try {
 					iptManager.execute(scriptInput.text);
-					scriptOutput.text = iptManager.palaceController.output;
-				}
-				catch (e:Error) {
-					trace(e.message);
-					scriptOutput.text += (e.message + "\n");
-				}
 			}
 			
 			private function resetEngine():void {
 				iptManager = new TestIptscraeManager();
+				iptManager.addEventListener(IptEngineEvent.TRACE_MESSAGE, handleScriptTrace);
 				iptManager.parser.addCommand("SAY", SAYCommand);
-				scriptOutput.text = iptManager.palaceController.output;
+				scriptOutput.text = "";
+			}
+			
+			private function handleScriptTrace(event:IptEngineEvent):void {
+				scriptOutput.text += (event.message + "\n"); 
 			}
 		]]>
 	</fx:Script>
@@ -50,6 +49,6 @@
 	</s:HGroup>
 	
 	<s:Label text="Output:" />
-	<s:TextArea id="scriptOutput" width="100%" height="100%" />
+	<s:TextArea id="scriptOutput" fontFamily="Courier" width="100%" height="100%" />
 	
 </s:Application>
