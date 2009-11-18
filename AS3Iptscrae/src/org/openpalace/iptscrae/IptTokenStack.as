@@ -1,8 +1,5 @@
 package org.openpalace.iptscrae
 {
-	import flash.net.getClassByAlias;
-	import flash.utils.getQualifiedClassName;
-	
 	import org.openpalace.iptscrae.token.IptToken;
 
 	public class IptTokenStack
@@ -63,6 +60,9 @@ package org.openpalace.iptscrae
 		}
 		
 		public function pick(position:uint):IptToken {
+			if (position > depth-1) {
+				throw new IptError("You requested element #" + position + " from the top of the stack, but there are only " + depth + " element(s) available.");
+			}
 			var token:IptToken;
 			try {
 				token = stack[stackDepth - 1 - position];
@@ -78,7 +78,7 @@ package org.openpalace.iptscrae
 				stack.push(pick(0));
 			}
 			catch (e:Error) {
-				throw new IptError("Unable to duplicate the top element on the stack: " + e.message);
+				throw new IptError(e.message);
 			}
 		}
 	}

@@ -8,6 +8,7 @@ package org.openpalace.iptscrae
 		internal var contextStack:Vector.<IptExecutionContext>;
 		public var parser:IptParser;
 		public var globalVariableStore:IptVariableStore;
+		public var grepMatchData:Array;
 		
 		public var executionContextClass:Class = IptExecutionContext;
 		
