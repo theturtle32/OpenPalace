@@ -7,7 +7,7 @@ package org.openpalace.iptscrae.command.operator
 	import org.openpalace.iptscrae.token.IptToken;
 	import org.openpalace.iptscrae.token.StringToken;
 	
-	public class PlusOperator extends IptCommand
+	public class AdditionOperator extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext):void {
 			var a2:IptToken = context.stack.pop().dereference();
@@ -24,7 +24,7 @@ package org.openpalace.iptscrae.command.operator
 				);
 			}
 			else {
-				throw new IptError("Operator (+): Argument type mismatch.");
+				throw new IptError("Argument type mismatch.");
 			}
 			context.stack.push(result);
 		}

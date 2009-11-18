@@ -7,7 +7,8 @@ package org.openpalace.iptscrae.token
 	{
 		public var name:String;
 		
-		public function VariableToken(name:String) {
+		public function VariableToken(name:String, characterOffset:int = -1) {
+			super(characterOffset);
 			this.name = name.toUpperCase();
 		}
 		

@@ -5,9 +5,9 @@ package org.openpalace.iptscrae.token
 	{
 		public var data:String;
 		
-		public function StringToken(value:String)
+		public function StringToken(value:String, characterOffset:int = -1)
 		{
-			super();
+			super(characterOffset);
 			data = value;
 		}
 		

@@ -5,6 +5,8 @@ package org.openpalace.iptscrae
 
 	public class IptTokenList extends IptToken implements Runnable
 	{
+		public var sourceScript:String;
+		public var characterOffsetCompensation:int = 0;
 		internal var tokenList:Vector.<IptToken>;
 		internal var position:uint = 0;
 		
@@ -49,7 +51,8 @@ package org.openpalace.iptscrae
 			return tokenList.length;
 		}
 		
-		public function addToken(token:IptToken):void {
+		public function addToken(token:IptToken, characterOffset:int = -1):void {
+			token.scriptCharacterOffset = characterOffset;
 			tokenList.push(token);
 		}
 		
@@ -88,7 +91,13 @@ package org.openpalace.iptscrae
 						IptCommand(token).execute(context);
 					}
 					catch (e:IptError) {
-						throw new IptError(IptUtil.className(token) + ": " + e.message);
+						
+						var offsetToReport:int = (e.characterOffset == -1) ?
+								token.scriptCharacterOffset :
+								e.characterOffset;
+						
+						throw new IptError("  " + IptUtil.className(token) + ":\n" + e.message, offsetToReport);
+						
 					}
 				}
 				else {

@@ -6,7 +6,10 @@ package org.openpalace.iptscrae
 	public final class IptDefaultCommands
 	{
 		public static const commands:Object = {
-			"AS3TRACE": AS3TRACECommand,
+			"_TRACE": TRACECommand,
+			"ALARMEXEC": ALARMEXECCommand,
+			"AND": LogicalAndOperator,
+			"ARRAY": ARRAYCommand,
 			"ATOI": ATOICommand,
 			"BREAK": BREAKCommand,
 			"EXEC": EXECCommand,
@@ -16,16 +19,37 @@ package org.openpalace.iptscrae
 			"IF": IFCommand,
 			"IFELSE": IFELSECommand,
 			"ITOA": ITOACommand,
+			"LENGTH": LENGTHCommand,
+			"NOT": LogicalNotOperator,
+			"OR": LogicalOrOperator,
 			"PUT": PUTCommand,
 			"RETURN": RETURNCommand,
+			"STRLEN": STRLENCommand,
+			"STRTOATOM": STRTOATOMCommand,
 			"WHILE": WHILECommand,
-			"+": PlusOperator,
+			"!": LogicalNotOperator,
+			"!=": InequalityOperator,
+			"<>": InequalityOperator,
+			"+": AdditionOperator,
 			"++": UnaryIncrementOperator,
-			"+=": PlusAssignOperator,
-			"-": MinusOperator,
+			"+=": AdditionAssignmentOperator,
+			"-": SubtractionOperator,
+			"--": UnaryDecrementOperator,
+			"-=": SubtractionAssignmentOperator,
+			"*": MultiplicationOperator,
+			"*=": MultiplicationAssignmentOperator,
+			"/": DivisionOperator,
+			"/=": DivisionAssignmentOperator,
+			"%": ModuloOperator,
+			"%=": ModuloAssignmentOperator,
 			"&": ConcatOperator,
+			"&=": ConcatAssignmentOperator,
 			"=": AssignOperator,
-			"<": LessThanOperator
+			"==": EqualityOperator,
+			"<": LessThanOperator,
+			"<=": LessThanOrEqualToOperator,
+			">": GreaterThanOperator,
+			">=": GreaterThanOrEqualToOperator
 		}
 	}
 }

@@ -6,7 +6,7 @@ package org.openpalace.iptscrae.command.operator
 	import org.openpalace.iptscrae.command.IptCommand;
 	import org.openpalace.iptscrae.token.IntegerToken;
 	
-	public class UnaryIncrementOperator extends IptCommand
+	public class SubtractionAssignmentOperator extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext):void {
 			var variable:IptVariable = context.stack.popType(IptVariable);
@@ -14,7 +14,8 @@ package org.openpalace.iptscrae.command.operator
 				throw new IptError("Variable '" + variable.name + "' does not contain a number.");
 			}
 			var originalValue:IntegerToken = IntegerToken(variable.value);
-			variable.value = new IntegerToken(originalValue.data + 1);
+			var amountToSubtract:IntegerToken = context.stack.popType(IntegerToken);
+			variable.value = new IntegerToken(originalValue.data - amountToSubtract.data);
 		}
 	}
 }

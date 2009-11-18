@@ -4,7 +4,7 @@ package org.openpalace.iptscrae.command.operator
 	import org.openpalace.iptscrae.command.IptCommand;
 	import org.openpalace.iptscrae.token.IntegerToken;
 	
-	public class MinusOperator extends IptCommand
+	public class SubtractionOperator extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext) : void
 		{

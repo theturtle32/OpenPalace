@@ -6,7 +6,7 @@ package org.openpalace.iptscrae.command.operator
 	import org.openpalace.iptscrae.command.IptCommand;
 	import org.openpalace.iptscrae.token.IntegerToken;
 	
-	public class UnaryIncrementOperator extends IptCommand
+	public class UnaryDecrementOperator extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext):void {
 			var variable:IptVariable = context.stack.popType(IptVariable);

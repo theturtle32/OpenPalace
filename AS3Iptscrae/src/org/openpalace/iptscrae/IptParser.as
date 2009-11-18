@@ -14,6 +14,7 @@ package org.openpalace.iptscrae
 		private var commandList:Object;
 		private var script:String;
 		private var so:uint;
+		private var offset:int;
 		
 		private var hexNumberTest:RegExp = /^[0-9a-fA-F]{1}$/;
 		private var tokenTest:RegExp = /^[a-zA-Z0-9_]{1}$/;
@@ -30,14 +31,18 @@ package org.openpalace.iptscrae
 			}
 		}
 		
-		public function getCommand(commandName:String):IptCommand {
+		public function getCommand(commandName:String):Class {
 			return commandList[commandName.toUpperCase()];
 		}
 		
 		public function addDefaultCommands():void {
-			for (var commandName:String in IptDefaultCommands.commands) {
-				addCommand(commandName, IptDefaultCommands.commands[commandName]);
-			}
+			addCommands(IptDefaultCommands.commands);
+		}
+		
+		public function addCommands(commands:Object):void {
+			for (var commandName:String in commands) {
+				addCommand(commandName, commands[commandName]);
+			}	
 		}
 		
 		public function addCommand(commandName:String, commandClass:Class):void {
@@ -45,7 +50,7 @@ package org.openpalace.iptscrae
 			if (commandList[ucCommandName] != null) {
 				throw new IptError("Cannot add command. Command " + ucCommandName + " already defined.");
 			}
-			commandList[commandName.toUpperCase()] = new commandClass();
+			commandList[commandName.toUpperCase()] = commandClass;
 		}
 		
 		public function removeCommand(commandName:String):void {
@@ -69,7 +74,7 @@ package org.openpalace.iptscrae
 				return script.charAt(pos);
 		}
 		
-		public function tokenize(script:String):IptTokenList {
+		public function tokenize(script:String, nestedCharCountOffset:int = 0):IptTokenList {
 			this.script = script;
 			so = 0;
 			var tokenList:IptTokenList = new IptTokenList();
@@ -77,6 +82,7 @@ package org.openpalace.iptscrae
 			var arrayDepth:int = 0;
 			
 			while((char = currentChar()) != null && char.charCodeAt(0) != 0) { 
+				offset = so;
 				
 				if(char == " " || char == "\t" || char == "\r" || char == "\n") { // || char == "'"
 					so++;
@@ -87,157 +93,143 @@ package org.openpalace.iptscrae
 						so++;
 					}
 				}
-					
+				
 				else if(char == '{') {
-					tokenList.addToken(parseAtomList());
+					tokenList.addToken(parseAtomList(so + nestedCharCountOffset), offset + nestedCharCountOffset);
 				}
 					
 				else if(char == '"') {
-					tokenList.addToken(parseStringLiteral());
+					tokenList.addToken(parseStringLiteral(), offset + nestedCharCountOffset);
 				}
 					
 				else {
 					if(char == '}') {
-						throw new IptError("Parse error: unexpected '}' encountered at character offset " + so + ".");
+						throw new IptError("Parse error: unexpected '}' encountered", offset + nestedCharCountOffset);
 					}
 					if(char == '[') {
 						so ++;
 						arrayDepth ++;
-						tokenList.addToken(new ArrayMarkToken());
+						tokenList.addToken(new ArrayMarkToken(), offset + nestedCharCountOffset);
 					}
 					else if(char == ']') {
 						arrayDepth --;
 						if (arrayDepth < 0) {
-							throw new IptError("Parse error: encountered a ']' without a matching '['.  Character offset " + so + ".");
+							throw new IptError("Parse error: encountered a ']' without a matching '['.", offset + nestedCharCountOffset);
 						}
 						so ++;
-						tokenList.addToken(popArrayDef(tokenList));
-						//pushNewAtom(IptAtom.TYPE_ARRAY, popArrayDef());
+						tokenList.addToken(popArrayDef(tokenList), offset + nestedCharCountOffset);
 					}
 					else if(char == '!') {
-						if (arrayDepth > 0) {
-							throw new IptError("Cannot use operator inside an array at character " + so + ".");
-						} 
 						if(sc(1) == '=') {
-							tokenList.addToken(getCommand("!="));
+							tokenList.addToken(new (getCommand("!="))(), offset + nestedCharCountOffset);
 							so += 2;
 						}
 						else {
-							tokenList.addToken(getCommand("!"));
+							tokenList.addToken(new (getCommand("!"))(), offset + nestedCharCountOffset);
 							so ++;
 						}
 					}
+
+
+
+
 					else if(char == '=') {
-						if (arrayDepth > 0) {
-							throw new IptError("Parse error: Cannot use operator inside an array at character " + so + ".");
-						} 
 						if(sc(1) == '=') {
-							tokenList.addToken(getCommand("=="));
+							tokenList.addToken(new (getCommand("=="))(), offset + nestedCharCountOffset);
 							so += 2;
 						}
 						else {
-							tokenList.addToken(getCommand("="));
+							tokenList.addToken(new (getCommand("="))(), offset + nestedCharCountOffset);
 							so ++;
 						}
 					}
 					else if(char == '+') {
-						if (arrayDepth > 0) {
-							throw new IptError("Parse error: Cannot use operator inside an array at character " + so + ".");
-						} 
 						if(sc(1) == '+') {
-							tokenList.addToken(getCommand("++"));
+							tokenList.addToken(new (getCommand("++"))(), offset + nestedCharCountOffset);
 							so += 2;
 						}
 						else if(sc(1) == '=') {
-							tokenList.addToken(getCommand("+="));
+							tokenList.addToken(new (getCommand("+="))(), offset + nestedCharCountOffset);
 							so += 2;
 						}
 						else {
-							tokenList.addToken(getCommand("+"));
+							tokenList.addToken(new (getCommand("+"))(), offset + nestedCharCountOffset);
 							so ++;
 						}
 					}
 					else if(char == '-' && (sc(1) < '0' || sc(1) > '9')) {
-						if (arrayDepth > 0) {
-							throw new IptError("Parse error: Cannot use operator inside an array at character " + so + ".");
-						} 
 						if(sc(1) == '-') {
-							tokenList.addToken(getCommand("--"));
+							tokenList.addToken(new (getCommand("--"))(), offset + nestedCharCountOffset);
 							so += 2;
 						}
 						else if(sc(1) == '=') {
-							tokenList.addToken(getCommand("-="));
+							tokenList.addToken(new (getCommand("-="))(), offset + nestedCharCountOffset);
 							so += 2;
 						}
 						else {
-							tokenList.addToken(getCommand("-"));
+							tokenList.addToken(new (getCommand("-"))(), offset + nestedCharCountOffset);
 							so++;
 						}
 					}
 					else if(char == '<') {
-						if (arrayDepth > 0) {
-							throw new IptError("Parse error: Cannot use operator inside an array at character " + so + ".");
-						} 
 						if (sc(1) == '>') {
-							tokenList.addToken(getCommand("<>"));
+							tokenList.addToken(new (getCommand("<>"))(), offset + nestedCharCountOffset);
 							so += 2;
 						}
 						else if (sc(1) == '=') {
-							tokenList.addToken(getCommand("<="));
+							tokenList.addToken(new (getCommand("<="))(), offset + nestedCharCountOffset);
 							so += 2;
 						}
 						else {
-							tokenList.addToken(getCommand("<"));
+							tokenList.addToken(new (getCommand("<"))(), offset + nestedCharCountOffset);
 							so ++;
 						}
 					}
 					else if(char == '>') {
-						if (arrayDepth > 0) {
-							throw new IptError("Parse error: Cannot use operator inside an array at character " + so + ".");
-						} 
 						if (sc(1) == "=") {
-							tokenList.addToken(getCommand(">="));
+							tokenList.addToken(new (getCommand(">="))(), offset + nestedCharCountOffset);
 							so += 2;
 						}
 						else {
-							tokenList.addToken(getCommand(">"));
+							tokenList.addToken(new (getCommand(">"))(), offset + nestedCharCountOffset);
 							so ++;
 						}
 					}
 					else if(char == '*' || char == '/' || char == '&' || char == '%') {
-						if (arrayDepth > 0) {
-							throw new IptError("Parse error: Cannot use operator inside an array at character " + so + ".");
-						}
 						var operator:String = char;
 						if (sc(1) == '=') {
 							operator += "=";
 							so ++;
 						}
-						tokenList.addToken(getCommand(operator));
+						tokenList.addToken(new (getCommand(operator))(), offset + nestedCharCountOffset);
 						so++;
 					}
 					else if(char == '-' || char >= '0' && char <= '9') {
-						tokenList.addToken(parseNumber());
+						tokenList.addToken(parseNumber(), offset + nestedCharCountOffset);
 					}
 					else if(char == '_' || char >= 'a' && char <= 'z' || char >= 'A' && char <= 'Z') {
-						tokenList.addToken(parseSymbol());
+						tokenList.addToken(parseSymbol(), offset + nestedCharCountOffset);
 					}
 					else {
-						throw new IptError("Parse error: Unexpected character at character offset " + so + ", charcode: " + char.charCodeAt(0) + " -- '" + char + "'");
+						throw new IptError("Parse error: Unexpected character, charcode: " + char.charCodeAt(0) + " -- '" + char + "'",
+											offset + nestedCharCountOffset);
 					}
 				}
 			}
-			
+			tokenList.sourceScript = script;
+			tokenList.characterOffsetCompensation = nestedCharCountOffset;
 			return tokenList;
 		}
 		
-		private function parseAtomList():IptTokenList {
+		private function parseAtomList(runningOffset:int = 0):IptTokenList {
 			var nest:int = 0;
 			var qFlag:Boolean = false;
 			var atomListString:String = "";
+			
 			if(currentChar() == '{') {
 				so++;
 			}
+			
 			while(currentChar() != null && currentChar().charCodeAt(0) != 0 && (currentChar() != '}' || nest > 0)) 
 			{
 				if(qFlag)
@@ -278,7 +270,7 @@ package org.openpalace.iptscrae
 			var savedScript:String = script;
 			
 			// parse inner script block
-			var tokenList:IptTokenList = tokenize(atomListString);
+			var tokenList:IptTokenList = tokenize(atomListString, runningOffset+1);
 			
 			// restore parsing context back to the outer script
 			script = savedScript;
@@ -374,9 +366,9 @@ package org.openpalace.iptscrae
 				sc = currentChar()
 			}
 			
-			var command:IptCommand = getCommand(token);
-			if (command) {
-				return command;
+			var commandClass:Class = getCommand(token);
+			if (commandClass) {
+				return IptCommand(new commandClass());
 			}
 			
 			return new VariableToken(token);

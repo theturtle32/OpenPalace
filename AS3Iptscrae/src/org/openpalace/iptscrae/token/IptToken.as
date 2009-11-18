@@ -2,8 +2,11 @@ package org.openpalace.iptscrae.token
 {
 	public class IptToken
 	{
-		public function IptToken()
+		public var scriptCharacterOffset:int;
+		
+		public function IptToken(characterOffset:int = -1)
 		{
+			scriptCharacterOffset = characterOffset;
 		}
 		
 		public function clone():IptToken {

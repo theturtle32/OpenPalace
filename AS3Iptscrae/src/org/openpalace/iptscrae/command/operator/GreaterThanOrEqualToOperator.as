@@ -8,7 +8,7 @@ package org.openpalace.iptscrae.command.operator
 	import org.openpalace.iptscrae.token.IptToken;
 	import org.openpalace.iptscrae.token.StringToken;
 	
-	public class LessThanOperator extends IptCommand
+	public class GreaterThanOrEqualToOperator extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext):void {
 			var arg2:IptToken = context.stack.popType(IptToken);
@@ -16,14 +16,14 @@ package org.openpalace.iptscrae.command.operator
 			if (arg1 is IntegerToken && arg2 is IntegerToken) {
 				context.stack.push(
 					new IntegerToken(
-						(IntegerToken(arg1).data < IntegerToken(arg2).data) ? 1 : 0
+						(IntegerToken(arg1).data >= IntegerToken(arg2).data) ? 1 : 0
 					)
 				);
 			}
 			else if (arg1 is StringToken && arg2 is StringToken) {
 				context.stack.push(
 					new IntegerToken(
-						(StringToken(arg1).data.toUpperCase() < StringToken(arg2).data.toUpperCase()) ? 1 : 0
+						(StringToken(arg1).data.toUpperCase() >= StringToken(arg2).data.toUpperCase()) ? 1 : 0
 					)
 				);
 			}
