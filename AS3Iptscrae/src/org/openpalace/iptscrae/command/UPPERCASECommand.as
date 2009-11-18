@@ -1,6 +1,6 @@
-package org.openpalace.iptscrae
+package org.openpalace.iptscrae.command
 {
-	import org.openpalace.iptscrae.command.IptCommand;
+	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.token.StringToken;
 	
 	public class UPPERCASECommand extends IptCommand

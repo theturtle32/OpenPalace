@@ -46,7 +46,7 @@
     <classEntry path="org.openpalace.iptscrae.command.STACKDEPTHCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.OVERCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.LOWERCASECommand"/>
-    <classEntry path="org.openpalace.iptscrae.UPPERCASECommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.UPPERCASECommand"/>
     <classEntry path="org.openpalace.iptscrae.command.IPTVERSIONCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.GREPSUBCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.GREPSTRCommand"/>
