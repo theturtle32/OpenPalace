@@ -123,9 +123,11 @@ package net.codecomposer.palace.rpc
 		[Bindable]
 		public var utf8:Boolean = false;
 		[Bindable]
-		public var port:int = 0;
+		public var port:uint = 0;
 		[Bindable]
 		public var host:String = null;
+		[Bindable]
+		public var initialRoom:uint = 0;
 		[Bindable]
 		public var state:int = STATE_DISCONNECTED;
 		[Bindable]
@@ -251,7 +253,7 @@ package net.codecomposer.palace.rpc
 		// Begin public functions for user interaction
 		// ***************************************************************
 		
-		public function connect(userName:String, host:String, port:int = 9998):void {
+		public function connect(userName:String, host:String, port:uint = 9998, initialRoom:uint = 0):void {
 			PalaceClient.loaderContext.checkPolicyFile = true;
 			
 			host = host.toLowerCase();
@@ -262,6 +264,7 @@ package net.codecomposer.palace.rpc
 			
 			this.host = host;
 			this.port = port;
+			this.initialRoom = initialRoom;
 			this.userName = userName;
 			
 			if (connected || (socket && socket.connected)) {
@@ -1050,7 +1053,7 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(0);
         
 			// desired room id
-			socket.writeShort(0);
+			socket.writeShort(initialRoom);
 
 			// Protocol spec lists these as reserved, and says there shouldn't
 			// be anything put in them... but the server records these 6 bytes
