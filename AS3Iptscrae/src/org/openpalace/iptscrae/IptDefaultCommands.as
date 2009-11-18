@@ -26,6 +26,8 @@ package org.openpalace.iptscrae
 			"RETURN": RETURNCommand,
 			"STRLEN": STRLENCommand,
 			"STRTOATOM": STRTOATOMCommand,
+			"TOPTYPE": TOPTYPECommand,
+			"VARTYPE": VARTYPECommand,
 			"WHILE": WHILECommand,
 			"!": LogicalNotOperator,
 			"!=": InequalityOperator,

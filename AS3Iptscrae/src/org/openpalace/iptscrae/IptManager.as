@@ -60,7 +60,11 @@ package org.openpalace.iptscrae
 				tokenList.execute(context);
 			}
 			catch(e:IptError) {
-				outputError(script, e, tokenList.characterOffsetCompensation);
+				var charOffset:int = 0;
+				if (tokenList) {
+					charOffset = tokenList.characterOffsetCompensation;
+				}
+				outputError(script, e, charOffset);
 			}
 			contextStack.pop();
 		}

@@ -24,7 +24,6 @@
     <classEntry path="org.openpalace.iptscrae.IptVariableStore"/>
     <classEntry path="org.openpalace.iptscrae.command.EXECCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.operator.PlusOperator"/>
-    <classEntry path="org.openpalace.iptscrae.command.operator.MinusOperator"/>
     <classEntry path="org.openpalace.iptscrae.IptUtil"/>
     <classEntry path="org.openpalace.iptscrae.IptDefaultCommands"/>
     <classEntry path="org.openpalace.iptscrae.token.ArrayMarkToken"/>
@@ -34,12 +33,14 @@
     <classEntry path="org.openpalace.iptscrae.command.operator.ConcatOperator"/>
     <classEntry path="org.openpalace.iptscrae.command.operator.AssignOperator"/>
     <classEntry path="org.openpalace.iptscrae.command.operator.LessThanOperator"/>
-    <classEntry path="org.openpalace.iptscrae.command.operator.PlusAssignOperator"/>
     <classEntry path="org.openpalace.iptscrae.command.operator.UnaryIncrementOperator"/>
     <classEntry path="org.openpalace.iptscrae.command.BREAKCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.RETURNCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.GETCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.PUTCommand"/>
+    <classEntry path="org.openpalace.iptscrae.token.ArrayParseToken"/>
+    <classEntry path="org.openpalace.iptscrae.command.TOPTYPECommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.VARTYPECommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

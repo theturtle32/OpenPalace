@@ -2,7 +2,7 @@ package org.openpalace.iptscrae
 {
 	import org.openpalace.iptscrae.command.IptCommand;
 	import org.openpalace.iptscrae.token.ArrayMarkToken;
-	import org.openpalace.iptscrae.token.ArrayToken;
+	import org.openpalace.iptscrae.token.ArrayParseToken;
 	import org.openpalace.iptscrae.token.IntegerToken;
 	import org.openpalace.iptscrae.token.IptToken;
 	import org.openpalace.iptscrae.token.StringToken;
@@ -117,7 +117,7 @@ package org.openpalace.iptscrae
 							throw new IptError("Parse error: encountered a ']' without a matching '['.", offset + nestedCharCountOffset);
 						}
 						so ++;
-						tokenList.addToken(popArrayDef(tokenList), offset + nestedCharCountOffset);
+						tokenList.addToken(new ArrayParseToken(), offset + nestedCharCountOffset);
 					}
 					else if(char == '!') {
 						if(sc(1) == '=') {
@@ -335,22 +335,6 @@ package org.openpalace.iptscrae
 				so++;
 			}
 			return new StringToken(result);
-		}
-		
-		private function popArrayDef(tokenList:IptTokenList):ArrayToken	{
-			var array:ArrayToken = new ArrayToken();
-			
-			while ( tokenList.length > 0 ) {
-				var token:IptToken = tokenList.popToken();
-				if (!(token is ArrayMarkToken)) {
-					array.data.unshift(token);
-				}
-				else {
-					break;
-				}
-			}
-			
-			return array;
 		}
 		
 		public function parseSymbol():IptCommand {

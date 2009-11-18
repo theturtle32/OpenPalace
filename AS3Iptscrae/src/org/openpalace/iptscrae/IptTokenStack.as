@@ -65,7 +65,7 @@ package org.openpalace.iptscrae
 		public function pick(position:uint):IptToken {
 			var token:IptToken;
 			try {
-				token = stack[position - 1 - position];
+				token = stack[stackDepth - 1 - position];
 			}
 			catch (e:Error) {
 				throw new IptError("Unable to pick element " + position.toString() + " from the stack: " + e.message);
