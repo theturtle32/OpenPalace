@@ -125,21 +125,22 @@
 				var parameters:Object = URLUtil.stringToObject(browserManager.fragment);
 				if (parameters.palace != null) {
 					var url:String = String(parameters.palace).toLowerCase();
-					var match:Array = url.match(/^palace:\/\/(.*)$/);
+					var match:Array = url.match(/^(palace:\/\/){0,1}(.*?):?([0-9]*)\/?([0-9]*)$/);
+					var port:uint = 9998;
+					var initialRoom:uint = 0;
+					var hostName:String;
 					if (match && match.length > 0) {
-						url = match[1];
+						hostName = match[2];
+						if (match[3]) {
+							port = parseInt(match[3]);
+						}
+						if (match[4]) {
+							initialRoom = parseInt(match[4]);
+						}
 					}
 					
-					var parts:Array = url.split(':');
-					var hostName:String = parts[0];
-					var port:Number = 9998;
-					if ( parts[1] && String(parts[1]).length > 0 ) {
-						port = uint(parts[1]);
-					} 
-					trace("palace = " + hostName + " port " + port);
-					
 					if (hostName && hostName.length > 0) {
-						palace.connect(preferences.userName, hostName, port);
+						palace.connect(preferences.userName, hostName, port, initialRoom);
 					}
 				}
 			}
