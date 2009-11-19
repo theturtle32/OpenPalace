@@ -7,11 +7,6 @@ package org.openpalace.iptscrae.command
 	
 	public class FOREACHCommand extends IptCommand
 	{
-		public function FOREACHCommand()
-		{
-			super();
-		}
-		
 		override public function execute(context:IptExecutionContext):void {
 			var array:ArrayToken = context.stack.popType(ArrayToken);
 			var tokenList:IptTokenList = context.stack.popType(IptTokenList);

@@ -75,7 +75,7 @@ package org.openpalace.iptscrae
 		
 		public function duplicate():void {
 			try {
-				stack.push(pick(0));
+				push(pick(0));
 			}
 			catch (e:Error) {
 				throw new IptError(e.message);
