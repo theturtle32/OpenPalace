@@ -38,6 +38,7 @@ package org.openpalace.iptscrae
 			"STACKDEPTH": STACKDEPTHCommand,
 			"STRLEN": STRLENCommand,
 			"STRTOATOM": STRTOATOMCommand,
+			"SWAP": SWAPCommand,
 			"TICKS": TICKSCommand,
 			"TOPTYPE": TOPTYPECommand,
 			"UPPERCASE": UPPERCASECommand,
