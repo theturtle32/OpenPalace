@@ -6,9 +6,11 @@ package org.openpalace.iptscrae
 	public class IptManager extends EventDispatcher implements IIptManager
 	{
 		internal var contextStack:Vector.<IptExecutionContext>;
+		public var callStack:Vector.<IptTokenList> = new Vector.<IptTokenList>();
 		public var parser:IptParser;
 		public var globalVariableStore:IptVariableStore;
 		public var grepMatchData:Array;
+		public var currentScript:String;
 		
 		public var executionContextClass:Class = IptExecutionContext;
 		
@@ -37,7 +39,45 @@ package org.openpalace.iptscrae
 			var context:IptExecutionContext = new executionContextClass(this);
 			executeTokenListWithContext(alarm.tokenList, context);
 		}
+		
+		public function clearCallStack():void {
+			callStack = new Vector.<IptTokenList>();
+		}
 
+		public function get currentTokenList():IptTokenList {
+			if (callStack.length > 0) {
+				return callStack[callStack.length-1];
+			}
+			return null;
+		}
+		
+		public function get running():Boolean {
+			return Boolean(callStack.length > 0);
+		}
+		
+		public function step():void {
+			var tokenList:IptTokenList = currentTokenList;
+			if (tokenList) {
+				if (tokenList.running) {
+					try {
+						tokenList.step();
+						if (!tokenList.running) {
+							callStack.pop();
+						}
+					}
+					catch(e:IptError) {
+						var charOffset:int = 0;
+						charOffset = tokenList.characterOffsetCompensation;
+						outputError(currentScript, e, charOffset);
+						clearCallStack();
+					}
+				}
+				else {
+					callStack.pop();
+				}
+			}
+		}
+		
 		public function execute(script:String):void {
 			var context:IptExecutionContext = new executionContextClass(this);
 			executeWithContext(script, context);
@@ -46,15 +86,18 @@ package org.openpalace.iptscrae
 		public function executeTokenListWithContext(tokenList:IptTokenList, context:IptExecutionContext):void {
 			contextStack.push(context);
 			try {
+				currentScript = tokenList.sourceScript;
 				tokenList.execute(context);
 			}
 			catch(e:IptError) {
 				outputError(tokenList.sourceScript, e);
+				clearCallStack();
 			}
 			contextStack.pop();	
 		}
 		
 		public function executeWithContext(script:String, context:IptExecutionContext):void {
+			currentScript = script;
 			contextStack.push(context);
 			try {
 				var tokenList:IptTokenList = parser.tokenize(script);
@@ -65,7 +108,8 @@ package org.openpalace.iptscrae
 				if (tokenList) {
 					charOffset = tokenList.characterOffsetCompensation;
 				}
-				outputError(script, e, charOffset);
+				outputError(currentScript, e, charOffset);
+				clearCallStack();
 			}
 			contextStack.pop();
 		}

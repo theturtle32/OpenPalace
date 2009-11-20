@@ -32,6 +32,9 @@ For log output, use the "_TRACE" command:
 			
 			private function doScript():void {
 					iptManager.execute(scriptInput.text);
+					while (iptManager.running) {
+						iptManager.step();
+					}
 			}
 			
 			private var commands:Object = {

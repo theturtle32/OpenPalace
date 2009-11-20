@@ -7,8 +7,11 @@ package org.openpalace.iptscrae
 	{
 		public var sourceScript:String;
 		public var characterOffsetCompensation:int = 0;
+		public var running:Boolean = false;
+		public var context:IptExecutionContext;
 		internal var tokenList:Vector.<IptToken>;
 		internal var position:uint = 0;
+		
 		
 		public function IptTokenList(tokenList:Vector.<IptToken> = null)
 		{
@@ -23,6 +26,7 @@ package org.openpalace.iptscrae
 		
 		public function reset():void {
 			position = 0;
+			running = true;
 		}
 		
 		public function getNextToken():IptToken {
@@ -71,20 +75,30 @@ package org.openpalace.iptscrae
 		public override function clone():IptToken {
 			return new IptTokenList(tokenList);
 		}
-		
+
 		public function execute(context:IptExecutionContext):void {
+			this.context = context;
 			reset();
-			while (tokensAvailable) {
+			context.manager.callStack.push(this);
+		}
+		
+		public function end():void {
+			running = false;
+		}
+		
+		public function step():void {
+			if (running && tokensAvailable) {
 				if (context.returnRequested) {
 					context.returnRequested = false;
-					break;
+					end();
+					return;
 				}
-				if (context.exitRequested) {
-					break;
+				if (context.exitRequested || context.breakRequested) {
+					end();
+					return;
 				}
-				if (context.breakRequested) {
-					break;
-				}
+				
+				// Process next token...
 				var token:IptToken = getNextToken();
 				if (token is IptCommand) {
 					try {
@@ -95,14 +109,19 @@ package org.openpalace.iptscrae
 						var offsetToReport:int = (e.characterOffset == -1) ?
 								token.scriptCharacterOffset :
 								e.characterOffset;
-						
+						end();						
 						throw new IptError("  " + IptUtil.className(token) + ":\n" + e.message, offsetToReport);
-						
 					}
 				}
 				else {
 					context.stack.push(token);
 				}
+				if (!tokensAvailable) {
+					end();
+				}
+			}
+			else {
+				end();
 			}
 		}
 	}
