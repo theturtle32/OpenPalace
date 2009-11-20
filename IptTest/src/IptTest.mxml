@@ -2,25 +2,52 @@
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
 			   xmlns:s="library://ns.adobe.com/flex/spark" 
 			   xmlns:mx="library://ns.adobe.com/flex/halo"
-			   creationComplete="resetEngine()">
+			   creationComplete="handleCreationComplete()">
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<fx:String id="infoText">
+This interpreter console runs a non-Palace-specific version of Iptscrae. All the core commands and operators are supported, but the Palace-specific ones are not.
+
+You cannot use any commands that draw, manipulate spots, work with props, etc.
+
+For log output, use the "_TRACE" command:
+"Hello there!" _TRACE
+		</fx:String>
 	</fx:Declarations>
 
 	<fx:Script>
 		<![CDATA[
+			import customCommands.SAYCommand;
+			
+			import mx.controls.Alert;
+			
 			import org.openpalace.iptscrae.IptEngineEvent;
 			
 			private var iptManager:TestIptscraeManager;
+			
+			private function handleCreationComplete():void {
+				resetEngine();
+				Alert.show(infoText, "Message", Alert.OK);
+			}
 			
 			private function doScript():void {
 					iptManager.execute(scriptInput.text);
 			}
 			
+			private var commands:Object = {
+				"SAY": SAYCommand,
+				"LOCALMSG": SAYCommand,
+				"LOGMSG": SAYCommand,
+				"ROOMMSG": SAYCommand,
+				"GLOBALMSG": SAYCommand,
+				"SUSRMSG": SAYCommand,
+				"STATUSMSG": SAYCommand
+			};
+			
 			private function resetEngine():void {
 				iptManager = new TestIptscraeManager();
 				iptManager.addEventListener(IptEngineEvent.TRACE_MESSAGE, handleScriptTrace);
-				iptManager.parser.addCommand("SAY", SAYCommand);
+				iptManager.parser.addCommands(commands);
 				scriptOutput.text = "";
 			}
 			
@@ -41,7 +68,20 @@
 	</s:layout>
 	
 	<s:Label text="Script:" />
-	<s:TextArea id="scriptInput" width="100%" height="100%" />
+	<s:TextArea id="scriptInput" width="100%" height="100%">
+		<s:text>
+			<![CDATA[; FizzBuz example in Iptscrae
+1 a =
+{
+   "" b =
+   { "fizz" b &= } a 3 % 0 == IF
+   { "buzz" b &= } a 5 % 0 == IF
+   { a ITOA } { b } b STRLEN 0 == IFELSE _TRACE
+   a ++
+}
+{ a 100 <= } WHILE]]>
+		</s:text>
+	</s:TextArea>
 	
 	<s:HGroup gap="10">
 		<s:Button label="Execute!" click="doScript()" />
