@@ -73,11 +73,11 @@ For log output, use the "_TRACE" command:
 			<![CDATA[; FizzBuz example in Iptscrae
 1 a =
 {
-   "" b =
-   { "fizz" b &= } a 3 % 0 == IF
-   { "buzz" b &= } a 5 % 0 == IF
-   { a ITOA } { b } b STRLEN 0 == IFELSE _TRACE
-   a ++
+"" b =
+{ "fizz" b &= } a 3 % 0 == IF
+{ "buzz" b &= } a 5 % 0 == IF
+{ a ITOA } { b } b STRLEN 0 == IFELSE _TRACE
+a ++
 }
 { a 100 <= } WHILE]]>
 		</s:text>

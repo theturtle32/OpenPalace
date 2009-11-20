@@ -55,6 +55,7 @@
     <classEntry path="org.openpalace.iptscrae.command.BEEPCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.EXITCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.TICKSCommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.TRACESTACKCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

@@ -14,5 +14,9 @@ package org.openpalace.iptscrae.token
 		public override function clone():IptToken {
 			return new StringToken(data);
 		}
+		
+		override public function toString():String {
+			return "[StringToken value=\"" + data + "\"]";
+		}
 	}
 }

@@ -18,5 +18,9 @@ package org.openpalace.iptscrae.token
 		override public function toBoolean():Boolean {
 			return Boolean(data != 0);
 		}
+		
+		override public function toString():String {
+			return "[IntegerToken value=\"" + data.toString() + "\"]";
+		}
 	}
 }
