@@ -44,6 +44,7 @@ package org.openpalace.iptscrae
 			"STRINDEX": STRINDEXCommand,
 			"STRLEN": STRLENCommand,
 			"STRTOATOM": STRTOATOMCommand,
+			"SUBSTR": SUBSTRCommand,
 			"SUBSTRING": SUBSTRINGCommand,
 			"SWAP": SWAPCommand,
 			"TANGENT": TANGENTCommand,
