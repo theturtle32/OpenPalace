@@ -12,6 +12,8 @@ You cannot use any commands that draw, manipulate spots, work with props, etc.
 
 For log output, use the "_TRACE" command:
 "Hello there!" _TRACE
+
+To add a breakpoint, type the keyword "_BREAKPOINT" into the code where you want to pause execution.
 		</fx:String>
 	</fx:Declarations>
 
