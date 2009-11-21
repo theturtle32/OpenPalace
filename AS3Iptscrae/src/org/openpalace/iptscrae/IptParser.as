@@ -131,6 +131,8 @@ package org.openpalace.iptscrae
 
 
 
+
+
 					else if(char == '=') {
 						if(sc(1) == '=') {
 							tokenList.addToken(new (getCommand("=="))(), offset + nestedCharCountOffset);
@@ -356,6 +358,35 @@ package org.openpalace.iptscrae
 			}
 			
 			return new VariableToken(token);
+		}
+		
+		private var eventHandlerSearch:RegExp = /ON[\s\r\n]*([a-zA-Z0-9_]*)[\s\r\n]*\{(.*)$/sim;
+		/**
+		 * Parses event handlers into individual token lists. 
+		 * 
+		 * @param script String containing the event handlers and their
+		 * scripts.
+		 * @return An object.  Keys are event handler names, values are
+		 * IptTokenList instances 
+		 * 
+		 */		
+		public function parseEventHandlers(script:String):Object {
+			var handlers:Object = {};
+			this.script = script;
+			while (true) {
+				var match:Array = this.script.match(eventHandlerSearch);
+				if (match && match.length > 2) {
+					var handlerName:String = String(match[1]).toUpperCase();
+					this.script = match[2];
+					so = offset = 0;
+					var tokenList:IptTokenList = parseAtomList();
+					handlers[handlerName] = tokenList;
+				}
+				else {
+					break;
+				}
+			}
+			return handlers;
 		}
 	}
 }

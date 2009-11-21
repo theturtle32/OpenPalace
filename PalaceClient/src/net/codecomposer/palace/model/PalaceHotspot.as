@@ -245,10 +245,6 @@ package net.codecomposer.palace.model
 			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + numPoints);
 		}
 		
-		private function initScriptParser(script:String):void {
-			scriptCursor = 0;
-		}
-		
 		public function getEventHandler(eventType:int):IptTokenList {
 			if(nbrScripts > 0 && (scriptEventMask & 1 << eventType) != 0)
 			{
@@ -263,168 +259,24 @@ package net.codecomposer.palace.model
 			}
 			return null;
 		}
-		
-		private function parseSpotEventHandler():void {
-			var script:String = "";
-			if(!getScriptToken()) {
-				return;
-			}
-			
-			var eventType:int = IptEventHandler.getEventType(gToken);
-			if(eventType == IptEventHandler.TYPE_UNHANDLED) {
-				trace("Invalid Event Handler: ON " + gToken);
-			}
-			
-			getScriptToken();
-			var braceCnt:int = 1;
-			for(var doneParse:Boolean = false; !doneParse && getScriptToken();)
-				switch(gToken.charAt(0))
-				{
-					case "(": // '(' 40
-					case ")": // ')' 41
-						break;
-					
-					case "}": // '}' 125
-						if(--braceCnt == 0) {
-							doneParse = true;
-						}
-						else {
-							script = script + "} ";
-						}
-						break;
-					
-					case "{": // '{' 123
-						braceCnt++;
-						script = script + "{ ";
-						break;
-					
-					default:
-						script = script + gToken + " ";
-						break;
-				}
-			
-			var parser:IptParser = PalaceClient.getInstance().palaceController.scriptManager.parser
-			var tokenList:IptTokenList = parser.tokenize(script);
-			var eventHandler:IptEventHandler = new IptEventHandler(eventType, script, tokenList);
-			eventHandlers.push(eventHandler);
-			trace("Got event handler.  Type: " + eventHandler.eventType + " Script: \n" + eventHandler.script);
-			nbrScripts++;
-			scriptEventMask |= 1 << eventType;
-		}
 
-		private var char:String;
-		
-		private function getNextChar():void {
-			scriptCursor ++;
-			getCurrentChar();
-		}
-		
-		private function getCurrentChar():void {
-			char = sc(0);
-		}
-		
-		private function sc(offset:int):String {
-			var pos:int = scriptCursor + offset;
-			if(pos < 0 || pos >= scriptString.length)
-				return null;
-			else
-				return scriptString.charAt(pos);
-		}
-		
-		private function myIsSpace(c:String):Boolean {
-			return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
-		}
-		
-		private var symbolTest:RegExp = /^[^\s"\{\}\[\]\(\)]{1}$/;
-		private var notLetterOrDigitTest:RegExp = /^[^a-zA-Z0-9]{1}$/;
-		
-		private function getScriptToken():Boolean
-		{
-			getCurrentChar();
-			if(ungetFlag)
-			{
-				ungetFlag = false;
-				return true;
-			}
-			while(char != null) 
-			{
-				if (char == null) {
-					return false;
-				}
-				
-				if(myIsSpace(char)) {
-					getNextChar();
-				}
-				else if(char == "#" || char == ";") {
-					for(; char != null && char != "\n" && char != "\r"; getNextChar());
-				}
-				else {
-					if (symbolTest.test(char)) {
-						gToken = char;
-						
-						for (getNextChar(); symbolTest.test(char); getNextChar()) {
-							gToken += char;
-						} 
-						
-						return true;
-					}
-					if(char == "\"") {
-						gToken = char;
-						for(getNextChar(); char != null && char != "\"";) {
-							if(char == "\\")
-							{
-								gToken += char;
-								getNextChar();
-								if(char != null)
-								{
-									gToken += char
-									getNextChar();
-								}
-							} else
-							{
-								gToken += char;
-								getNextChar();
-							}
-						}
-							
-						if(char == "\"")
-						{
-							gToken += char;
-							getNextChar();
-						}
-						return true;
-					}
-					if("{}[]()".indexOf(char) != -1)
-					{
-						gToken = char;
-						getNextChar();
-						return true;
-					}
-					if(char != null)
-					{
-						gToken = "";
-						for(; char != null && !myIsSpace(char) && notLetterOrDigitTest.test(char); getNextChar()) {
-							gToken += char;
-						}
-						return true;
-					}
-					trace("Script error");
-				}
-			}
-			return false;
-		}
-		
 		private function loadScripts():void {
 			nbrScripts = 0;
 			scriptEventMask = 0;
 			if(scriptString)
 			{
-				initScriptParser(scriptString);
-				while(getScriptToken()) { 
-					if(gToken == "ON") {
-						trace("Found event handler.");
-						parseSpotEventHandler();
-					}
+				var parser:IptParser = PalaceClient.getInstance().palaceController.scriptManager.parser
+				var foundHandlers:Object = parser.parseEventHandlers(scriptString);
+				
+				for (var eventName:String in foundHandlers) {
+					var handler:IptTokenList = foundHandlers[eventName];
+					var eventType:int = IptEventHandler.getEventType(eventName)
+					var eventHandler:IptEventHandler =
+						new IptEventHandler(eventType, handler.sourceScript, handler);
+					eventHandlers.push(eventHandler);
+					trace("Got event handler.  Type: " + eventHandler.eventType + " Script: \n" + eventHandler.script);
+					nbrScripts ++;
+					scriptEventMask |= (1 << eventType);
 				}
 			}
 		}
