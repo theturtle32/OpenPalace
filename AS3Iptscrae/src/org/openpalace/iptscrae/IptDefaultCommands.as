@@ -37,6 +37,7 @@ package org.openpalace.iptscrae
 			"OVER": OVERCommand,
 			"PICK": PICKCommand,
 			"PUT": PUTCommand,
+			"RANDOM": RANDOMCommand,
 			"RETURN": RETURNCommand,
 			"SINE": SINECommand,
 			"STACKDEPTH": STACKDEPTHCommand,
