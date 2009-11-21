@@ -89,6 +89,6 @@ a ++
 	</s:HGroup>
 	
 	<s:Label text="Output:" />
-	<s:TextArea id="scriptOutput" fontFamily="Courier" width="100%" height="100%" />
+	<s:TextArea id="scriptOutput" fontFamily="Courier New" width="100%" height="100%" />
 	
 </s:Application>
