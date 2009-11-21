@@ -35,7 +35,7 @@ package org.openpalace.iptscrae
 		}
 		
 		public function traceMessage(message:String):void {
-			var event:IptEngineEvent = new IptEngineEvent(IptEngineEvent.TRACE_MESSAGE);
+			var event:IptEngineEvent = new IptEngineEvent(IptEngineEvent.TRACE);
 			event.message = message;
 			dispatchEvent(event);
 		}
@@ -62,11 +62,10 @@ package org.openpalace.iptscrae
 		
 		public function handleAlarm(event:IptEngineEvent):void {
 			var alarm:IptAlarm = IptAlarm(event.target);
+			if (alarms.indexOf(alarm) == -1) { return; }
 			executeTokenListWithContext(alarm.tokenList, alarm.context);
 			removeAlarm(alarm);
-			if (!running) {
-				run();
-			}
+			start();
 		}
 		
 		public function clearCallStack():void {
@@ -139,6 +138,12 @@ package org.openpalace.iptscrae
 			_running = false;
 			dispatchEvent(new IptEngineEvent(IptEngineEvent.ABORT));
 			dispatchEvent(new IptEngineEvent(IptEngineEvent.FINISH));
+		}
+		
+		public function start():void {
+			if (!_running) {
+				run();
+			}
 		}
 		
 		public function run():void {

@@ -1,6 +1,8 @@
-package net.codecomposer.palace.script
+package net.codecomposer.palace.iptscrae
 {
 	import net.codecomposer.palace.model.PalaceHotspot;
+	
+	import org.openpalace.iptscrae.IptTokenList;
 
 	public interface IPalaceController
 	{
@@ -36,14 +38,12 @@ package net.codecomposer.palace.script
 		function getWhoTarget():int;
 		function beep():void;
 		function getSpotDest(spotId:int):int;
-		function getCurSpotDest():int;
 		function doMacro(macro:int):void;
 		function changeColor(colorNumber:int):void;
 		function getSpotName(spotId:int):String;
 		function getUserName(userId:int):String;
 		function getSelfUserName():String;
 		function getNumRoomUsers():int;
-		function setScriptManager(manager:IptscraeMgr):void;
 		function getSelfUserId():int;
 		function lock(spotId:int):void;
 		function midiStop():void;
@@ -83,14 +83,11 @@ package net.codecomposer.palace.script
 		function showLooseProps():void;
 		function getUserByName(userName:String):int;
 		function getRoomId():int;
-		function getCurrentSpotId():int;
-		function setScriptAlarm(script:String, spotId:int, futureTime:int):void;
+		function setScriptAlarm(tokenList:IptTokenList, spotId:int, futureTime:int):void;
 		function moveSpot(spotId:int, xBy:int, yBy:int):void;
 		function getRoomUserIdByIndex(userIndex:int):int;
 		function getChatString():String;
-		function getSelfSpotDest():int;
 		function setSpotAlarm(spotId:int, futureTime:int):void;
 		function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):void;
-		function executeScript(script:String):int;
 	}
 }

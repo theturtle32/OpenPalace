@@ -1,6 +1,7 @@
 package net.codecomposer.palace.script
 {
 	import flash.utils.Dictionary;
+	import net.codecomposer.palace.iptscrae.IPalaceController;
 
 	public class IptscraeMgr implements IScriptMgr
 	{
@@ -858,7 +859,7 @@ package net.codecomposer.palace.script
 			//grepPattern = null;
 			grepPattern = null;
 			this.pc = pc;
-			pc.setScriptManager(this);
+			//pc.setScriptManager(this);
 			initInterpreter();
 		}
 		
@@ -1366,7 +1367,7 @@ package net.codecomposer.palace.script
 					sf_SETALARM();
 					break;
 				case "ALARMEXEC":
-					sf_ALARMEXEC();
+//					sf_ALARMEXEC();
 					break;
 				case "GET":
 					sf_GET();
@@ -1466,10 +1467,10 @@ package net.codecomposer.palace.script
 					sf_DEST();
 					break;
 				case "ME":
-					sf_ME();
+//					sf_ME();
 					break;
 				case "ID":
-					sf_ME();
+//					sf_ME();
 					break;
 				case "LAUNCHAPP":
 					sf_LAUNCHAPP();
@@ -2161,18 +2162,6 @@ package net.codecomposer.palace.script
 			popString();
 		}
 		
-		public function sf_ME():void
-		{
-			pushInt(pc.getCurrentSpotId());
-		}
-		
-		public function sf_ALARMEXEC():void
-		{
-			var futureTime:int = popInt();
-			var aList:String = popAtomList();
-			pc.setScriptAlarm(aList, pc.getCurrentSpotId(), futureTime);
-		}
-		
 		public function newVariable(sym:String):IptVariable
 		{
 			var vp:IptVariable = new IptVariable(sym, 1, 0, 0);
@@ -2225,7 +2214,7 @@ package net.codecomposer.palace.script
 		public function sf_DEST():void
 		
 		{
-			pushInt(pc.getCurSpotDest());
+//			pushInt(pc.getCurSpotDest());
 		}
 		
 		public function invalidArg():void
@@ -2281,8 +2270,8 @@ package net.codecomposer.palace.script
 		{
 			var spotID:int = popInt();
 			var futureTime:int = popInt();
-			if(spotID == 0)
-				spotID = pc.getCurrentSpotId();
+//			if(spotID == 0)
+//				spotID = pc.getCurrentSpotId();
 			pc.setSpotAlarm(spotID, futureTime);
 		}
 		

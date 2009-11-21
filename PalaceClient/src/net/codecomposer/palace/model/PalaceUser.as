@@ -97,6 +97,18 @@ package net.codecomposer.palace.model
 			props.refresh();
 		}
 		
+		public function get isWizard():Boolean {
+			return Boolean((flags & SUPERUSER) > 0);
+		}
+		
+		public function get isGod():Boolean {
+			return Boolean((flags & GOD) > 0);
+		}
+		
+		public function get isGuest():Boolean {
+			return Boolean((flags & GUEST) > 0);
+		}
+		
 		public function toggleProp(prop:PalaceProp):void {
 			var wearingProp:Boolean = (props.getItemIndex(prop) != -1);
 			if (wearingProp) {

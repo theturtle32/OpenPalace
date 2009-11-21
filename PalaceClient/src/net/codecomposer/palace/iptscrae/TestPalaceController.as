@@ -1,6 +1,9 @@
-package net.codecomposer.palace.script
+package net.codecomposer.palace.iptscrae
 {
 	import net.codecomposer.palace.model.PalaceHotspot;
+	import net.codecomposer.palace.script.IptscraeMgr;
+	
+	import org.openpalace.iptscrae.IptTokenList;
 
 	public class TestPalaceController implements IPalaceController
 	{
@@ -474,7 +477,7 @@ package net.codecomposer.palace.script
 			return 2;
 		}
 		
-		public function setScriptAlarm(script:String, spotId:int, futureTime:int):void
+		public function setScriptAlarm(tokenList:IptTokenList, spotId:int, futureTime:int):void
 		{
 			logResult("setScriptAlarm spotId: " + spotId + " futureTime: " + futureTime);
 		}

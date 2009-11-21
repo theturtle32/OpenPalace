@@ -24,7 +24,11 @@ package net.codecomposer.palace.model
 	import mx.collections.ArrayCollection;
 	
 	import net.codecomposer.palace.event.HotspotEvent;
-	import net.codecomposer.palace.script.IptEventHandler;
+	import net.codecomposer.palace.iptscrae.IptEventHandler;
+	import net.codecomposer.palace.rpc.PalaceClient;
+	
+	import org.openpalace.iptscrae.IptParser;
+	import org.openpalace.iptscrae.IptTokenList;
 
 	[Event(name="stateChanged",type="net.codecomposer.palace.event.HotspotEvent")]
 	[Event(name="moved",type="net.codecomposer.palace.event.HotspotEvent")]
@@ -117,6 +121,12 @@ package net.codecomposer.palace.model
 		
 		public function PalaceHotspot()
 		{
+		}
+		
+		public function get isDoor():Boolean {
+			return Boolean(type == TYPE_PASSAGE ||
+						   type == TYPE_LOCKABLE_DOOR ||
+						   type == TYPE_SHUTABLE_DOOR);
 		}
 		
 		public function changeState(newState:int):void {
@@ -239,14 +249,14 @@ package net.codecomposer.palace.model
 			scriptCursor = 0;
 		}
 		
-		public function getEventHandler(eventType:int):String {
+		public function getEventHandler(eventType:int):IptTokenList {
 			if(nbrScripts > 0 && (scriptEventMask & 1 << eventType) != 0)
 			{
 				for(var i:int = 0; i < nbrScripts; i++)
 				{
 					var eventHandler:IptEventHandler = eventHandlers[i];
 					if (eventHandler.eventType == eventType) {
-						return eventHandler.script;
+						return eventHandler.tokenList;
 					}
 				}
 				
@@ -293,7 +303,9 @@ package net.codecomposer.palace.model
 						break;
 				}
 			
-			var eventHandler:IptEventHandler = new IptEventHandler(eventType, script);
+			var parser:IptParser = PalaceClient.getInstance().palaceController.scriptManager.parser
+			var tokenList:IptTokenList = parser.tokenize(script);
+			var eventHandler:IptEventHandler = new IptEventHandler(eventType, script, tokenList);
 			eventHandlers.push(eventHandler);
 			trace("Got event handler.  Type: " + eventHandler.eventType + " Script: \n" + eventHandler.script);
 			nbrScripts++;
@@ -323,8 +335,7 @@ package net.codecomposer.palace.model
 			return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
 		}
 		
-		private var symbolTest:RegExp = /^[a-zA-Z0-9_\.]{1}|-\d$/;
-		private var symbolTest2:RegExp = /^[a-zA-Z0-9_\.]{1}$/;
+		private var symbolTest:RegExp = /^[^\s"\{\}\[\]\(\)]{1}$/;
 		private var notLetterOrDigitTest:RegExp = /^[^a-zA-Z0-9]{1}$/;
 		
 		private function getScriptToken():Boolean
@@ -349,61 +360,56 @@ package net.codecomposer.palace.model
 				}
 				else {
 					if (symbolTest.test(char)) {
-							gToken = "";
-							
-							if(char == "-")
+						gToken = char;
+						
+						for (getNextChar(); symbolTest.test(char); getNextChar()) {
+							gToken += char;
+						} 
+						
+						return true;
+					}
+					if(char == "\"") {
+						gToken = char;
+						for(getNextChar(); char != null && char != "\"";) {
+							if(char == "\\")
 							{
 								gToken += char;
 								getNextChar();
-							}
-							for(; symbolTest2.test(char); getNextChar()) {
-								gToken += char;
-							}
-							
-							return true;
-						}
-						if(char == "\"")
-						{
-							gToken = char;
-							for(getNextChar(); char != null && char != "\"";)
-								if(char == "\\")
+								if(char != null)
 								{
-									gToken += char;
-									getNextChar();
-									if(char != null)
-									{
-										gToken += char
-										getNextChar();
-									}
-								} else
-								{
-									gToken += char;
+									gToken += char
 									getNextChar();
 								}
-							
-							if(char == "\"")
+							} else
 							{
 								gToken += char;
 								getNextChar();
 							}
-							return true;
 						}
-						if("{}[]()".indexOf(char) != -1)
+							
+						if(char == "\"")
 						{
-							gToken = char;
+							gToken += char;
 							getNextChar();
-							return true;
 						}
-						if(char != null)
-						{
-							gToken = "";
-							for(; char != null && !myIsSpace(char) && notLetterOrDigitTest.test(char); getNextChar()) {
-								gToken += char;
-							}
-							return true;
-						}
-						trace("Script error");
+						return true;
 					}
+					if("{}[]()".indexOf(char) != -1)
+					{
+						gToken = char;
+						getNextChar();
+						return true;
+					}
+					if(char != null)
+					{
+						gToken = "";
+						for(; char != null && !myIsSpace(char) && notLetterOrDigitTest.test(char); getNextChar()) {
+							gToken += char;
+						}
+						return true;
+					}
+					trace("Script error");
+				}
 			}
 			return false;
 		}

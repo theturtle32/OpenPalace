@@ -2,6 +2,7 @@ package net.codecomposer.palace.script
 {
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
+	import net.codecomposer.palace.iptscrae.PalaceController;
 
 	public class IptAlarm
 	{
@@ -40,7 +41,7 @@ package net.codecomposer.palace.script
 		
 		private function handleTimer(event:TimerEvent):void {
 			completed = true;
-			palaceController.handleAlarm(this);
+			//palaceController.handleAlarm(this);
 		}
 		
 		public function start():void {

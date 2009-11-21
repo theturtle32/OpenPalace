@@ -207,6 +207,11 @@ package net.codecomposer.palace.model
 			dispatchEvent(new Event('chatLogUpdated'));
 		}
 		
+		public function logScript(message:String):void {
+			recordChat("<font face=\"Courier New\">" + PalaceUtil.htmlEscape(message) + "</font>\n")
+			dispatchEvent(new Event('chatLogUpdated'));
+		}
+		
 		public function roomWhisper(message:String):void {
 			recordChat("<b><i>*** " + PalaceUtil.htmlEscape(message), "</i></b>\n");
 			dispatchEvent(new Event('chatLogUpdated'));

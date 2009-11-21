@@ -1,5 +1,7 @@
-package net.codecomposer.palace.script
+package net.codecomposer.palace.iptscrae
 {
+	import org.openpalace.iptscrae.IptTokenList;
+
 	public class IptEventHandler
 	{
 		public static const TYPE_SELECT:int = 0;
@@ -33,6 +35,7 @@ package net.codecomposer.palace.script
 		
 		public var eventType:int;
 		public var script:String;
+		public var tokenList:IptTokenList;
 		
 		public static function getEventType(token:String):int
 		{
@@ -103,10 +106,11 @@ package net.codecomposer.palace.script
 			}
 		}
 		
-		public function IptEventHandler(type:int = 0, script:String = "")
+		public function IptEventHandler(type:int = 0, script:String = null, tokenList:IptTokenList = null)
 		{
 			this.eventType = type;
 			this.script = script;
+			this.tokenList = tokenList;
 		}
 	}
 }

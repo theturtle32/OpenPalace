@@ -1,6 +1,6 @@
 package
 {
-	import net.codecomposer.palace.script.TestPalaceController;
+	import net.codecomposer.palace.iptscrae.TestPalaceController;
 	
 	import org.openpalace.iptscrae.IptManager;
 	

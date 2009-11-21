@@ -54,9 +54,9 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
 	import net.codecomposer.palace.record.PalaceDrawRecord;
-	import net.codecomposer.palace.script.IptEventHandler;
+	import net.codecomposer.palace.iptscrae.IptEventHandler;
 	import net.codecomposer.palace.script.IptscraeMgr;
-	import net.codecomposer.palace.script.PalaceController;
+	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
 
 	public class PalaceClient extends EventDispatcher
@@ -510,12 +510,12 @@ package net.codecomposer.palace.rpc
 			if (!connected) {
 				return;
 			}
+			color = Math.max(Math.min(color, 15), 0);
+			currentUser.color = color;
 			socket.writeInt(OutgoingMessageTypes.USER_COLOR);
 			socket.writeInt(2);
 			socket.writeInt(id);
-			color = Math.max(Math.min(color, 15), 0);
 			socket.writeShort(color);
-			currentUser.color = color;
 			socket.flush();
 		}
 				

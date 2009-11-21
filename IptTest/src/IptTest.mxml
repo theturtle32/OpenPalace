@@ -33,6 +33,7 @@ To add a breakpoint, type the keyword "_BREAKPOINT" into the code where you want
 			}
 			
 			private function doScript():void {
+				executeButton.enabled = false;
 				iptManager.execute(scriptInput.text);
 				if (stepCheckbox.selected) {
 					iptManager.pause();
@@ -40,7 +41,6 @@ To add a breakpoint, type the keyword "_BREAKPOINT" into the code where you want
 				else {
 					runScript();
 				}
-				executeButton.enabled = !iptManager.running;
 			}
 			
 			private function runScript():void {
@@ -62,7 +62,6 @@ To add a breakpoint, type the keyword "_BREAKPOINT" into the code where you want
 				iptManager.debugMode = true;
 				iptManager.addEventListener(IptEngineEvent.TRACE_MESSAGE, handleScriptTrace);
 				iptManager.parser.addCommands(commands);
-				iptManager.addEventListener(IptEngineEvent.RESUME, handleResume);
 				iptManager.addEventListener(IptEngineEvent.FINISH, handleScriptEnd);
 				iptManager.addEventListener(IptEngineEvent.ABORT, handleScriptEnd);
 				debugConsole.iptManager = iptManager;
@@ -73,10 +72,6 @@ To add a breakpoint, type the keyword "_BREAKPOINT" into the code where you want
 			private function handleScriptEnd(event:IptEngineEvent):void {
 				executeButton.enabled = true;
 				trace("Script end.");
-			}
-			
-			private function handleResume(event:IptEngineEvent):void {
-				runScript();
 			}
 			
 			private function handleScriptTrace(event:IptEngineEvent):void {

@@ -1,4 +1,4 @@
-package net.codecomposer.palace.script
+package net.codecomposer.palace.iptscrae
 {
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
 	import net.codecomposer.palace.model.PalaceHotspot;
@@ -7,20 +7,31 @@ package net.codecomposer.palace.script
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceUser;
 	import net.codecomposer.palace.rpc.PalaceClient;
+	import net.codecomposer.palace.util.PalaceUtil;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
+	
+	import org.openpalace.iptscrae.IptAlarm;
+	import org.openpalace.iptscrae.IptEngineEvent;
+	import org.openpalace.iptscrae.IptTokenList;
 
 	public class PalaceController implements IPalaceController
 	{
-		private var scriptManager:IptscraeMgr;
+		public var scriptManager:PalaceIptManager;
 		[Bindable]
 		public var output:String;
 		public var client:PalaceClient;
-		private var currentHotSpotId:int = 0;
-		private var alarms:Vector.<IptAlarm> = new Vector.<IptAlarm>();
 		
 		public function PalaceController()
 		{
 			output = "";
+			scriptManager = new PalaceIptManager(this);
+			scriptManager.parser.removeCommand("ALARMEXEC");
+			scriptManager.parser.addCommands(PalaceIptscraeCommands.commands);
+			scriptManager.addEventListener(IptEngineEvent.TRACE, handleTrace);
+		}
+		
+		private function handleTrace(event:IptEngineEvent):void {
+			logResult(event.message);
 		}
 		
 		public function logError(message:String):void {
@@ -29,20 +40,17 @@ package net.codecomposer.palace.script
 		
 		private function logResult(value:String):void {
 			output += value + "\n";
-			client.currentRoom.logMessage("<b>Iptscrae: </b>" + value);
+			client.currentRoom.logScript(value);
 			trace(value);
 		}
-		
-		public function setScriptManager(manager:IptscraeMgr):void
-		{
-			scriptManager = manager;
-		}
-		
+				
 		public function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):void {
-			var script:String = hotspot.getEventHandler(eventType);
-			currentHotSpotId = hotspot.id;
-			if(script != null) {
-				doScript(script);
+			var tokenList:IptTokenList = hotspot.getEventHandler(eventType);
+			if (tokenList) {
+				var context:PalaceIptExecutionContext = new PalaceIptExecutionContext(scriptManager);
+				context.hotspotId = hotspot.id;
+				scriptManager.executeTokenListWithContext(tokenList, context);
+				scriptManager.start();
 			}
 		}
 		
@@ -52,17 +60,12 @@ package net.codecomposer.palace.script
 			}
 		}
 		
-		public function executeScript(script:String):int {
-			currentHotSpotId = 0;
-			return doScript(script);
-		}
 		
-		private function doScript(script:String):int {
+		
+		public function executeScript(script:String):void {
 			if (scriptManager) {
-				return scriptManager.doScript(script);
-			}
-			else {
-				return -1;
+				scriptManager.execute(script);
+				scriptManager.start();
 			}
 		}
 		
@@ -112,20 +115,16 @@ package net.codecomposer.palace.script
 		public function selectHotSpot(spotId:int):void
 		{
 			var hotspot:PalaceHotspot = client.currentRoom.getHotspotById(spotId);
-			var oldHotSpotId:int = currentHotSpotId;
 			if (hotspot) {
 				triggerHotspotEvent(hotspot, IptEventHandler.TYPE_SELECT);
 			}
-			currentHotSpotId = oldHotSpotId;
 		}
 		
 		public function getNumDoors():int
 		{
 			var spotCount:int = 0;
 			for each (var hotspot:PalaceHotspot in client.currentRoom.hotSpots) {
-				if (hotspot.type == PalaceHotspot.TYPE_PASSAGE ||
-					hotspot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR || 
-					hotspot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR) {
+				if (hotspot.isDoor) {
 					spotCount ++;
 				}
 			}
@@ -134,8 +133,7 @@ package net.codecomposer.palace.script
 		
 		public function isGuest():Boolean
 		{
-			logResult("isGuest")
-			return true;
+			return client.currentUser.isGuest;
 		}
 		
 		public function dimRoom(dimLevel:int):void
@@ -155,8 +153,7 @@ package net.codecomposer.palace.script
 		
 		public function isWizard():Boolean
 		{
-			logResult("isWizard");
-			return false;
+			return (client.currentUser.isWizard || client.currentUser.isGod);
 		}
 		
 		public function moveUserAbs(x:int, y:int):void
@@ -218,7 +215,6 @@ package net.codecomposer.palace.script
 			if (prop) {
 				return prop.asset.id;
 			}
-			// TODO: What value should be returned when the prop isn't found?
 			return 0;
 		}
 		
@@ -253,22 +249,22 @@ package net.codecomposer.palace.script
 		
 		public function clearAlarms():void
 		{
-			for each (var alarm:IptAlarm in alarms) {
-				alarm.stop();
-			}
-			alarms = new Vector.<IptAlarm>();
-		}
-		
-		public function handleAlarm(alarm:IptAlarm):void {
-			currentHotSpotId = alarm.spotId;
-			doScript(alarm.script);
-			alarms.splice(alarms.indexOf(alarm), 1);
+			scriptManager.abort();
 		}
 		
 		public function getDoorIdByIndex(index:int):int
 		{
 			var room:PalaceCurrentRoom = client.currentRoom;
-			var hotspot:PalaceHotspot = PalaceHotspot(room.hotSpots.getItemAt(index));
+			var doors:Vector.<PalaceHotspot> = new Vector.<PalaceHotspot>();
+			var hotspot:PalaceHotspot;
+			for (var i:int = 0; i < room.hotSpots.length; i ++) {
+				hotspot = PalaceHotspot(room.hotSpots.getItemAt(i));
+				if (hotspot.isDoor) {
+					doors.push(hotspot);
+				}
+			}
+			hotspot = null;
+			hotspot = doors[index];
 			if (hotspot) {
 				return hotspot.id;
 			}
@@ -303,12 +299,7 @@ package net.codecomposer.palace.script
 			}
 			return 0;
 		}
-		
-		public function getCurSpotDest():int
-		{
-			return getSpotDest(currentHotSpotId);
-		}
-		
+				
 		public function doMacro(macro:int):void
 		{
 			logResult("doMacro macro: " + macro);
@@ -460,8 +451,7 @@ package net.codecomposer.palace.script
 		
 		public function isGod():Boolean
 		{
-			logResult("isGod");
-			return false;
+			return client.currentUser.isGod;
 		}
 		
 		public function getNumUserProps():int
@@ -593,17 +583,11 @@ package net.codecomposer.palace.script
 			return client.currentRoom.id;
 		}
 		
-		public function getCurrentSpotId():int
-		{
-			return currentHotSpotId;
-		}
-		
-		public function setScriptAlarm(script:String, spotId:int, futureTime:int):void
-		{
-			// TODO: Alarms
-			var alarm:IptAlarm = new IptAlarm(script, spotId, futureTime, this);
-			alarms.push(alarm);
-			alarm.start();
+		public function setScriptAlarm(tokenList:IptTokenList, spotId:int, futureTime:int):void {
+			var context:PalaceIptExecutionContext = new PalaceIptExecutionContext(scriptManager);
+			context.hotspotId = spotId;
+			var alarm:IptAlarm = new IptAlarm(tokenList, scriptManager, futureTime, context);
+			scriptManager.addAlarm(alarm);
 		}
 		
 		public function moveSpot(spotId:int, xBy:int, yBy:int):void
@@ -625,25 +609,13 @@ package net.codecomposer.palace.script
 		{
 			return client.chatstr;
 		}
-		
-		public function getSelfSpotDest():int
-		{
-			logResult("getSelfSpotDest");
-			var hotspot:PalaceHotspot = client.currentRoom.getHotspotById(currentHotSpotId);
-			if (hotspot) {
-				return hotspot.dest;
-			}
-			else {
-				return 0;
-			}
-		}
-		
+	
 		public function setSpotAlarm(spotId:int, futureTime:int):void
 		{
 			var hotspot:PalaceHotspot = client.currentRoom.getHotspotById(spotId);
 			if (hotspot) {
-				var script:String = hotspot.getEventHandler(IptEventHandler.TYPE_ALARM);
-				setScriptAlarm(script, spotId, futureTime);
+				var tokenList:IptTokenList = hotspot.getEventHandler(IptEventHandler.TYPE_ALARM);
+				setScriptAlarm(tokenList, hotspot.id, futureTime);
 			}
 		}
 	}

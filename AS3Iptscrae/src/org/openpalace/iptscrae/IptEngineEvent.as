@@ -4,7 +4,7 @@ package org.openpalace.iptscrae
 	
 	public class IptEngineEvent extends Event
 	{
-		public static const TRACE_MESSAGE:String = "trace";
+		public static const TRACE:String = "trace";
 		public static const PAUSE:String = "pause";
 		public static const RESUME:String = "resume";
 		public static const ABORT:String = "abort";

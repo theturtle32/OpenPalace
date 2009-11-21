@@ -25,7 +25,7 @@ package net.codecomposer.palace.view
 	import net.codecomposer.palace.event.HotspotEvent;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.rpc.PalaceClient;
-	import net.codecomposer.palace.script.IptEventHandler;
+	import net.codecomposer.palace.iptscrae.IptEventHandler;
 
 	public class HotSpotSprite extends FlexSprite
 	{

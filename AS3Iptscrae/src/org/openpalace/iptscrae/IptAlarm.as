@@ -8,7 +8,6 @@ package org.openpalace.iptscrae
 	{
 		private var timer:Timer;
 		public var tokenList:IptTokenList;
-		public var manager:IptManager;
 		public var context:IptExecutionContext;
 		private var _delay:uint = 0;
 		public var completed:Boolean = false;
@@ -38,7 +37,6 @@ package org.openpalace.iptscrae
 			}
 			this.context = context;
 			this.tokenList = script;
-			this.manager = manager;
 			this.delayTicks = delayTicks;
 		}
 		
