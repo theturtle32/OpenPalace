@@ -1,7 +1,6 @@
 package org.openpalace.iptscrae
 {
 	import org.openpalace.iptscrae.token.IIptVariable;
-	import org.openpalace.iptscrae.token.IptToken;
 
 	public class IptVariable extends IptToken implements IIptVariable
 	{
@@ -57,6 +56,15 @@ package org.openpalace.iptscrae
 		
 		override public function dereference():IptToken {
 			return value;
+		}
+		
+		override public function toString():String {
+			var string:String = "[IptVariable ";
+			if (_globalized) {
+				string += "(global) ";
+			}
+			string += "\"" + name + "\" " + value.toString() + "]";
+			return string;
 		}
 	}
 }

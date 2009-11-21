@@ -1,7 +1,7 @@
 package org.openpalace.iptscrae.token
 {
 	import org.openpalace.iptscrae.IptExecutionContext;
-	import org.openpalace.iptscrae.command.IptCommand;
+	import org.openpalace.iptscrae.IptCommand;
 
 	public class VariableToken extends IptCommand
 	{

@@ -2,7 +2,8 @@ package org.openpalace.iptscrae.token
 {
 	import org.openpalace.iptscrae.IptConstants;
 	import org.openpalace.iptscrae.IptExecutionContext;
-	import org.openpalace.iptscrae.command.IptCommand;
+	import org.openpalace.iptscrae.IptCommand;
+	import org.openpalace.iptscrae.IptToken;
 	
 	public class ArrayParseToken extends IptCommand
 	{

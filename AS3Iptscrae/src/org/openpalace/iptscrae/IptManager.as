@@ -1,16 +1,23 @@
 package org.openpalace.iptscrae
 {
 	import flash.events.EventDispatcher;
+	import flash.utils.setTimeout;
 
-	[Event(name="traceEvent", type="org.openpalace.iptscrae.IptEngineEvent")]
+	[Event(name="trace", type="org.openpalace.iptscrae.IptEngineEvent")]
+	[Event(name="pause", type="org.openpalace.iptscrae.IptEngineEvent")]
+	[Event(name="resume", type="org.openpalace.iptscrae.IptEngineEvent")]
+	[Event(name="abort", type="org.openpalace.iptscrae.IptEngineEvent")]
+	[Event(name="start", type="org.openpalace.iptscrae.IptEngineEvent")]
 	public class IptManager extends EventDispatcher implements IIptManager
 	{
-		internal var contextStack:Vector.<IptExecutionContext>;
-		public var callStack:Vector.<IptTokenList> = new Vector.<IptTokenList>();
+		public var callStack:Vector.<Runnable> = new Vector.<Runnable>();
 		public var parser:IptParser;
 		public var globalVariableStore:IptVariableStore;
 		public var grepMatchData:Array;
 		public var currentScript:String;
+		public var paused:Boolean = false;
+		public var debugMode:Boolean = false;
+		public var stepsPerTimeSlice:int = 800;
 		
 		public var executionContextClass:Class = IptExecutionContext;
 		
@@ -18,15 +25,7 @@ package org.openpalace.iptscrae
 		{
 			super();
 			globalVariableStore = new IptVariableStore(new IptExecutionContext(this));
-			contextStack = new Vector.<IptExecutionContext>();
 			parser = new IptParser(this);
-		}
-		
-		public function get currentContext():IptExecutionContext {
-			if (contextStack.length > 0) {
-				return contextStack[contextStack.length-1];
-			}
-			return null;
 		}
 		
 		public function traceMessage(message:String):void {
@@ -41,10 +40,10 @@ package org.openpalace.iptscrae
 		}
 		
 		public function clearCallStack():void {
-			callStack = new Vector.<IptTokenList>();
+			callStack = new Vector.<Runnable>();
 		}
 
-		public function get currentTokenList():IptTokenList {
+		public function get currentRunnableItem():Runnable {
 			if (callStack.length > 0) {
 				return callStack[callStack.length-1];
 			}
@@ -55,27 +54,70 @@ package org.openpalace.iptscrae
 			return Boolean(callStack.length > 0);
 		}
 		
+		public function cleanupCurrentItem():void {
+			var runnableItem:Runnable = currentRunnableItem;
+			if (runnableItem && !runnableItem.running) {
+				callStack.pop();
+			}
+		}
+		
 		public function step():void {
-			var tokenList:IptTokenList = currentTokenList;
-			if (tokenList) {
-				if (tokenList.running) {
+			var runnableItem:Runnable = currentRunnableItem;
+			if (runnableItem) {
+				if (runnableItem.running) {
 					try {
-						tokenList.step();
-						if (!tokenList.running) {
-							callStack.pop();
-						}
+						runnableItem.step();
 					}
 					catch(e:IptError) {
 						var charOffset:int = 0;
-						charOffset = tokenList.characterOffsetCompensation;
-						outputError(currentScript, e, charOffset);
-						clearCallStack();
+						if (runnableItem is IptTokenList) {
+							outputError(currentScript, e, charOffset);
+							clearCallStack();
+						}
 					}
+					cleanupCurrentItem();
 				}
 				else {
 					callStack.pop();
 				}
 			}
+		}
+
+		public function pause():void {
+			if (debugMode) {
+				paused = true;
+				dispatchEvent(new IptEngineEvent(IptEngineEvent.PAUSE));
+			}
+		}
+		
+		public function resume():void {
+			paused = false;
+			dispatchEvent(new IptEngineEvent(IptEngineEvent.RESUME));
+		}
+		
+		public function abort():void {
+			clearCallStack();
+			dispatchEvent(new IptEngineEvent(IptEngineEvent.ABORT));
+			dispatchEvent(new IptEngineEvent(IptEngineEvent.FINISH));
+		}
+		
+		public function run():void {
+			for (var i:int = 0; i < stepsPerTimeSlice; i++) {
+				if (running && !paused) {
+					step();
+				}
+				else {
+					if (!running) {
+						finish();
+					}
+					return;
+				}
+			}
+			setTimeout(run, 1);
+		}
+		
+		private function finish():void {
+			dispatchEvent(new IptEngineEvent(IptEngineEvent.FINISH));
 		}
 		
 		public function execute(script:String):void {
@@ -84,24 +126,23 @@ package org.openpalace.iptscrae
 		}
 		
 		public function executeTokenListWithContext(tokenList:IptTokenList, context:IptExecutionContext):void {
-			contextStack.push(context);
 			try {
 				currentScript = tokenList.sourceScript;
 				tokenList.execute(context);
+				dispatchEvent(new IptEngineEvent(IptEngineEvent.START));
 			}
 			catch(e:IptError) {
 				outputError(tokenList.sourceScript, e);
-				clearCallStack();
+				abort();
 			}
-			contextStack.pop();	
 		}
 		
 		public function executeWithContext(script:String, context:IptExecutionContext):void {
 			currentScript = script;
-			contextStack.push(context);
 			try {
 				var tokenList:IptTokenList = parser.tokenize(script);
 				tokenList.execute(context);
+				dispatchEvent(new IptEngineEvent(IptEngineEvent.START));
 			}
 			catch(e:IptError) {
 				var charOffset:int = 0;
@@ -109,9 +150,8 @@ package org.openpalace.iptscrae
 					charOffset = tokenList.characterOffsetCompensation;
 				}
 				outputError(currentScript, e, charOffset);
-				clearCallStack();
+				abort();
 			}
-			contextStack.pop();
 		}
 		
 		private function outputError(script:String, e:IptError, characterOffsetCompensation:int = 0):void {
@@ -123,6 +163,21 @@ package org.openpalace.iptscrae
 			}
 			trace(output);
 			traceMessage(output);
+		}
+		
+		public function get scriptContextDisplay():String {
+			if (currentRunnableItem) {
+				if (currentRunnableItem is IptTokenList) {
+					var tokenList:IptTokenList = IptTokenList(currentRunnableItem);
+					var charOffset:int = tokenList.scriptCharacterOffset;
+					var currentToken:IptToken = tokenList.getCurrentToken();
+					if (currentToken) {
+						charOffset = currentToken.scriptCharacterOffset;
+					}
+					return highlightSource(currentScript, charOffset, 25);
+				}
+			}
+			return "";
 		}
 		
 		public function highlightSource(script:String, characterOffset:int, contextCharacters:int = 30):String {

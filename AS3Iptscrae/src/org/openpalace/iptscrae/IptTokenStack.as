@@ -1,20 +1,18 @@
 package org.openpalace.iptscrae
 {
-	import org.openpalace.iptscrae.token.IptToken;
 
 	public class IptTokenStack
 	{
-		internal var stack:Vector.<IptToken>;
-		internal var stackDepth:uint = 0;
+		public var stack:Vector.<IptToken>;
 		
 		public function IptTokenStack()
 		{
 			// Fixed size vector is much faster than dynamic one.
-			stack = new Vector.<IptToken>(IptConstants.STACK_DEPTH);
+			stack = new Vector.<IptToken>();
 		}
 
 		public function get depth():uint {
-			return stackDepth;
+			return stack.length;
 		}
 		
 		public function popType(requestedType:Class):* {
@@ -32,13 +30,12 @@ package org.openpalace.iptscrae
 		
 		public function pop():IptToken {
 			var token:IptToken;
-			if ( stackDepth == 0 ) {
+			if ( stack.length == 0 ) {
 				throw new IptError("Cannot pop from an empty stack.");
 			}
 			try {
 				// Cannot use push/pop on fixed size vector
-				token = stack[--stackDepth];
-				stack[stackDepth] = null;
+				token = stack.pop();
 			}
 			catch (e:Error) {
 				throw new IptError(e.message);
@@ -47,12 +44,12 @@ package org.openpalace.iptscrae
 		}
 		
 		public function push(token:IptToken):void {
-			if (stackDepth == IptConstants.STACK_DEPTH) {
+			if (stack.length == IptConstants.STACK_DEPTH) {
 				throw new IptError("Stack depth of " + IptConstants.STACK_DEPTH + " exceeded.");
 			}
 			try {
 				// Cannot use push/pop on fixed size vector.
-				stack[stackDepth++] = token;
+				stack.push(token);
 			}
 			catch (e:Error) {
 				throw new IptError("Unable to push element onto the stack:" + e.message);
@@ -60,12 +57,12 @@ package org.openpalace.iptscrae
 		}
 		
 		public function pick(position:uint):IptToken {
-			if (position > depth-1) {
+			if (position > stack.length-1) {
 				throw new IptError("You requested element #" + position + " from the top of the stack, but there are only " + depth + " element(s) available.");
 			}
 			var token:IptToken;
 			try {
-				token = stack[stackDepth - 1 - position];
+				token = stack[stack.length - 1 - position];
 			}
 			catch (e:Error) {
 				throw new IptError("Unable to pick element " + position.toString() + " from the stack: " + e.message);

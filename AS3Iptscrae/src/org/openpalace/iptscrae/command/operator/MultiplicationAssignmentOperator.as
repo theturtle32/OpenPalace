@@ -3,7 +3,7 @@ package org.openpalace.iptscrae.command.operator
 	import org.openpalace.iptscrae.IptError;
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.IptVariable;
-	import org.openpalace.iptscrae.command.IptCommand;
+	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.token.IntegerToken;
 	
 	public class MultiplicationAssignmentOperator extends IptCommand

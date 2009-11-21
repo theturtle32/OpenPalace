@@ -2,6 +2,7 @@ package org.openpalace.iptscrae.command
 {
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.IptVariable;
+	import org.openpalace.iptscrae.IptCommand;
 
 	public class GLOBALCommand extends IptCommand
 	{

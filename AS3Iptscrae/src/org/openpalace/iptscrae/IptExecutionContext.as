@@ -1,6 +1,5 @@
 package org.openpalace.iptscrae
 {
-	import org.openpalace.iptscrae.token.IptToken;
 
 	public class IptExecutionContext
 	{

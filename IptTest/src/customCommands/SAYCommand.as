@@ -1,7 +1,7 @@
 package customCommands
 {
 	import org.openpalace.iptscrae.IptExecutionContext;
-	import org.openpalace.iptscrae.command.IptCommand;
+	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.token.StringToken;
 	
 	public class SAYCommand extends IptCommand

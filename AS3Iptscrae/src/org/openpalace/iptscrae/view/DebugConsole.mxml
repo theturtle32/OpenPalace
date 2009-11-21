@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/halo">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			import org.openpalace.iptscrae.IptEngineEvent;
+			import org.openpalace.iptscrae.IptManager;
+			import org.openpalace.iptscrae.IptToken;
+			import org.openpalace.iptscrae.Runnable;
+			[Bindable]
+			private var dataStack:ArrayCollection;
+			[Bindable]
+			private var callStack:ArrayCollection;
+			
+			private var _iptManager:IptManager;
+			
+			[Bindable(event="managerChanged")]
+			public function set iptManager(newValue:IptManager):void {
+				if (_iptManager !== newValue) {
+					_iptManager = newValue;
+					_iptManager.addEventListener(IptEngineEvent.PAUSE, handlePause);
+					_iptManager.addEventListener(IptEngineEvent.START, handleStart);
+					_iptManager.addEventListener(IptEngineEvent.ABORT, handleAbort);
+					_iptManager.addEventListener(IptEngineEvent.RESUME, handleResume, false, 10000);
+					_iptManager.addEventListener(IptEngineEvent.FINISH, handleFinish);
+					this.enabled = false;
+					updateDebugDisplay();
+				}
+			}
+			public function get iptManager():IptManager {
+				return _iptManager;
+			}
+			
+			private function handleResume(event:IptEngineEvent):void {
+				updateDebugDisplay();
+				this.enabled = false;
+			}			
+			
+			private function handlePause(event:IptEngineEvent):void {
+				updateDebugDisplay();
+				this.enabled = true;
+			}
+			
+			private function handleStart(event:IptEngineEvent):void {
+				updateDebugDisplay();
+				this.enabled = false;
+			}
+			
+			private function handleAbort(event:IptEngineEvent):void {
+				updateDebugDisplay();
+				this.enabled = false;
+			}
+			
+			private function handleFinish(event:IptEngineEvent):void {
+				updateDebugDisplay();
+				this.enabled = false;
+			}
+			
+			private function updateDataStack(stack:Vector.<IptToken>):void {
+				var ac:ArrayCollection = new ArrayCollection();
+				for (var i:int = stack.length; i != 0; i--) {
+					ac.addItem(stack[i-1]);
+				}
+				dataStack = ac;
+			}
+			
+			private function updateCallStack(stack:Vector.<Runnable>):void {
+				var ac:ArrayCollection = new ArrayCollection();
+				for (var i:int = stack.length; i != 0; i--) {
+					ac.addItem(stack[i-1]);
+				}
+				callStack = ac;
+			}
+			
+			private function updateDebugDisplay():void {
+				if (iptManager.paused) {
+					scriptContextDisplay.text = iptManager.scriptContextDisplay;
+					
+					var currentItem:Runnable = iptManager.currentRunnableItem;
+					if (currentItem && Object(currentItem).context) {
+						updateDataStack(Object(currentItem).context.stack.stack);
+					}
+					else {
+						dataStack = new ArrayCollection();
+					}
+					updateCallStack(iptManager.callStack);
+				}
+				else {
+					callStack = new ArrayCollection();
+					dataStack = new ArrayCollection();
+					scriptContextDisplay.text = "";
+				}
+			}
+			
+			private function step():void {
+				iptManager.step();
+				updateDebugDisplay();
+			}
+			
+			private function resume():void {
+				iptManager.resume();
+			}
+			
+			private function abort():void {
+				iptManager.abort();
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout
+			gap="5"
+			horizontalAlign="left" />
+	</s:layout>
+	
+	<s:HGroup height="100%" width="100%">
+		<s:VGroup width="100%" height="100%">
+			<s:Label text="Data Stack:" />
+			<s:List width="100%" height="100%" dataProvider="{dataStack}" />
+		</s:VGroup>
+		<s:VGroup width="100%" height="100%">
+			<s:Label text="Call Stack:" />
+			<s:List width="100%" height="100%" dataProvider="{callStack}" />
+		</s:VGroup>
+	</s:HGroup>
+	
+	<s:VGroup height="60" width="100%">
+		<mx:Text id="scriptContextDisplay" width="100%" truncateToFit="true" fontFamily="Courier New" />
+	</s:VGroup>
+	
+	<s:HGroup>
+		<s:Button label="Step" click="step()" />
+		<s:Button label="Run" click="resume()" />
+		<s:Button label="Abort" click="abort()" />
+	</s:HGroup>
+</s:Group>

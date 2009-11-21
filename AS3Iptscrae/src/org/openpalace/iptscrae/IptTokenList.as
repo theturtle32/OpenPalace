@@ -1,13 +1,11 @@
 package org.openpalace.iptscrae
 {
-	import org.openpalace.iptscrae.command.IptCommand;
-	import org.openpalace.iptscrae.token.IptToken;
 
 	public class IptTokenList extends IptToken implements Runnable
 	{
 		public var sourceScript:String;
 		public var characterOffsetCompensation:int = 0;
-		public var running:Boolean = false;
+		protected var _running:Boolean = false;
 		public var context:IptExecutionContext;
 		internal var tokenList:Vector.<IptToken>;
 		internal var position:uint = 0;
@@ -24,9 +22,24 @@ package org.openpalace.iptscrae
 			}
 		}
 		
+		public function set running(newValue:Boolean):void {
+			_running = newValue;
+		}
+		
+		public function get running():Boolean {
+			return _running;
+		}
+		
 		public function reset():void {
 			position = 0;
-			running = true;
+			_running = true;
+		}
+		
+		public function getCurrentToken():IptToken {
+			if (position < tokenList.length) {
+				return tokenList[position];
+			}
+			return null;
 		}
 		
 		public function getNextToken():IptToken {
@@ -83,11 +96,11 @@ package org.openpalace.iptscrae
 		}
 		
 		public function end():void {
-			running = false;
+			_running = false;
 		}
 		
 		public function step():void {
-			if (running && tokensAvailable) {
+			if (tokensAvailable) {
 				if (context.returnRequested) {
 					context.returnRequested = false;
 					end();
@@ -100,7 +113,10 @@ package org.openpalace.iptscrae
 				
 				// Process next token...
 				var token:IptToken = getNextToken();
-				if (token is IptCommand) {
+				if (token is IptTokenList) {
+					context.stack.push(token);
+				}
+				else if (token is IptCommand) {
 					try {
 						IptCommand(token).execute(context);
 					}
@@ -109,7 +125,7 @@ package org.openpalace.iptscrae
 						var offsetToReport:int = (e.characterOffset == -1) ?
 								token.scriptCharacterOffset :
 								e.characterOffset;
-						end();						
+						end();
 						throw new IptError("  " + IptUtil.className(token) + ":\n" + e.message, offsetToReport);
 					}
 				}
@@ -123,6 +139,15 @@ package org.openpalace.iptscrae
 			else {
 				end();
 			}
+		}
+		override public function toString():String {
+			var string:String = "[IptTokenList {";
+			var snippet:String = sourceScript.replace(/[\r\n]/g, " ");;
+			if (snippet.length > 20) {
+				snippet = snippet.substr(0, 20) + "...";
+			}
+			string += (snippet + "}]"); 
+			return string;
 		}
 	}
 }

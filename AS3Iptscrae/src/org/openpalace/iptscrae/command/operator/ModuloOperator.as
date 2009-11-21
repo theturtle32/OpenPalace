@@ -1,7 +1,7 @@
 package org.openpalace.iptscrae.command.operator
 {
 	import org.openpalace.iptscrae.IptExecutionContext;
-	import org.openpalace.iptscrae.command.IptCommand;
+	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.token.IntegerToken;
 	
 	public class ModuloOperator extends IptCommand

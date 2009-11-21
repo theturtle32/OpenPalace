@@ -1,5 +1,6 @@
 package org.openpalace.iptscrae.token
 {
+	import org.openpalace.iptscrae.IptToken;
 
 	public class ArrayToken extends IptToken
 	{
@@ -21,9 +22,9 @@ package org.openpalace.iptscrae.token
 		}
 		
 		override public function toString():String {
-			var string:String = "[ArrayToken length=" + data.length + "] Elements Follow:\n";
+			var string:String = "[ArrayToken length=" + data.length + "]\n";
 			for each (var token:IptToken in data) {
-				string += ("   - " + token.toString() + "\n");
+				string += (" - " + token.toString() + "\n");
 			}
 			return string;
 		}

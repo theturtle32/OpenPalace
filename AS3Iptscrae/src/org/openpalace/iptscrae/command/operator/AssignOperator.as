@@ -2,8 +2,8 @@ package org.openpalace.iptscrae.command.operator
 {
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.IptVariable;
-	import org.openpalace.iptscrae.command.IptCommand;
-	import org.openpalace.iptscrae.token.IptToken;
+	import org.openpalace.iptscrae.IptCommand;
+	import org.openpalace.iptscrae.IptToken;
 
 	public class AssignOperator extends IptCommand
 	{

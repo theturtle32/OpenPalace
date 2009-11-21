@@ -1,10 +1,8 @@
 package org.openpalace.iptscrae
 {
-	import org.openpalace.iptscrae.command.IptCommand;
 	import org.openpalace.iptscrae.token.ArrayMarkToken;
 	import org.openpalace.iptscrae.token.ArrayParseToken;
 	import org.openpalace.iptscrae.token.IntegerToken;
-	import org.openpalace.iptscrae.token.IptToken;
 	import org.openpalace.iptscrae.token.StringToken;
 	import org.openpalace.iptscrae.token.VariableToken;
 
@@ -268,6 +266,7 @@ package org.openpalace.iptscrae
 			// save context before we parse something else
 			var savedSo:uint = so;
 			var savedScript:String = script;
+			var savedOffset:uint = offset;
 			
 			// parse inner script block
 			var tokenList:IptTokenList = tokenize(atomListString, runningOffset+1);
@@ -275,6 +274,7 @@ package org.openpalace.iptscrae
 			// restore parsing context back to the outer script
 			script = savedScript;
 			so = savedSo;
+			offset = savedOffset;
 			
 			return tokenList;
 		}
@@ -337,7 +337,7 @@ package org.openpalace.iptscrae
 			return new StringToken(result);
 		}
 		
-		public function parseSymbol():IptCommand {
+		public function parseSymbol():IptToken {
 			var dp:int = 0;
 			var sc:String = currentChar();
 			var token:String = "";
@@ -352,7 +352,7 @@ package org.openpalace.iptscrae
 			
 			var commandClass:Class = getCommand(token);
 			if (commandClass) {
-				return IptCommand(new commandClass());
+				return IptToken(new commandClass());
 			}
 			
 			return new VariableToken(token);

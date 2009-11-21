@@ -5,11 +5,10 @@
     <classEntry path="org.openpalace.iptscrae.Runnable"/>
     <classEntry path="org.openpalace.iptscrae.IptExecutionContext"/>
     <classEntry path="org.openpalace.iptscrae.IptError"/>
-    <classEntry path="org.openpalace.iptscrae.token.IptToken"/>
+    <classEntry path="org.openpalace.iptscrae.IptToken"/>
     <classEntry path="org.openpalace.iptscrae.IptVariable"/>
-    <classEntry path="org.openpalace.iptscrae.command.IptCommand"/>
+    <classEntry path="org.openpalace.iptscrae.IptCommand"/>
     <classEntry path="org.openpalace.iptscrae.IptTokenList"/>
-    <classEntry path="org.openpalace.iptscrae.IptTokenStack"/>
     <classEntry path="org.openpalace.iptscrae.IptConstants"/>
     <classEntry path="org.openpalace.iptscrae.IptParser"/>
     <classEntry path="org.openpalace.iptscrae.token.IntegerToken"/>
@@ -57,6 +56,8 @@
     <classEntry path="org.openpalace.iptscrae.command.TICKSCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.SWAPCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.TRACESTACKCommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.BREAKPOINTCommand"/>
+    <classEntry path="org.openpalace.iptscrae.view.DebugConsole"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

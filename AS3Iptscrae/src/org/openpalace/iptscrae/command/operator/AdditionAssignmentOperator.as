@@ -4,9 +4,9 @@ package org.openpalace.iptscrae.command.operator
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.IptUtil;
 	import org.openpalace.iptscrae.IptVariable;
-	import org.openpalace.iptscrae.command.IptCommand;
+	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.token.IntegerToken;
-	import org.openpalace.iptscrae.token.IptToken;
+	import org.openpalace.iptscrae.IptToken;
 	import org.openpalace.iptscrae.token.StringToken;
 
 	public class AdditionAssignmentOperator extends IptCommand

@@ -2,7 +2,8 @@ package org.openpalace.iptscrae.command
 {
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.IptTokenList;
-	import org.openpalace.iptscrae.token.IptToken;
+	import org.openpalace.iptscrae.IptToken;
+	import org.openpalace.iptscrae.IptCommand;
 
 	public class IFCommand extends IptCommand
 	{

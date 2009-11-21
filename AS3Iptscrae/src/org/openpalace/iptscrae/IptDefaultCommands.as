@@ -13,6 +13,7 @@ package org.openpalace.iptscrae
 			"ATOI": ATOICommand,
 			"BEEP": BEEPCommand,
 			"BREAK": BREAKCommand,
+			"_BREAKPOINT": BREAKPOINTCommand,
 			"DATETIME": DATETIMECommand,
 			"DEF": AssignOperator,
 			"DUP": DUPCommand,

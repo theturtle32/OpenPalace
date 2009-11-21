@@ -3,6 +3,7 @@ package org.openpalace.iptscrae.command
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.token.ArrayToken;
 	import org.openpalace.iptscrae.token.IntegerToken;
+	import org.openpalace.iptscrae.IptCommand;
 
 	public class LENGTHCommand extends IptCommand
 	{

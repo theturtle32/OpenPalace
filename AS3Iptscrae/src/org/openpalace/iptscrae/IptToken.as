@@ -1,4 +1,4 @@
-package org.openpalace.iptscrae.token
+package org.openpalace.iptscrae
 {
 	public class IptToken
 	{
@@ -22,7 +22,7 @@ package org.openpalace.iptscrae.token
 		}
 		
 		public function toString():String {
-			return "[IptToken]";
+			return "[" + IptUtil.className(this) + "]";
 		}
 	}
 }

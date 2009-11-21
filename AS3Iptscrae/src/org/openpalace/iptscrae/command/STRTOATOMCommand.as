@@ -3,6 +3,7 @@ package org.openpalace.iptscrae.command
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.IptTokenList;
 	import org.openpalace.iptscrae.token.StringToken;
+	import org.openpalace.iptscrae.IptCommand;
 
 	public class STRTOATOMCommand extends IptCommand
 	{

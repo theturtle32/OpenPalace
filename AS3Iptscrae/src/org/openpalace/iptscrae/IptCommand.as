@@ -1,9 +1,5 @@
-package org.openpalace.iptscrae.command
+package org.openpalace.iptscrae
 {
-	import org.openpalace.iptscrae.IptError;
-	import org.openpalace.iptscrae.IptExecutionContext;
-	import org.openpalace.iptscrae.Runnable;
-	import org.openpalace.iptscrae.token.IptToken;
 
 	public class IptCommand extends IptToken implements Runnable
 	{
@@ -18,6 +14,17 @@ package org.openpalace.iptscrae.command
 		
 		override public function clone():IptToken {
 			throw new IptError("You cannot clone a command token.");
+		}
+		
+		public function get running():Boolean {
+			return false;
+		}
+		
+		public function step():void {
+		}
+		
+		public function end():void {
+			
 		}
 	}
 }
