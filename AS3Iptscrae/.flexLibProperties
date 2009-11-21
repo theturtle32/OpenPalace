@@ -61,6 +61,7 @@
     <classEntry path="org.openpalace.iptscrae.command.COSINECommand"/>
     <classEntry path="org.openpalace.iptscrae.command.SINECommand"/>
     <classEntry path="org.openpalace.iptscrae.command.TANGENTCommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.SUBSTRINGCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

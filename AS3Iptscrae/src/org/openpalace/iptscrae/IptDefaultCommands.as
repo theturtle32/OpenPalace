@@ -41,6 +41,7 @@ package org.openpalace.iptscrae
 			"STACKDEPTH": STACKDEPTHCommand,
 			"STRLEN": STRLENCommand,
 			"STRTOATOM": STRTOATOMCommand,
+			"SUBSTRING": SUBSTRINGCommand,
 			"SWAP": SWAPCommand,
 			"TANGENT": TANGENTCommand,
 			"TICKS": TICKSCommand,
