@@ -18,5 +18,9 @@ package org.openpalace.iptscrae.token
 		override public function execute(context:IptExecutionContext):void {
 			context.stack.push(context.variableStore.getVariable(name));
 		}
+		
+		override public function toString():String {
+			return "[VariableToken name=\"" + name + "\"]";
+		}
 	}
 }

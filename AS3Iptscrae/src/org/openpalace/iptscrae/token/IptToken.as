@@ -20,5 +20,9 @@ package org.openpalace.iptscrae.token
 		public function dereference():IptToken {
 			return this;
 		}
+		
+		public function toString():String {
+			return "[IptToken]";
+		}
 	}
 }

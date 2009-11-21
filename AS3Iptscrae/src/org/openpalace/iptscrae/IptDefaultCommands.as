@@ -41,6 +41,7 @@ package org.openpalace.iptscrae
 			"SWAP": SWAPCommand,
 			"TICKS": TICKSCommand,
 			"TOPTYPE": TOPTYPECommand,
+			"TRACESTACK": TRACESTACKCommand,
 			"UPPERCASE": UPPERCASECommand,
 			"VARTYPE": VARTYPECommand,
 			"WHILE": WHILECommand,
