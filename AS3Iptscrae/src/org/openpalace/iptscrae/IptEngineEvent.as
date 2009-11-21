@@ -10,6 +10,7 @@ package org.openpalace.iptscrae
 		public static const ABORT:String = "abort";
 		public static const START:String = "start";
 		public static const FINISH:String = "finish";
+		public static const ALARM:String = "alarm";
 		
 		public var message:String;
 		

@@ -12,7 +12,7 @@ package org.openpalace.iptscrae.command
 			var delayTicks:IntegerToken = context.stack.popType(IntegerToken);
 			var tokenList:IptTokenList = context.stack.popType(IptTokenList);
 			var alarm:IptAlarm = new IptAlarm(tokenList, context.manager, delayTicks.data);
-			alarm.start();
+			context.manager.addAlarm(alarm);
 		}
 	}
 }

@@ -58,6 +58,9 @@
     <classEntry path="org.openpalace.iptscrae.command.TRACESTACKCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.BREAKPOINTCommand"/>
     <classEntry path="org.openpalace.iptscrae.view.DebugConsole"/>
+    <classEntry path="org.openpalace.iptscrae.command.COSINECommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.SINECommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.TANGENTCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

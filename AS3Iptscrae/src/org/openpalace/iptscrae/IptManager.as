@@ -11,6 +11,7 @@ package org.openpalace.iptscrae
 	public class IptManager extends EventDispatcher implements IIptManager
 	{
 		public var callStack:Vector.<Runnable> = new Vector.<Runnable>();
+		public var alarms:Vector.<IptAlarm> = new Vector.<IptAlarm>();
 		public var parser:IptParser;
 		public var globalVariableStore:IptVariableStore;
 		public var grepMatchData:Array;
@@ -18,6 +19,7 @@ package org.openpalace.iptscrae
 		public var paused:Boolean = false;
 		public var debugMode:Boolean = false;
 		public var stepsPerTimeSlice:int = 800;
+		private var _running:Boolean = false;
 		
 		public var executionContextClass:Class = IptExecutionContext;
 		
@@ -28,15 +30,43 @@ package org.openpalace.iptscrae
 			parser = new IptParser(this);
 		}
 		
+		public function get running():Boolean {
+			return _running;
+		}
+		
 		public function traceMessage(message:String):void {
 			var event:IptEngineEvent = new IptEngineEvent(IptEngineEvent.TRACE_MESSAGE);
 			event.message = message;
 			dispatchEvent(event);
 		}
 		
-		public function handleAlarm(alarm:IptAlarm):void {
-			var context:IptExecutionContext = new executionContextClass(this);
-			executeTokenListWithContext(alarm.tokenList, context);
+		public function addAlarm(alarm:IptAlarm):void {
+			alarms.push(alarm);
+			alarm.addEventListener(IptEngineEvent.ALARM, handleAlarm);
+			alarm.start();
+		}
+		
+		public function removeAlarm(alarm:IptAlarm):void {
+			alarm.stop();
+			var index:int = alarms.indexOf(alarm);
+			if (index != -1) {
+				alarms.splice(index, 1);
+			}
+		}
+		
+		public function clearAlarms():void {
+			for each (var alarm:IptAlarm in alarms) {
+				removeAlarm(alarm);
+			}
+		}
+		
+		public function handleAlarm(event:IptEngineEvent):void {
+			var alarm:IptAlarm = IptAlarm(event.target);
+			executeTokenListWithContext(alarm.tokenList, alarm.context);
+			removeAlarm(alarm);
+			if (!running) {
+				run();
+			}
 		}
 		
 		public function clearCallStack():void {
@@ -50,7 +80,7 @@ package org.openpalace.iptscrae
 			return null;
 		}
 		
-		public function get running():Boolean {
+		public function get moreToExecute():Boolean {
 			return Boolean(callStack.length > 0);
 		}
 		
@@ -93,33 +123,41 @@ package org.openpalace.iptscrae
 		public function resume():void {
 			paused = false;
 			dispatchEvent(new IptEngineEvent(IptEngineEvent.RESUME));
+			run();
+		}
+
+		private function finish():void {
+			_running = false;
+			if (alarms.length == 0) {
+				dispatchEvent(new IptEngineEvent(IptEngineEvent.FINISH));
+			}
 		}
 		
 		public function abort():void {
+			clearAlarms();
 			clearCallStack();
+			_running = false;
 			dispatchEvent(new IptEngineEvent(IptEngineEvent.ABORT));
 			dispatchEvent(new IptEngineEvent(IptEngineEvent.FINISH));
 		}
 		
 		public function run():void {
+			_running = true;
+			
 			// Pseudo-threading.  Execute a group of commands and then yield
 			// before scheduling the next group.
 			for (var i:int = 0; i < stepsPerTimeSlice; i++) {
-				if (running && !paused) {
+				if (moreToExecute && !paused) {
 					step();
 				}
 				else {
-					if (!running) {
+					if (!moreToExecute) { 
 						finish();
 					}
 					return;
 				}
 			}
 			setTimeout(run, 1);
-		}
-		
-		private function finish():void {
-			dispatchEvent(new IptEngineEvent(IptEngineEvent.FINISH));
 		}
 		
 		public function execute(script:String):void {

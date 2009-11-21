@@ -1,13 +1,15 @@
 package org.openpalace.iptscrae
 {
+	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
 	import flash.utils.Timer;
 	
-	public class IptAlarm
+	public class IptAlarm extends EventDispatcher
 	{
 		private var timer:Timer;
 		public var tokenList:IptTokenList;
 		public var manager:IptManager;
+		public var context:IptExecutionContext;
 		private var _delay:uint = 0;
 		public var completed:Boolean = false;
 		
@@ -27,18 +29,22 @@ package org.openpalace.iptscrae
 			return ms / 1000 * 60;
 		}
 		
-		public function IptAlarm(script:IptTokenList, manager:IptManager, delayTicks:uint)
+		public function IptAlarm(script:IptTokenList, manager:IptManager, delayTicks:uint, context:IptExecutionContext = null)
 		{
 			timer = new Timer(ticksToMS(delayTicks), 1);
 			timer.addEventListener(TimerEvent.TIMER, handleTimer);
+			if (context == null) {
+				context = new manager.executionContextClass(manager); 
+			}
+			this.context = context;
 			this.tokenList = script;
 			this.manager = manager;
 			this.delayTicks = delayTicks;
 		}
 		
 		private function handleTimer(event:TimerEvent):void {
+			dispatchEvent(new IptEngineEvent(IptEngineEvent.ALARM));
 			completed = true;
-			manager.handleAlarm(this);
 		}
 		
 		public function start():void {
