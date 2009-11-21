@@ -16,6 +16,7 @@ package org.openpalace.iptscrae
 			"_BREAKPOINT": BREAKPOINTCommand,
 			"COSINE": COSINECommand,
 			"DATETIME": DATETIMECommand,
+			"DELAY": DELAYCommand,
 			"DEF": AssignOperator,
 			"DUP": DUPCommand,
 			"EXEC": EXECCommand,
