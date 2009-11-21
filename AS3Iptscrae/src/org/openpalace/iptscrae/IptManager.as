@@ -102,6 +102,8 @@ package org.openpalace.iptscrae
 		}
 		
 		public function run():void {
+			// Pseudo-threading.  Execute a group of commands and then yield
+			// before scheduling the next group.
 			for (var i:int = 0; i < stepsPerTimeSlice; i++) {
 				if (running && !paused) {
 					step();
