@@ -41,6 +41,7 @@ package org.openpalace.iptscrae
 			"RETURN": RETURNCommand,
 			"SINE": SINECommand,
 			"STACKDEPTH": STACKDEPTHCommand,
+			"STRINDEX": STRINDEXCommand,
 			"STRLEN": STRLENCommand,
 			"STRTOATOM": STRTOATOMCommand,
 			"SUBSTRING": SUBSTRINGCommand,

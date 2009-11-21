@@ -64,6 +64,7 @@
     <classEntry path="org.openpalace.iptscrae.command.SUBSTRINGCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.DELAYCommand"/>
     <classEntry path="org.openpalace.iptscrae.command.RANDOMCommand"/>
+    <classEntry path="org.openpalace.iptscrae.command.STRINDEXCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
