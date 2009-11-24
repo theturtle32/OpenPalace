@@ -75,6 +75,8 @@
 			}
 			
 			private function handleConnectComplete(event:PalaceEvent):void {
+				hideConnectWindow();
+				hideDirectoryWindow();
 				chatWindow.currentState = "connected";
 			}
 			

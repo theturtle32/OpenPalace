@@ -2,7 +2,7 @@
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		 xmlns:s="library://ns.adobe.com/flex/spark" 
 		 xmlns:mx="library://ns.adobe.com/flex/halo" width="500" height="350"
-		 creationComplete="load()">
+		 creationComplete="handleCreationComplete()">
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
@@ -10,6 +10,8 @@
 	<fx:Script>
 		<![CDATA[
 			import mx.controls.Alert;
+			import mx.managers.BrowserManager;
+			import mx.managers.IBrowserManager;
 			
 			import net.codecomposer.palace.rpc.PalaceClient;
 			import net.codecomposer.palace.rpc.webservice.OPWSEvent;
@@ -20,6 +22,13 @@
 			
 			[Bindable]
 			public var loading:Boolean = false;
+			
+			private var browserManager:IBrowserManager;
+			
+			private function handleCreationComplete():void {
+				load();
+				browserManager = BrowserManager.getInstance();
+			}
 			
 			public function load():void {
 				var directoryRequest:OPWSGetDirectory = new OPWSGetDirectory();
@@ -61,6 +70,7 @@
 						trace("palace = " + hostName + " port " + port);
 						
 						if (hostName && hostName.length > 0) {
+							browserManager.setFragment("palace=" + hostName + ":" + port.toString());
 							PalaceClient.getInstance().connect(Preferences.getInstance().userName, hostName, port);
 						}
 					}
