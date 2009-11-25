@@ -26,6 +26,9 @@
 			[Bindable]
 			private var maxSize:uint = 220;
 			
+			[Embed(source="net/onthewings/filters/bicubicResampling.pbj",mimeType="application/octet-stream")]
+			private var bicubicResamplingFilter:Class;
+			
 			private var _fileReference:FileReference;
 			
 			[Bindable(event="fileReferenceChanged")]
@@ -52,8 +55,6 @@
 					bitmap = loader.content as Bitmap;
 					
 					image = new Image();
-					image.smoothBitmapContent = true;
-					image.source = bitmap;
 					image.horizontalCenter = 0;
 					image.verticalCenter = 0;
 					
@@ -65,11 +66,19 @@
 			}
 			
 			private function doPreview():void {
-				horizontalScale = Math.min(1, maxSize / bitmap.width);
-				verticalScale = Math.min(1, maxSize / bitmap.height);
+				horizontalScale = maxSize / bitmap.width;
+				verticalScale = maxSize / bitmap.height;
 				scale = Math.min(verticalScale, horizontalScale);
-				image.scaleX = scale;
-				image.scaleY = scale;
+				
+				var bicubicResamplingShader:Shader = new Shader(new bicubicResamplingFilter() as ByteArray);
+				bicubicResamplingShader.data.src.input = bitmap.bitmapData;
+				bicubicResamplingShader.data.scale.value = [1/scale, 1/scale];
+				var resultBD:BitmapData = new BitmapData(bitmap.bitmapData.width * scale, bitmap.bitmapData.height * scale);
+				var shaderJob:ShaderJob = new ShaderJob(bicubicResamplingShader);
+				shaderJob.target = resultBD;
+				shaderJob.start(true);
+				
+				image.source = new Bitmap(resultBD);
 				image.alpha = ghost.selected ? 0.5 : 1.0;
 				smiley.visible = !head.selected;
 				
@@ -81,6 +90,7 @@
 				trace(maxSize);
 				doPreview();
 			}
+			
 			
 			private function handleSave():void {
 				var e:PropEvent = new PropEvent(PropEvent.SAVE_PROP);
@@ -158,6 +168,7 @@
 		<s:HSlider width="176"
 				   bottom="5" horizontalCenter="0"
 				   id="scaleSlider"
+				   showDataTip="false"
 				   minimum="44" maximum="220"
 				   stepSize="1"
 				   value="220"

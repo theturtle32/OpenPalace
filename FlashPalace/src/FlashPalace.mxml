@@ -9,6 +9,8 @@
  
 	<fx:Script>
 		<![CDATA[
+			import com.pixelbreaker.ui.osx.MacMouseWheel;
+			
 			import flexlib.mdi.events.MDIWindowEvent;
 			
 			import mx.binding.utils.ChangeWatcher;
@@ -40,6 +42,7 @@
 
 			private function handleApplicationComplete():void {
 				stage.addEventListener(KeyboardEvent.KEY_DOWN, handleStageKeyDown);
+				MacMouseWheel.setup(stage);
 			}
 			
 			private function handleStageKeyDown(event:KeyboardEvent):void {
@@ -91,6 +94,8 @@
 			}
 			
 			private function handleConnectComplete(event:PalaceEvent):void {
+				hideConnectWindow();
+				hideDirectoryWindow();
 				chatWindow.currentState = "connected";
 			}
 			
