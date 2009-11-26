@@ -14,7 +14,7 @@ package org.openpalace.iptscrae.command.operator
 				throw new IptError("Variable '" + variable.name + "' does not contain a number.");
 			}
 			var originalValue:IntegerToken = IntegerToken(variable.value);
-			variable.value = new IntegerToken(originalValue.data + 1);
+			variable.value = new IntegerToken(originalValue.data - 1);
 		}
 	}
 }
