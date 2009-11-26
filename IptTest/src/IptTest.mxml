@@ -60,7 +60,7 @@ To add a breakpoint, type the keyword "_BREAKPOINT" into the code where you want
 			private function resetEngine():void {
 				iptManager = new TestIptscraeManager();
 				iptManager.debugMode = true;
-				iptManager.addEventListener(IptEngineEvent.TRACE_MESSAGE, handleScriptTrace);
+				iptManager.addEventListener(IptEngineEvent.TRACE, handleScriptTrace);
 				iptManager.parser.addCommands(commands);
 				iptManager.addEventListener(IptEngineEvent.FINISH, handleScriptEnd);
 				iptManager.addEventListener(IptEngineEvent.ABORT, handleScriptEnd);
