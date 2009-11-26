@@ -27,7 +27,7 @@
 					_iptManager.addEventListener(IptEngineEvent.ABORT, handleAbort);
 					_iptManager.addEventListener(IptEngineEvent.RESUME, handleResume, false, 10000);
 					_iptManager.addEventListener(IptEngineEvent.FINISH, handleFinish);
-					this.enabled = false;
+					this.enabled = _iptManager.paused;
 					updateDebugDisplay();
 				}
 			}

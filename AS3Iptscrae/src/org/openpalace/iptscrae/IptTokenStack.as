@@ -34,7 +34,6 @@ package org.openpalace.iptscrae
 				throw new IptError("Cannot pop from an empty stack.");
 			}
 			try {
-				// Cannot use push/pop on fixed size vector
 				token = stack.pop();
 			}
 			catch (e:Error) {
@@ -48,7 +47,6 @@ package org.openpalace.iptscrae
 				throw new IptError("Stack depth of " + IptConstants.STACK_DEPTH + " exceeded.");
 			}
 			try {
-				// Cannot use push/pop on fixed size vector.
 				stack.push(token);
 			}
 			catch (e:Error) {

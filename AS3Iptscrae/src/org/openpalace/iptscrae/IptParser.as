@@ -129,10 +129,6 @@ package org.openpalace.iptscrae
 					}
 
 
-
-
-
-
 					else if(char == '=') {
 						if(sc(1) == '=') {
 							tokenList.addToken(new (getCommand("=="))(), offset + nestedCharCountOffset);
@@ -223,6 +219,7 @@ package org.openpalace.iptscrae
 		
 		private function parseAtomList(runningOffset:int = 0):IptTokenList {
 			var nest:int = 0;
+			var quotnest:int = 0;
 			var qFlag:Boolean = false;
 			var atomListString:String = "";
 			
@@ -230,21 +227,19 @@ package org.openpalace.iptscrae
 				so++;
 			}
 			
-			while(currentChar() != null && currentChar().charCodeAt(0) != 0 && (currentChar() != '}' || nest > 0)) 
+			while(currentChar() != null && currentChar().charCodeAt(0) != 0 && (currentChar() != '}' || nest > 0 || qFlag)) 
 			{
-				if(qFlag)
-				{
-					if(currentChar() == '\\')
-					{
+				if(qFlag) {
+					if(currentChar() == '\\') {
 						atomListString += currentChar();
 						so++;
-					} else
-						if(currentChar() == '"')
-							qFlag = false;
-				} else
-				{
-					switch(currentChar())
-					{
+					}
+					else if(currentChar() == '"') {
+						qFlag = false;
+					}
+				}
+				else {
+					switch(currentChar()) {
 						case "\"": // '"'
 							qFlag = true;
 							break;
@@ -263,6 +258,9 @@ package org.openpalace.iptscrae
 			}
 			if(currentChar() == '}') {
 				so++;
+			}
+			if (qFlag) {
+				throw new IptError("End of string not found.", so);
 			}
 			
 			// save context before we parse something else
@@ -304,16 +302,16 @@ package org.openpalace.iptscrae
 		
 		private function parseStringLiteral():StringToken {
 			var result:String = "";
-			
+			var quoteCount:int = 0;
 			var dp:int = 0;
 			if(currentChar() == '"') {
 				so++;
+				quoteCount ++;
 			}
 			while(currentChar() != null && currentChar().charCodeAt(0) != 0 && currentChar() != '"') { 
 				if(currentChar() == '\\') {
 					so++;
-					if(currentChar() == 'x')
-					{
+					if(currentChar() == 'x') {
 						var hexNumChars:String = "0x";
 						so++;
 						while (hexNumberTest.test(currentChar())) {
@@ -322,19 +320,23 @@ package org.openpalace.iptscrae
 						}
 						
 						result += String.fromCharCode(parseInt(hexNumChars));
-					} else
-					{
+					}
+					else {
 						result += currentChar();
 						so++;
 					}
-				} else
-				{
+				}
+				else {
 					result += currentChar();
 					so++;
 				}
 			}
 			if(currentChar() == '"') {
+				quoteCount ++;
 				so++;
+			}
+			if (quoteCount <= 1) {
+				throw new IptError("End of string not found.", so);
 			}
 			return new StringToken(result);
 		}

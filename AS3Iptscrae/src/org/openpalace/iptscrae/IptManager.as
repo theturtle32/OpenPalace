@@ -56,8 +56,9 @@ package org.openpalace.iptscrae
 		
 		public function clearAlarms():void {
 			for each (var alarm:IptAlarm in alarms) {
-				removeAlarm(alarm);
+				alarm.stop();
 			}
+			alarms = new Vector.<IptAlarm>;
 		}
 		
 		public function handleAlarm(event:IptEngineEvent):void {
@@ -113,16 +114,18 @@ package org.openpalace.iptscrae
 		}
 
 		public function pause():void {
-			if (debugMode) {
+			if (debugMode && !paused) {
 				paused = true;
 				dispatchEvent(new IptEngineEvent(IptEngineEvent.PAUSE));
 			}
 		}
 		
 		public function resume():void {
-			paused = false;
-			dispatchEvent(new IptEngineEvent(IptEngineEvent.RESUME));
-			run();
+			if (paused) {
+				paused = false;
+				dispatchEvent(new IptEngineEvent(IptEngineEvent.RESUME));
+				run();
+			}
 		}
 
 		private function finish():void {
@@ -184,8 +187,17 @@ package org.openpalace.iptscrae
 		
 		public function executeWithContext(script:String, context:IptExecutionContext):void {
 			currentScript = script;
+			var tokenList:IptTokenList;
 			try {
-				var tokenList:IptTokenList = parser.tokenize(script);
+				tokenList = parser.tokenize(script);
+			}
+			catch(e:IptError) {
+				var error:IptError = new IptError("Parse Error: " + e.message, e.characterOffset);
+				outputError(currentScript, error, 0);
+				abort();
+				return;
+			}
+			try {
 				tokenList.execute(context);
 				dispatchEvent(new IptEngineEvent(IptEngineEvent.START));
 			}

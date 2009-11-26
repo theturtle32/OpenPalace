@@ -34,7 +34,10 @@ package org.openpalace.iptscrae
 		}
 		
 		public function set value(newValue:IptToken):void {
-			if (_globalized) {
+			if (external) {
+				context.setExternalVariable(name, newValue);
+			}
+			else if (_globalized) {
 				_globalVariable.value = newValue;
 			}
 			else {
