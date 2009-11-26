@@ -33,7 +33,39 @@ package net.codecomposer.palace.iptscrae
 		public static const TYPE_UNHANDLED:int = 27;
 		public static const TYPE_PPA_MESSAGE:int = 32; // Unused... PalacePresents Message
 		
+		public static const EVENT_NAME:Object = {
+			0: "SELECT",
+			1: "LOCK",
+			2: "UNLOCK",
+			3: "HIDE",
+			4: "SHOW",
+			5: "STARTUP",
+			6: "ALARM",
+			7: "CUSTOM",
+			8: "INCHAT",
+			9: "PROPCHANGE",
+			10: "ENTER",
+			11: "LEAVE",
+			12: "OUTCHAT",
+			13: "SIGNON",
+			14: "SIGNOFF",
+			15: "MACRO0",
+			16: "MACRO1",
+			17: "MACRO2",
+			18: "MACRO3",
+			19: "MACRO4",
+			20: "MACRO5",
+			21: "MACRO6",
+			22: "MACRO7",
+			23: "MACRO8",
+			24: "MACRO9",
+			25: "PPA_MACRO",
+			27: "UNHANDLED",
+			32: "PPA_MESSAGE"
+		};
+		
 		public var eventType:int;
+		[Bindable]
 		public var script:String;
 		public var tokenList:IptTokenList;
 		
@@ -104,6 +136,11 @@ package net.codecomposer.palace.iptscrae
 					return IptEventHandler.TYPE_UNHANDLED;
 					break;
 			}
+		}
+		
+		public function get label():String {
+			var name:String = EVENT_NAME[eventType];
+			return (name) ? name : "(unknown event)";
 		}
 		
 		public function IptEventHandler(type:int = 0, script:String = null, tokenList:IptTokenList = null)

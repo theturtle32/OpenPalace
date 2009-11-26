@@ -9,7 +9,8 @@ package net.codecomposer.palace.iptscrae.command
 	public class NETGOTOCommand extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext):void {
-			PalaceIptManager(context.manager).pc.gotoURL(context.stack.popType(StringToken));
+			var url:StringToken = context.stack.popType(StringToken);
+			PalaceIptManager(context.manager).pc.gotoURL(url.data);
 		}
 	}
 }

@@ -21,6 +21,7 @@ package net.codecomposer.palace.model
 	import flash.events.EventDispatcher;
 	
 	import mx.collections.ArrayCollection;
+	import mx.events.CollectionEvent;
 	
 	import net.codecomposer.palace.event.ChatEvent;
 	import net.codecomposer.palace.event.PalaceRoomEvent;

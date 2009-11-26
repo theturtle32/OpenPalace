@@ -12,7 +12,14 @@ package net.codecomposer.palace.iptscrae.command
 		override public function execute(context:IptExecutionContext):void {
 			var pc:PalaceController = PalaceIptManager(context.manager).pc;
 			var userIndex:IntegerToken = context.stack.popType(IntegerToken);
-			context.stack.push(new IntegerToken(pc.getRoomUserIdByIndex(userIndex.data)));
+			var userId:int;
+			try {
+				userId = pc.getRoomUserIdByIndex(userIndex.data);
+			}
+			catch (e:Error) {
+				userId = 0;
+			}
+			context.stack.push(new IntegerToken(userId));
 		}
 	}
 }

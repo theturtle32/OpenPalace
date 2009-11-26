@@ -38,6 +38,9 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.crypto.PalaceEncryption;
 	import net.codecomposer.palace.event.PalaceEvent;
 	import net.codecomposer.palace.event.PropEvent;
+	import net.codecomposer.palace.iptscrae.DebugData;
+	import net.codecomposer.palace.iptscrae.IptEventHandler;
+	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
 	import net.codecomposer.palace.message.RoomDescription;
@@ -54,18 +57,17 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
 	import net.codecomposer.palace.record.PalaceDrawRecord;
-	import net.codecomposer.palace.iptscrae.IptEventHandler;
-	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
 
+	[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="connectComplete")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="connectFailed")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="disconnected")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="gotoURL")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="roomChanged")]
+	
 	public class PalaceClient extends EventDispatcher
 	{
-				
-		[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
-		[Event(type="net.codecomposer.event.PalaceEvent",name="connectComplete")]
-		[Event(type="net.codecomposer.event.PalaceEvent",name="connectFailed")]
-		[Event(type="net.codecomposer.event.PalaceEvent",name="disconnected")]
-		[Event(type="net.codecomposer.event.PalaceEvent",name="gotoURL")]
 		
 		private static var instance:PalaceClient;
 		
@@ -120,6 +122,8 @@ package net.codecomposer.palace.rpc
 		public var waitingForMore:Boolean = false;
 		
 		[Bindable]
+		public var debugData:DebugData;
+		[Bindable]
 		public var utf8:Boolean = false;
 		[Bindable]
 		public var port:uint = 0;
@@ -168,6 +172,7 @@ package net.codecomposer.palace.rpc
 		
 		private var _userName:String = "OpenPalace User";
 		
+		[Bindable]
 		public var palaceController:PalaceController;
 		
 		private var temporaryUserFlags:int;
@@ -1382,6 +1387,8 @@ package net.codecomposer.palace.rpc
 			
 			currentRoom.name = roomName;
 			trace("Room name: " + currentRoom.name);
+			
+			debugData = new DebugData(currentRoom);
 			
 			var roomChangeEvent:PalaceEvent = new PalaceEvent(PalaceEvent.ROOM_CHANGED);
 			dispatchEvent(roomChangeEvent);

@@ -39,12 +39,12 @@ package net.codecomposer.palace.model
 		
 		public var type:int = 0;
 		public var dest:int = 0;
-		public var id:int = 0;
+		private var _id:int = 0;
 		private var _flags:int = 0;
 		public var state:int = 0;
 		public var numStates:int = 0;
 		public var polygon:Array = []; // Array of points
-		public var name:String = null;
+		private var _name:String = null;
 		public var location:FlexPoint;
 		public var scriptEventMask:int = 0;
 		public var nbrScripts:int = 0;
@@ -59,6 +59,28 @@ package net.codecomposer.palace.model
 		public var states:ArrayCollection = new ArrayCollection();
 		public var eventHandlers:Vector.<IptEventHandler> = new Vector.<IptEventHandler>();
 		
+		[Bindable('idChanged')]
+		public function set id(newValue:int):void {
+			if (_id != newValue) {
+				_id = newValue;
+				dispatchEvent(new Event('idChanged'));
+			}
+		}
+		public function get id():int {
+			return _id;
+		}
+		
+		[Bindable('nameChanged')]
+		public function set name(newValue:String):void {
+			if (_name != newValue) {
+				_name = newValue;
+				dispatchEvent(new Event('nameChanged'));
+			}
+		}
+		public function get name():String {
+			return _name;
+		}
+		
 		[Bindable('flagsChanged')]
 		public function set flags(newValue:int):void {
 			_flags = newValue;
@@ -66,6 +88,13 @@ package net.codecomposer.palace.model
 		}
 		public function get flags():int {
 			return _flags;
+		}
+		
+		public function get label():String {
+			var string:String = "id " + id.toString() + ": ";
+			string += (name) ? name : "(no name)";
+			trace(string);
+			return string;
 		}
 		
 		[Bindable('flagsChanged')]

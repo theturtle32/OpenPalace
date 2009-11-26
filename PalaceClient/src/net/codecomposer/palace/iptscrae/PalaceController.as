@@ -16,6 +16,7 @@ package net.codecomposer.palace.iptscrae
 
 	public class PalaceController implements IPalaceController
 	{
+		[Bindable]
 		public var scriptManager:PalaceIptManager;
 		[Bindable]
 		public var output:String;
@@ -615,7 +616,9 @@ package net.codecomposer.palace.iptscrae
 			var hotspot:PalaceHotspot = client.currentRoom.getHotspotById(spotId);
 			if (hotspot) {
 				var tokenList:IptTokenList = hotspot.getEventHandler(IptEventHandler.TYPE_ALARM);
-				setScriptAlarm(tokenList, hotspot.id, futureTime);
+				if (tokenList) {
+					setScriptAlarm(tokenList, hotspot.id, futureTime);
+				}
 			}
 		}
 	}

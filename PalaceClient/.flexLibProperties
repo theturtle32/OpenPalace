@@ -140,6 +140,8 @@
     <classEntry path="net.codecomposer.palace.view.RoomListGrid"/>
     <classEntry path="net.codecomposer.palace.view.UserListGrid"/>
     <classEntry path="net.codecomposer.util.MultiPartFormBuilder"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.DebugView"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.DebugData"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
