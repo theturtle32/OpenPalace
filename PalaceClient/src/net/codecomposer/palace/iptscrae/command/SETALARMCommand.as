@@ -3,7 +3,6 @@ package net.codecomposer.palace.iptscrae.command
 	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.iptscrae.PalaceIptExecutionContext;
 	import net.codecomposer.palace.iptscrae.PalaceIptManager;
-	import net.codecomposer.palace.script.IptAlarm;
 	
 	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.IptExecutionContext;

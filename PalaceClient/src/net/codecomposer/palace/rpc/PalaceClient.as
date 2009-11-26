@@ -55,7 +55,6 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceUser;
 	import net.codecomposer.palace.record.PalaceDrawRecord;
 	import net.codecomposer.palace.iptscrae.IptEventHandler;
-	import net.codecomposer.palace.script.IptscraeMgr;
 	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
 
@@ -170,7 +169,6 @@ package net.codecomposer.palace.rpc
 		private var _userName:String = "OpenPalace User";
 		
 		public var palaceController:PalaceController;
-		public var scriptManager:IptscraeMgr;
 		
 		private var temporaryUserFlags:int;
 		// We get the user flags before we have the current user
@@ -208,7 +206,6 @@ package net.codecomposer.palace.rpc
 			
 			palaceController = new PalaceController();
 			palaceController.client = this;
-			scriptManager = new IptscraeMgr(palaceController);
 		}
 		
 		public function gotoURL(url:String):void {

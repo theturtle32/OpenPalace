@@ -1,13 +1,11 @@
 package net.codecomposer.palace.iptscrae
 {
 	import net.codecomposer.palace.model.PalaceHotspot;
-	import net.codecomposer.palace.script.IptscraeMgr;
 	
 	import org.openpalace.iptscrae.IptTokenList;
 
 	public class TestPalaceController implements IPalaceController
 	{
-		public var scriptManager:IptscraeMgr;
 		
 		[Bindable]
 		public var output:String;
@@ -28,26 +26,8 @@ package net.codecomposer.palace.iptscrae
 			trace(value);
 		}
 		
-		public function setScriptManager(manager:IptscraeMgr):void
-		{
-			scriptManager = manager;
-		}
-		
 		public function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):void {
 			
-		}
-		
-		public function executeScript(script:String):int {
-			return doScript(script);
-		}
-		
-		private function doScript(script:String):int {
-			if (scriptManager) {
-				return scriptManager.doScript(script);
-			}
-			else {
-				return -1;
-			}
 		}
 		
 		public function gotoURL(url:String):void
