@@ -215,7 +215,7 @@ package org.openpalace.iptscrae
 			var output:String = e.message;
 			if (e.characterOffset != -1) {
 				var offset:int = e.characterOffset - characterOffsetCompensation;
-				output = "At character " + offset + ":\n" + output +
+				output = "At character " + offset + ":\n" + output + "\n" +
 					highlightSource(script, offset);
 			}
 			trace(output);
@@ -231,7 +231,7 @@ package org.openpalace.iptscrae
 					if (currentToken) {
 						charOffset = currentToken.scriptCharacterOffset;
 					}
-					return highlightSource(currentScript, charOffset, 25);
+					return highlightSource(tokenList.sourceScript, charOffset - tokenList.characterOffsetCompensation, 25);
 				}
 			}
 			return "";
@@ -243,7 +243,7 @@ package org.openpalace.iptscrae
 				
 				var charsAfter:int = script.length - characterOffset;
 				var charsBefore:int = script.length - charsAfter;
-				var output:String = "\n";
+				var output:String = "";
 				
 				output += script.slice(
 					characterOffset - Math.min(charsBefore, contextCharacters),
