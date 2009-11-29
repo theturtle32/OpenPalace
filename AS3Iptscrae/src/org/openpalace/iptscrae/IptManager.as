@@ -115,7 +115,7 @@ package org.openpalace.iptscrae
 		}
 
 		public function pause():void {
-			if (debugMode && !paused) {
+			if (debugMode) {
 				paused = true;
 				dispatchEvent(new IptEngineEvent(IptEngineEvent.PAUSE));
 			}
@@ -149,13 +149,13 @@ package org.openpalace.iptscrae
 			if (!_running) {
 				run();
 			}
+			if (debugMode && stepThroughScript) {
+				pause();
+			}
 		}
 		
 		public function run():void {
 			_running = true;
-			if (stepThroughScript) {
-				pause();
-			}
 			
 			// Pseudo-threading.  Execute a group of commands and then yield
 			// before scheduling the next group.
@@ -217,11 +217,22 @@ package org.openpalace.iptscrae
 		}
 		
 		private function outputError(script:String, e:IptError, characterOffsetCompensation:int = 0):void {
+			var sourceContext:String = "";
 			var output:String = e.message;
 			if (e.characterOffset != -1) {
 				var offset:int = e.characterOffset - characterOffsetCompensation;
-				output = "At character " + offset + ":\n" + output + "\n" +
-					highlightSource(script, offset);
+				if (currentRunnableItem) {
+					if (currentRunnableItem is IptTokenList) {
+						var tokenList:IptTokenList = IptTokenList(currentRunnableItem);
+						var charOffset:int = tokenList.scriptCharacterOffset;
+						var currentToken:IptToken = tokenList.getCurrentToken();
+						if (currentToken) {
+							charOffset = currentToken.scriptCharacterOffset;
+						}
+						sourceContext = highlightSource(tokenList.sourceScript, offset - tokenList.characterOffsetCompensation, 30);
+					}
+				}
+				output = "At character " + offset + ":\n" + output + "\n" + sourceContext;
 			}
 			trace(output);
 			traceMessage(output);
@@ -236,7 +247,7 @@ package org.openpalace.iptscrae
 					if (currentToken) {
 						charOffset = currentToken.scriptCharacterOffset;
 					}
-					return highlightSource(tokenList.sourceScript, charOffset - tokenList.characterOffsetCompensation, 25);
+					return highlightSource(tokenList.sourceScript, charOffset - tokenList.characterOffsetCompensation, 30);
 				}
 			}
 			return "";
