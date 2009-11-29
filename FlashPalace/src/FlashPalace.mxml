@@ -365,7 +365,7 @@
 
 			protected function handleZoomChange(event:Event):void
 			{
-				chatWindow.scaleX = chatWindow.scaleY = zoomSlider.value;
+				chatWindow.roomView.scaleX = chatWindow.roomView.scaleY = zoomSlider.value;
 			}
 
 		]]>
