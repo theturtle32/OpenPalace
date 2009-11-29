@@ -19,6 +19,7 @@ package org.openpalace.iptscrae
 		public var paused:Boolean = false;
 		public var debugMode:Boolean = false;
 		public var stepsPerTimeSlice:int = 800;
+		public var stepThroughScript:Boolean = false;
 		private var _running:Boolean = false;
 		
 		public var executionContextClass:Class = IptExecutionContext;
@@ -121,6 +122,7 @@ package org.openpalace.iptscrae
 		}
 		
 		public function resume():void {
+			stepThroughScript = false;
 			if (paused) {
 				paused = false;
 				dispatchEvent(new IptEngineEvent(IptEngineEvent.RESUME));
@@ -151,6 +153,9 @@ package org.openpalace.iptscrae
 		
 		public function run():void {
 			_running = true;
+			if (stepThroughScript) {
+				pause();
+			}
 			
 			// Pseudo-threading.  Execute a group of commands and then yield
 			// before scheduling the next group.
