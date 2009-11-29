@@ -151,6 +151,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				image.y = event.looseProp.y;
 				image.alpha = event.looseProp.prop.ghost ? 0.5 : 1.0;
 				imagesByLooseProp[event.looseProp] = image;
+				image.smoothBitmapContent = true;
 				if (event.addToFront) {
 					loosePropsGroup.addElement(image);
 				}
@@ -786,24 +787,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			<s:BasicLayout />
 		</s:layout>
 	</s:Group>
-<!--	
-	<mx:Canvas id="loosePropsCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off" top="0" right="0" bottom="0" left="0">
-		<mx:Repeater id="loosePropsRepeater" dataProvider="{room.looseProps}">
-			<mx:Image smoothBitmapContent="true" source="{loosePropsRepeater.currentItem.prop.bitmap}"
-				alpha="{loosePropsRepeater.currentItem.prop.ghost ? 0.5 : 1.0}"
-				x="{loosePropsRepeater.currentItem.x}"
-				y="{loosePropsRepeater.currentItem.y}" />
-		</mx:Repeater>
-	</mx:Canvas>
--->	
+
 	<s:Group id="avatarsGroup" top="0" right="0" bottom="0" left="0">
 		<s:layout>
 			<s:BasicLayout />
 		</s:layout>
 	</s:Group>
 	
-<!--	<mx:Canvas id="nameTagsCanvas" top="0" right="0" bottom="0" left="0" horizontalScrollPolicy="off" verticalScrollPolicy="off"  /> -->
-
 	<view:PaintLayer dataProvider="{room.drawFrontCommands}" />
 
 	<s:Group id="nameTagGroup" mouseEnabled="false"

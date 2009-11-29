@@ -111,6 +111,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				image.y = prop.verticalOffset;
 				image.alpha = prop.ghost ? 0.5 : 1.0;
 				imagesByProp[prop] = image;
+				image.smoothBitmapContent = true;
 				propsGroup.addElement(image);
 				updateAnimatedProps();
 			}
@@ -218,7 +219,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private function handlePropLoaded(event:Event):void {
 				var prop:PalaceProp = PalaceProp(event.target);
 				var image:AlphaHitAreaImage = imagesByProp[prop];
-				image.smoothBitmapContent = true;
 				if (image != null) {
 					image.alpha = 0;
 					image.source = prop.bitmap;
@@ -230,6 +230,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					fade.alphaTo = prop.ghost ? 0.5 : 1.0;
 					fade.play();
 				}
+				image.smoothBitmapContent = true;
 				updateAnimatedProps();
 			}
 			
