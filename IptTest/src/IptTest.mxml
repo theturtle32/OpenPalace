@@ -32,10 +32,6 @@ To add a breakpoint, type the keyword "_BREAKPOINT" into the code where you want
 				Alert.show(infoText, "Message", Alert.OK);
 			}
 			
-			private function stepChanged():void {
-				iptManager.stepThroughScript = stepCheckbox.selected;
-			}
-			
 			private function doScript():void {
 				executeButton.enabled = false;
 				iptManager.execute(scriptInput.text);
@@ -119,7 +115,6 @@ a ++
 				<s:HGroup gap="10">
 					<s:Button id="executeButton" label="Execute!" click="doScript()" />
 					<s:Button label="Reset Engine" click="resetEngine()" />
-					<s:CheckBox id="stepCheckbox" label="Step through script" change="stepChanged()" />
 				</s:HGroup>
 			</s:Group>
 			

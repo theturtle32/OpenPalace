@@ -17,6 +17,8 @@
 			private var callStack:ArrayCollection;
 			
 			private var _iptManager:IptManager;
+			[Bindable]
+			private var enableDebugging:Boolean;
 			
 			[Bindable(event="managerChanged")]
 			public function set iptManager(newValue:IptManager):void {
@@ -27,7 +29,7 @@
 					_iptManager.addEventListener(IptEngineEvent.ABORT, handleAbort);
 					_iptManager.addEventListener(IptEngineEvent.RESUME, handleResume, false, 10000);
 					_iptManager.addEventListener(IptEngineEvent.FINISH, handleFinish);
-					this.enabled = _iptManager.paused;
+					enableDebugging = _iptManager.paused;
 					updateDebugDisplay();
 				}
 			}
@@ -37,27 +39,27 @@
 			
 			private function handleResume(event:IptEngineEvent):void {
 				updateDebugDisplay();
-				this.enabled = false;
+				enableDebugging = false;
 			}			
 			
 			private function handlePause(event:IptEngineEvent):void {
 				updateDebugDisplay();
-				this.enabled = true;
+				enableDebugging = true;
 			}
 			
 			private function handleStart(event:IptEngineEvent):void {
 				updateDebugDisplay();
-				this.enabled = false;
+				enableDebugging = false;
 			}
 			
 			private function handleAbort(event:IptEngineEvent):void {
 				updateDebugDisplay();
-				this.enabled = false;
+				enableDebugging = false;
 			}
 			
 			private function handleFinish(event:IptEngineEvent):void {
 				updateDebugDisplay();
-				this.enabled = false;
+				enableDebugging = false;
 			}
 			
 			private function updateDataStack(stack:Vector.<IptToken>):void {
@@ -108,6 +110,10 @@
 			private function abort():void {
 				iptManager.abort();
 			}
+			
+			private function stepChanged():void {
+				iptManager.stepThroughScript = stepCheckbox.selected;
+			}
 		]]>
 	</fx:Script>
 	
@@ -137,8 +143,9 @@
 	</s:VGroup>
 	
 	<s:HGroup>
-		<s:Button label="Step" click="step()" />
-		<s:Button label="Run" click="resume()" />
-		<s:Button label="Abort" click="abort()" />
+		<s:Button label="Step" click="step()" enabled="{enableDebugging}" />
+		<s:Button label="Run" click="resume()" enabled="{enableDebugging}" />
+		<s:Button label="Abort" click="abort()" enabled="{enableDebugging}" />
+		<s:CheckBox id="stepCheckbox" label="Step through script" change="stepChanged()" />
 	</s:HGroup>
 </s:Group>
