@@ -681,6 +681,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				else {
 					backgroundImage.source = mediaServer + room.backgroundFile;
 				}
+				if (backgroundImage.content) {
+					backgroundImage.visible = true;
+				}
 			}
 			
 			private function tryJpegBG():void {
