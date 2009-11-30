@@ -19,6 +19,7 @@ package org.openpalace.iptscrae
 		public var paused:Boolean = false;
 		public var debugMode:Boolean = false;
 		public var stepsPerTimeSlice:int = 800;
+		public var delayBetweenTimeSlices:int = 1;
 		public var stepThroughScript:Boolean = false;
 		private var _running:Boolean = false;
 		
@@ -154,9 +155,8 @@ package org.openpalace.iptscrae
 			}
 		}
 		
-		public function run():void {
+		private function run():void {
 			_running = true;
-			
 			// Pseudo-threading.  Execute a group of commands and then yield
 			// before scheduling the next group.
 			for (var i:int = 0; i < stepsPerTimeSlice; i++) {
@@ -170,7 +170,7 @@ package org.openpalace.iptscrae
 					return;
 				}
 			}
-			setTimeout(run, 1);
+			setTimeout(run, delayBetweenTimeSlices);
 		}
 		
 		public function execute(script:String):void {
