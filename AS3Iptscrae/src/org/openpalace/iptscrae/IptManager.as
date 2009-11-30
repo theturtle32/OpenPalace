@@ -216,6 +216,17 @@ package org.openpalace.iptscrae
 			}
 		}
 		
+		public function parseEventHandlers(script:String):Object {
+			var handlers:Object = {};
+			try {
+				handlers = parser.parseEventHandlers(script);
+			}
+			catch(e:IptError) {
+				outputError(script, e);
+			}
+			return handlers;
+		}
+		
 		private function outputError(script:String, e:IptError, characterOffsetCompensation:int = 0):void {
 			var sourceContext:String = "";
 			var output:String = e.message;

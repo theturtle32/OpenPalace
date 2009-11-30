@@ -25,9 +25,9 @@ package net.codecomposer.palace.model
 	
 	import net.codecomposer.palace.event.HotspotEvent;
 	import net.codecomposer.palace.iptscrae.IptEventHandler;
+	import net.codecomposer.palace.iptscrae.PalaceIptManager;
 	import net.codecomposer.palace.rpc.PalaceClient;
 	
-	import org.openpalace.iptscrae.IptParser;
 	import org.openpalace.iptscrae.IptTokenList;
 
 	[Event(name="stateChanged",type="net.codecomposer.palace.event.HotspotEvent")]
@@ -234,11 +234,13 @@ package net.codecomposer.palace.model
 				var currentByte:int = -1;
 				var counter:int = scriptTextOffset;
 				var maxLength:int = roomBytes.length;
-				scriptString = "";
+				var scriptChars:int = 0;
 				while (currentByte != 0 && counter < maxLength) {
-					currentByte = roomBytes[counter++];
-					scriptString += String.fromCharCode(currentByte);
+					scriptByteArray.writeByte(roomBytes[counter++]);
+					scriptChars ++;
 				}
+				scriptByteArray.position = 0;
+				scriptString = scriptByteArray.readMultiByte(scriptChars, 'Windows-1252');
 			}
 			trace("Script: " + scriptString);
 			loadScripts();
@@ -274,6 +276,10 @@ package net.codecomposer.palace.model
 			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + numPoints);
 		}
 		
+		public function hasEventHandler(eventType:int):Boolean {
+			return (nbrScripts > 0 && (scriptEventMask & 1 << eventType) != 0);
+		}
+		
 		public function getEventHandler(eventType:int):IptTokenList {
 			if(nbrScripts > 0 && (scriptEventMask & 1 << eventType) != 0)
 			{
@@ -294,8 +300,8 @@ package net.codecomposer.palace.model
 			scriptEventMask = 0;
 			if(scriptString)
 			{
-				var parser:IptParser = PalaceClient.getInstance().palaceController.scriptManager.parser
-				var foundHandlers:Object = parser.parseEventHandlers(scriptString);
+				var manager:PalaceIptManager = PalaceClient.getInstance().palaceController.scriptManager;
+				var foundHandlers:Object = manager.parseEventHandlers(scriptString);
 				
 				for (var eventName:String in foundHandlers) {
 					var handler:IptTokenList = foundHandlers[eventName];
