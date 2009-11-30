@@ -34,6 +34,7 @@ package net.codecomposer.palace.iptscrae
 			"LOGMSG": LOGMSGCommand,
 			"LOCK": LOCKCommand,
 			"MACRO": MACROCommand,
+			"MOVE": MOVECommand,
 			"ME": MECommand,
 			"MIDILOOP": MIDILOOPCommand,
 			"MIDIPLAY": MIDIPLAYCommand,
