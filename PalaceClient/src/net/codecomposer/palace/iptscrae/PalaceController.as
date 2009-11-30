@@ -276,7 +276,9 @@ package net.codecomposer.palace.iptscrae
 		{
 			var room:PalaceCurrentRoom = client.currentRoom;
 			var hotspot:PalaceHotspot = room.getHotspotById(spotId);
-			hotspot.changeState(state);
+			if (hotspot) {
+				hotspot.changeState(state);
+			}
 		}
 		
 		public function getWhoTarget():int
