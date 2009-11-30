@@ -13,8 +13,8 @@ package net.codecomposer.palace.iptscrae.command
 	{
 		override public function execute(context:IptExecutionContext) : void {
 			var pc:PalaceController = PalaceIptManager(context.manager).pc;
-			var y:int = context.stack.popType(IntegerToken);
-			var x:int = context.stack.popType(IntegerToken);
+			var y:IntegerToken = context.stack.popType(IntegerToken);
+			var x:IntegerToken = context.stack.popType(IntegerToken);
 			var id:int = 0;
 			var propId:IptToken = context.stack.pop().dereference();
 			if(propId is IntegerToken) {
@@ -24,7 +24,7 @@ package net.codecomposer.palace.iptscrae.command
 				id = pc.getPropIdByName(StringToken(propId).data);
 			}
 			if(id != 0) {
-				pc.addLooseProp(id, x, y);
+				pc.addLooseProp(id, x.data, y.data);
 			}
 		}
 	}
