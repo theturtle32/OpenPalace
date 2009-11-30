@@ -12,7 +12,7 @@ package org.openpalace.iptscrae.command
 		override public function execute(context:IptExecutionContext):void {
 			var index:IntegerToken = context.stack.popType(IntegerToken);
 			var array:ArrayToken = context.stack.popType(ArrayToken);
-			var data:IptToken = context.stack.pop();
+			var data:IptToken = context.stack.pop().dereference();
 			
 			if (index.data >= 0 && index.data < array.data.length) {
 				try {
