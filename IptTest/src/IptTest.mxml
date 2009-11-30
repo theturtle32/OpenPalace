@@ -35,7 +35,7 @@ To add a breakpoint, type the keyword "_BREAKPOINT" into the code where you want
 			private function doScript():void {
 				executeButton.enabled = false;
 				iptManager.execute(scriptInput.text);
-				iptManager.run();
+				iptManager.start();
 			}
 						
 			private var commands:Object = {
