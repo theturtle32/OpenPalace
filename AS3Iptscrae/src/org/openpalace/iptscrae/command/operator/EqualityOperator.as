@@ -1,11 +1,9 @@
 package org.openpalace.iptscrae.command.operator
 {
-	import org.openpalace.iptscrae.IptError;
-	import org.openpalace.iptscrae.IptExecutionContext;
-	import org.openpalace.iptscrae.IptUtil;
 	import org.openpalace.iptscrae.IptCommand;
-	import org.openpalace.iptscrae.token.IntegerToken;
+	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.IptToken;
+	import org.openpalace.iptscrae.token.IntegerToken;
 	import org.openpalace.iptscrae.token.StringToken;
 	
 	public class EqualityOperator extends IptCommand
@@ -28,9 +26,7 @@ package org.openpalace.iptscrae.command.operator
 				);
 			}
 			else {
-				throw new IptError("Type mismatch or incompatible data type.  " +
-					"argument 1 is type " + IptUtil.className(a1) + ", " +
-					"and argument 2 is type " + IptUtil.className(a2) + ".");
+				result = new IntegerToken(0);
 			}
 			context.stack.push(result);
 		}

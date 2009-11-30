@@ -28,9 +28,7 @@ package org.openpalace.iptscrae.command.operator
 				);
 			}
 			else {
-				throw new IptError("Type mismatch or incompatible data type.  " +
-					"argument 1 is type " + IptUtil.className(a1) + ", " +
-					"and argument 2 is type " + IptUtil.className(a2) + ".");
+				result = new IntegerToken(1);
 			}
 			context.stack.push(result);
 		}
