@@ -25,6 +25,7 @@ package net.codecomposer.palace.view
 	import net.codecomposer.palace.event.HotspotEvent;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.rpc.PalaceClient;
+	import net.codecomposer.palace.iptscrae.IptEventHandler;
 
 	public class HotSpotSprite extends FlexSprite
 	{
@@ -99,13 +100,17 @@ package net.codecomposer.palace.view
 			if (hotSpot.dontMoveHere) {
 				event.stopImmediatePropagation();
 			}
+			
+			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_SELECT)) {
+				client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_SELECT);
+				return;
+			}
+			
 			switch (hotSpot.type) {
 				case PalaceHotspot.TYPE_NORMAL:
-					checkForPalaceLinksInScript();
 					break;
 				case PalaceHotspot.TYPE_PASSAGE:
 					event.stopPropagation();
-					checkForPalaceLinksInScript();
 					if (hotSpot.dest != 0) {
 						client.gotoRoom(hotSpot.dest);
 					}
@@ -136,7 +141,6 @@ package net.codecomposer.palace.view
 					trace("You clicked a nav area");
 					break;
 				case PalaceHotspot.TYPE_BOLT:
-					trace("You clicked a deadbolt");
 					var doorToBolt:PalaceHotspot = client.currentRoom.hotSpotsById[hotSpot.dest];
 					if (doorToBolt != null) {
 						if (doorToBolt.state == PalaceHotspot.STATE_UNLOCKED) {
@@ -147,18 +151,6 @@ package net.codecomposer.palace.view
 						}
 					}
 					break;
-			}
-		}//
-		
-		private function checkForPalaceLinksInScript():void {
-			trace("Checking for palace links in script...");
-			trace(hotSpot.script);
-			var matchParts:Array = hotSpot.script.toLowerCase().match(/on select.*\{.*["']palace:\/\/(.+?):{0,1}([0-9]*)["'].*netgoto/ms); 
-			if (matchParts && matchParts.length > 0) {
-				var port:int = int(matchParts[2]);
-				if (port < 1) { port = 9998; }
-				trace("Taking you to host: " + matchParts[1] + " port " + port);
-				client.connect(client.userName, matchParts[1], int(port));
 			}
 		}
 		

@@ -24,6 +24,11 @@ package net.codecomposer.palace.model
 	import mx.collections.ArrayCollection;
 	
 	import net.codecomposer.palace.event.HotspotEvent;
+	import net.codecomposer.palace.iptscrae.IptEventHandler;
+	import net.codecomposer.palace.iptscrae.PalaceIptManager;
+	import net.codecomposer.palace.rpc.PalaceClient;
+	
+	import org.openpalace.iptscrae.IptTokenList;
 
 	[Event(name="stateChanged",type="net.codecomposer.palace.event.HotspotEvent")]
 	[Event(name="moved",type="net.codecomposer.palace.event.HotspotEvent")]
@@ -34,21 +39,47 @@ package net.codecomposer.palace.model
 		
 		public var type:int = 0;
 		public var dest:int = 0;
-		public var id:int = 0;
+		private var _id:int = 0;
 		private var _flags:int = 0;
 		public var state:int = 0;
 		public var numStates:int = 0;
 		public var polygon:Array = []; // Array of points
-		public var name:String = null;
+		private var _name:String = null;
 		public var location:FlexPoint;
 		public var scriptEventMask:int = 0;
-		public var numScripts:int = 0;
-		public var script:String = "";
+		public var nbrScripts:int = 0;
+		public var scriptString:String = "";
+		public var scriptCursor:int = 0;
+		private var ungetFlag:Boolean = false;
+		private var gToken:String;
 		public var secureInfo:int;
 		public var refCon:int;
 		public var groupId:int;
 		public var scriptRecordOffset:int;
 		public var states:ArrayCollection = new ArrayCollection();
+		public var eventHandlers:Vector.<IptEventHandler> = new Vector.<IptEventHandler>();
+		
+		[Bindable('idChanged')]
+		public function set id(newValue:int):void {
+			if (_id != newValue) {
+				_id = newValue;
+				dispatchEvent(new Event('idChanged'));
+			}
+		}
+		public function get id():int {
+			return _id;
+		}
+		
+		[Bindable('nameChanged')]
+		public function set name(newValue:String):void {
+			if (_name != newValue) {
+				_name = newValue;
+				dispatchEvent(new Event('nameChanged'));
+			}
+		}
+		public function get name():String {
+			return _name;
+		}
 		
 		[Bindable('flagsChanged')]
 		public function set flags(newValue:int):void {
@@ -57,6 +88,13 @@ package net.codecomposer.palace.model
 		}
 		public function get flags():int {
 			return _flags;
+		}
+		
+		public function get label():String {
+			var string:String = "id " + id.toString() + ": ";
+			string += (name) ? name : "(no name)";
+			trace(string);
+			return string;
 		}
 		
 		[Bindable('flagsChanged')]
@@ -114,8 +152,13 @@ package net.codecomposer.palace.model
 		{
 		}
 		
+		public function get isDoor():Boolean {
+			return Boolean(type == TYPE_PASSAGE ||
+						   type == TYPE_LOCKABLE_DOOR ||
+						   type == TYPE_SHUTABLE_DOOR);
+		}
+		
 		public function changeState(newState:int):void {
-			trace("CHANGING STATE TO " + newState);
 			if (newState != state) {
 				state = newState;
 			}
@@ -166,7 +209,7 @@ package net.codecomposer.palace.model
 			trace("Points offset: " + pointsOffset);
 			type = ba.readShort();
 			groupId = ba.readShort();
-			numScripts = ba.readShort();
+			nbrScripts = ba.readShort();
 			scriptRecordOffset = ba.readShort();
 			state = ba.readShort();
 			numStates = ba.readShort();
@@ -191,13 +234,16 @@ package net.codecomposer.palace.model
 				var currentByte:int = -1;
 				var counter:int = scriptTextOffset;
 				var maxLength:int = roomBytes.length;
-				script = "";
+				var scriptChars:int = 0;
 				while (currentByte != 0 && counter < maxLength) {
-					currentByte = roomBytes[counter++];
-					script += String.fromCharCode(currentByte);
+					scriptByteArray.writeByte(roomBytes[counter++]);
+					scriptChars ++;
 				}
+				scriptByteArray.position = 0;
+				scriptString = scriptByteArray.readMultiByte(scriptChars, 'Windows-1252');
 			}
-			trace("Script: " + script);
+			trace("Script: " + scriptString);
+			loadScripts();
 
 			ba = new ByteArray();
 			var endPos:int = pointsOffset+(numPoints*4);
@@ -228,6 +274,46 @@ package net.codecomposer.palace.model
 			}
 			
 			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + numPoints);
+		}
+		
+		public function hasEventHandler(eventType:int):Boolean {
+			return (nbrScripts > 0 && (scriptEventMask & 1 << eventType) != 0);
+		}
+		
+		public function getEventHandler(eventType:int):IptTokenList {
+			if(nbrScripts > 0 && (scriptEventMask & 1 << eventType) != 0)
+			{
+				for(var i:int = 0; i < nbrScripts; i++)
+				{
+					var eventHandler:IptEventHandler = eventHandlers[i];
+					if (eventHandler.eventType == eventType) {
+						return eventHandler.tokenList;
+					}
+				}
+				
+			}
+			return null;
+		}
+
+		private function loadScripts():void {
+			nbrScripts = 0;
+			scriptEventMask = 0;
+			if(scriptString)
+			{
+				var manager:PalaceIptManager = PalaceClient.getInstance().palaceController.scriptManager;
+				var foundHandlers:Object = manager.parseEventHandlers(scriptString);
+				
+				for (var eventName:String in foundHandlers) {
+					var handler:IptTokenList = foundHandlers[eventName];
+					var eventType:int = IptEventHandler.getEventType(eventName)
+					var eventHandler:IptEventHandler =
+						new IptEventHandler(eventType, handler.sourceScript, handler);
+					eventHandlers.push(eventHandler);
+					trace("Got event handler.  Type: " + eventHandler.eventType + " Script: \n" + eventHandler.script);
+					nbrScripts ++;
+					scriptEventMask |= (1 << eventType);
+				}
+			}
 		}
 
 	}

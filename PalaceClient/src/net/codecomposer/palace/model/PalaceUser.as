@@ -97,6 +97,18 @@ package net.codecomposer.palace.model
 			props.refresh();
 		}
 		
+		public function get isWizard():Boolean {
+			return Boolean((flags & SUPERUSER) > 0);
+		}
+		
+		public function get isGod():Boolean {
+			return Boolean((flags & GOD) > 0);
+		}
+		
+		public function get isGuest():Boolean {
+			return Boolean((flags & GUEST) > 0);
+		}
+		
 		public function toggleProp(prop:PalaceProp):void {
 			var wearingProp:Boolean = (props.getItemIndex(prop) != -1);
 			if (wearingProp) {
@@ -111,6 +123,17 @@ package net.codecomposer.palace.model
 			prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
 			if (props.length < 9 && props.getItemIndex(prop) == -1) {
 				props.addItem(prop);
+			}
+			syncPropIdsToProps();
+			checkFaceProps();
+			updatePropsOnServer();
+		}
+		
+		public function setProps(props:Vector.<PalaceProp>):void {
+			this.props.removeAll();
+			for each (var prop:PalaceProp in props) {
+				prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
+				this.props.addItem(prop);
 			}
 			syncPropIdsToProps();
 			checkFaceProps();

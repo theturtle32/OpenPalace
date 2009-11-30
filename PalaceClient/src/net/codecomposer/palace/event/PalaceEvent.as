@@ -10,8 +10,10 @@ package net.codecomposer.palace.event
 		public static const CONNECT_COMPLETE:String = "connectComplete";
 		public static const CONNECT_FAILED:String = "connectFailed";
 		public static const DISCONNECTED:String = "disconnected";
+		public static const GOTO_URL:String = "gotoURL";
 		
 		public var text:String;
+		public var url:String;
 		
 		public function PalaceEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false)
 		{

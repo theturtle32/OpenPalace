@@ -53,6 +53,7 @@
 		
 		<code:PromptingTextInput prompt="Type here to chat..."
 								 width="100%"
+								 enabled="{palace.connected}"
 								 id="chatBox" keyDown="handleChatKeyDown(event);" maxChars="254"/>
 	</s:Group>
 	

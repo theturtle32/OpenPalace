@@ -16,6 +16,7 @@
 			import mx.binding.utils.ChangeWatcher;
 			import mx.controls.Alert;
 			import mx.events.BrowserChangeEvent;
+			import mx.events.CloseEvent;
 			import mx.events.PropertyChangeEvent;
 			import mx.managers.BrowserManager;
 			import mx.managers.IBrowserManager;
@@ -34,6 +35,7 @@
 			private var preferencesWindow:PreferencesWindow;
 			private var propsWindow:PropsWindow;
 			private var newPropWindow:NewPropWindow;
+			private var debugWindow:DebugWindow;
 			
 			private var preferences:Preferences = Preferences.getInstance();
 			
@@ -75,6 +77,21 @@
 				palace.addEventListener(PalaceEvent.CONNECT_FAILED, handleConnectFailed);
 				palace.addEventListener(PalaceEvent.CONNECT_START, handleConnectStart);
 				palace.addEventListener(PalaceEvent.DISCONNECTED, handleDisconnected);
+				palace.addEventListener(PalaceEvent.GOTO_URL, handleGotoURL);
+			}
+			
+			private function handleGotoURL(event:PalaceEvent):void {
+				var url:String = event.url;
+				Alert.show("Do you want to visit this url in your browser?\n\n" + event.url,
+						   "External Link",
+						   Alert.YES | Alert.NO,
+						   null,
+						   function(event:CloseEvent):void {
+							  if (event.detail == Alert.YES) {
+								  var req:URLRequest = new URLRequest(url);
+								  navigateToURL(req, "_BLANK");
+							  }
+						   });
 			}
 			
 			private function handleConnectComplete(event:PalaceEvent):void {
@@ -114,21 +131,22 @@
 				var parameters:Object = URLUtil.stringToObject(browserManager.fragment);
 				if (parameters.palace != null) {
 					var url:String = String(parameters.palace).toLowerCase();
-					var match:Array = url.match(/^palace:\/\/(.*)$/);
+					var match:Array = url.match(/^(palace:\/\/){0,1}(.*?):?([0-9]*)\/?([0-9]*)$/);
+					var port:uint = 9998;
+					var initialRoom:uint = 0;
+					var hostName:String;
 					if (match && match.length > 0) {
-						url = match[1];
+						hostName = match[2];
+						if (match[3]) {
+							port = parseInt(match[3]);
+						}
+						if (match[4]) {
+							initialRoom = parseInt(match[4]);
+						}
 					}
 					
-					var parts:Array = url.split(':');
-					var hostName:String = parts[0];
-					var port:Number = 9998;
-					if ( parts[1] && String(parts[1]).length > 0 ) {
-						port = uint(parts[1]);
-					} 
-					trace("palace = " + hostName + " port " + port);
-					
 					if (hostName && hostName.length > 0) {
-						palace.connect(preferences.userName, hostName, port);
+						palace.connect(preferences.userName, hostName, port, initialRoom);
 					}
 				}
 			}
@@ -268,6 +286,29 @@
 				}
 			}
 			
+			private function showDebugWindow():void {
+				debugWindow = new DebugWindow();
+				debugWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					debugButton.selected = false;
+				});
+				mdic.windowManager.add(debugWindow);
+			}
+			
+			private function hideDebugWindow():void {
+				mdic.windowManager.remove(debugWindow);
+				debugWindow = null;
+				palace.palaceController.scriptManager.resume();
+			}
+			
+			private function handleDebugClick(event:MouseEvent):void {
+				if (ToggleButton(event.target).selected) {
+					showDebugWindow();
+				}
+				else {
+					hideDebugWindow();
+				}
+			}
+			
 			private function showDirectoryWindow():void {
 				directoryWindow = new DirectoryWindow();
 				directoryWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
@@ -336,6 +377,7 @@
 		<s:ToggleButton id="logButton" label="Log" click="handleLogClick(event)" />
 		<s:ToggleButton id="propsButton" label="Props" click="handlePropsClick(event)" />
 		<s:ToggleButton id="preferencesButton" label="Preferences" click="handlePreferencesClick(event)" />
+		<s:ToggleButton id="debugButton" label="Debug" click="handleDebugClick(event)" visible="false" includeInLayout="false" />
 		<mx:Spacer width="15" />
 		<s:Label text="Zoom:" />
 		<s:HSlider id="zoomSlider" width="75" value="1.0" minimum="0.5" maximum="1.5" snapInterval="0.01" liveDragging="true" change="handleZoomChange(event)" />

@@ -88,6 +88,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_MOVED, handleLoosePropMoved);
 					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_REMOVED, handleLoosePropRemoved);
 					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROPS_CLEARED, handleLoosePropsCleared);
+					_room.roomView = null;
 					roomBackgroundWatcher.unwatch();
 				}
 				if (_room !== newValue) {
@@ -103,6 +104,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					_room.addEventListener(PalaceRoomEvent.LOOSE_PROP_REMOVED, handleLoosePropRemoved);
 					_room.addEventListener(PalaceRoomEvent.LOOSE_PROPS_CLEARED, handleLoosePropsCleared);
 					roomBackgroundWatcher = ChangeWatcher.watch(room, 'backgroundFile', handleBGChange);
+					_room.roomView = this;
 					dispatchEvent(new Event("roomChanged"));
 				};
 			}
@@ -453,8 +455,11 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					if (!displayChatBubble(message)) {
 						// If we're not currently able to display the chat bubble,
 						// put it back on the queue.
-						trace("Didn't successfully display message.");
-						chatQueue.push(message);
+						//trace("Didn't successfully display message.");
+						message.displayFailureCount ++;
+						if (message.displayFailureCount < 40) {
+							chatQueue.push(message);
+						}
 					}
 				}
 			}
@@ -709,7 +714,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					var fade:Fade = new Fade(backgroundImage);
 					fade.duration = 600;
 					fade.alphaFrom = 0;
-					fade.alphaTo = 1;
+					fade.alphaTo = room.dimLevel;
 					fade.play();
 					currentState = "normal";
 				}
@@ -768,6 +773,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 							dragDrop="handleLoosePropDragDrop(event)"
 							dragOver="handleLoosePropDragOver(event)"
 							/>
+	
+	<s:Rect width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" alpha="{1 - room.dimLevel}" />
+		</s:fill>
+	</s:Rect>
 	
 	<view:PaintLayer dataProvider="{room.drawBackCommands}" />
 	

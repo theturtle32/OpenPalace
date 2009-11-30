@@ -11,6 +11,7 @@ package net.codecomposer.palace.model
 		public var tint:uint;
 		public var user:PalaceUser;
 		public var chatBubble:ChatBubble;
+		public var displayFailureCount:uint = 0;
 		
 		private static const locationRegex:RegExp = /^\@([\d]+),([\d]+)\s*(.*)$/; 
 		

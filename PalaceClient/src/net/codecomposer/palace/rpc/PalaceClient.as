@@ -30,6 +30,7 @@ package net.codecomposer.palace.rpc
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
+	import flash.utils.setTimeout;
 	
 	import mx.collections.ArrayCollection;
 	import mx.controls.Alert;
@@ -38,6 +39,9 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.crypto.PalaceEncryption;
 	import net.codecomposer.palace.event.PalaceEvent;
 	import net.codecomposer.palace.event.PropEvent;
+	import net.codecomposer.palace.iptscrae.DebugData;
+	import net.codecomposer.palace.iptscrae.IptEventHandler;
+	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
 	import net.codecomposer.palace.message.RoomDescription;
@@ -56,13 +60,15 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.record.PalaceDrawRecord;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
 
+	[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="connectComplete")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="connectFailed")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="disconnected")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="gotoURL")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="roomChanged")]
+	
 	public class PalaceClient extends EventDispatcher
 	{
-				
-		[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
-		[Event(type="net.codecomposer.event.PalaceEvent",name="connectComplete")]
-		[Event(type="net.codecomposer.event.PalaceEvent",name="connectFailed")]
-		[Event(type="net.codecomposer.event.PalaceEvent",name="disconnected")]
 		
 		private static var instance:PalaceClient;
 		
@@ -117,11 +123,15 @@ package net.codecomposer.palace.rpc
 		public var waitingForMore:Boolean = false;
 		
 		[Bindable]
+		public var debugData:DebugData;
+		[Bindable]
 		public var utf8:Boolean = false;
 		[Bindable]
-		public var port:int = 0;
+		public var port:uint = 0;
 		[Bindable]
 		public var host:String = null;
+		[Bindable]
+		public var initialRoom:uint = 0;
 		[Bindable]
 		public var state:int = STATE_DISCONNECTED;
 		[Bindable]
@@ -144,6 +154,10 @@ package net.codecomposer.palace.rpc
 		public var roomList:ArrayCollection = new ArrayCollection();
 		public var roomById:Object = {};
 		
+		public var chatstr:String = "";
+		public var whochat:int = 0;
+		public var needToRunSignonHandlers:Boolean = true; 
+		
 		private var assetRequestQueueTimer:Timer = null;
 		private var assetRequestQueue:Array = [];
 		private var assetRequestQueueCounter:int = 0;
@@ -158,6 +172,9 @@ package net.codecomposer.palace.rpc
 		private var recentLogonUserIds:ArrayCollection = new ArrayCollection();
 		
 		private var _userName:String = "OpenPalace User";
+		
+		[Bindable]
+		public var palaceController:PalaceController;
 		
 		private var temporaryUserFlags:int;
 		// We get the user flags before we have the current user
@@ -192,9 +209,20 @@ package net.codecomposer.palace.rpc
 			if (PalaceClient.instance != null) {
 				throw new Error("Cannot create more than one instance of a singleton.");
 			}
+			
+			palaceController = new PalaceController();
+			palaceController.client = this;
+		}
+		
+		public function gotoURL(url:String):void {
+			var event:PalaceEvent = new PalaceEvent('gotoURL');
+			event.url = url;
+			dispatchEvent(event);
 		}
 		
 		private function resetState():void {
+			palaceController.clearAlarms();
+			needToRunSignonHandlers = true;
 			messageID = 0;
 			messageSize = 0;
 			messageP = 0;
@@ -227,8 +255,8 @@ package net.codecomposer.palace.rpc
 		// ***************************************************************
 		// Begin public functions for user interaction
 		// ***************************************************************
-
-		public function connect(userName:String, host:String, port:int = 9998):void {
+		
+		public function connect(userName:String, host:String, port:uint = 9998, initialRoom:uint = 0):void {
 			PalaceClient.loaderContext.checkPolicyFile = true;
 			
 			host = host.toLowerCase();
@@ -239,6 +267,7 @@ package net.codecomposer.palace.rpc
 			
 			this.host = host;
 			this.port = port;
+			this.initialRoom = initialRoom;
 			this.userName = userName;
 			
 			if (connected || (socket && socket.connected)) {
@@ -259,6 +288,8 @@ package net.codecomposer.palace.rpc
 		
 		public function disconnect():void {
 			if (socket && socket.connected) {
+				palaceController.triggerHotspotEvents(IptEventHandler.TYPE_LEAVE);
+				palaceController.triggerHotspotEvents(IptEventHandler.TYPE_SIGNOFF);
 				socket.writeInt(OutgoingMessageTypes.BYE);
 				socket.writeInt(0);
 				socket.writeInt(id);
@@ -280,6 +311,41 @@ package net.codecomposer.palace.rpc
 			}
 		}
 
+		public function roomChat(message:String):void {
+			if (!connected || message == null || message.length == 0) {
+				return;
+			}
+			trace("Saying: " + message);
+			var messageBytes:ByteArray = PalaceEncryption.getInstance().encrypt(message, utf8, 254);
+			messageBytes.position = 0;
+
+			socket.writeInt(OutgoingMessageTypes.SAY);
+			socket.writeInt(messageBytes.length + 3);
+			socket.writeInt(id);
+			socket.writeShort(messageBytes.length + 3);
+			socket.writeBytes(messageBytes);
+			socket.writeByte(0);
+			socket.flush();
+		}
+		
+		public function privateMessage(message:String, userId:int):void {
+			if (!connected || message == null || message.length == 0) {
+				return;
+			}
+						
+			var messageBytes:ByteArray = PalaceEncryption.getInstance().encrypt(message, utf8, 254);
+			messageBytes.position = 0;
+			
+			socket.writeInt(OutgoingMessageTypes.WHISPER);
+			socket.writeInt(messageBytes.length + 7); // length + 2 bytes for short, + 4 bytes for id
+			socket.writeInt(id);
+			socket.writeInt(userId);
+			socket.writeShort(messageBytes.length + 3);
+			socket.writeBytes(messageBytes);
+			socket.writeByte(0);
+			socket.flush();
+		}
+		
 		public function say(message:String):void {
 			if (!connected || message == null || message.length == 0) {
 				return;
@@ -287,31 +353,97 @@ package net.codecomposer.palace.rpc
 			
 			if (handleClientCommand(message)) { return; }
 			
+			whochat = currentUser.id;
+			if (message.charAt(0) == "/") {
+				// Run iptscrae
+				palaceController.executeScript(message.substr(1));
+				return;
+			}
+			
 			if (message.toLocaleLowerCase() == "clean") {
 				deleteLooseProp(-1); // clear loose props
 				return;
 			}
 			
+			chatstr = message;
+			
+			// Handle room outchat handlers
+			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_OUTCHAT);
+			
 			var whispering:Boolean = currentRoom.selectedUser != null;
 			
-			var messageBytes:ByteArray = PalaceEncryption.getInstance().encrypt(message, utf8, 254);
-			messageBytes.position = 0;
-			
 			if (whispering) {
-				socket.writeInt(OutgoingMessageTypes.WHISPER);
-				socket.writeInt(messageBytes.length + 7); // length + 2 bytes for short, + 4 bytes for id
-				socket.writeInt(id);
-				socket.writeInt(currentRoom.selectedUser.id);
+				privateMessage(chatstr, currentRoom.selectedUser.id);
 			}
 			else {
-				socket.writeInt(OutgoingMessageTypes.SAY);
-				socket.writeInt(messageBytes.length + 3);
-				socket.writeInt(id);
+				roomChat(chatstr);
 			}
-			socket.writeShort(messageBytes.length + 3);
+		}
+		
+		public function globalMessage(message:String):void {
+			if (!connected || message == null || message.length == 0) {
+				return;
+			}
+			
+			if (message.length > 254) {
+				message = message.substr(0, 254);
+			}
+			trace("GLOBALMSG");
+			var messageBytes:ByteArray = new ByteArray();
+			messageBytes.writeMultiByte(message, "Windows-1252");
+			messageBytes.position = 0;
+			
+			socket.writeInt(OutgoingMessageTypes.GLOBAL_MSG);
+			socket.writeInt(messageBytes.length + 1);
+			socket.writeInt(0);
+			
 			socket.writeBytes(messageBytes);
 			socket.writeByte(0);
-			socket.flush();
+			socket.flush()
+		}
+		
+		public function roomMessage(message:String):void {
+			if (!connected || message == null || message.length == 0) {
+				return;
+			}
+			trace("ROOMMSG");
+			if (message.length > 254) {
+				message = message.substr(0, 254);
+			}
+			
+			var messageBytes:ByteArray = new ByteArray();
+			messageBytes.writeMultiByte(message, "Windows-1252");
+			messageBytes.position = 0;
+			
+			socket.writeInt(OutgoingMessageTypes.ROOM_MSG);
+			socket.writeInt(messageBytes.length + 1);
+			socket.writeInt(0);
+			
+			socket.writeBytes(messageBytes);
+			socket.writeByte(0);
+			socket.flush()
+		}
+		
+		public function superUserMessage(message:String):void {
+			if (!connected || message == null || message.length == 0) {
+				return;
+			}
+			trace("SUSRMSG");
+			if (message.length > 254) {
+				message = message.substr(0, 254);
+			}
+			
+			var messageBytes:ByteArray = new ByteArray();
+			messageBytes.writeMultiByte(message, "Windows-1252");
+			messageBytes.position = 0;
+			
+			socket.writeInt(OutgoingMessageTypes.SUSR_MSG);
+			socket.writeInt(messageBytes.length + 1);
+			socket.writeInt(0);
+			
+			socket.writeBytes(messageBytes);
+			socket.writeByte(0);
+			socket.flush()
 		}
 		
 		private function handleClientCommand(message:String):Boolean {
@@ -364,16 +496,29 @@ package net.codecomposer.palace.rpc
 			user.y = y;
 		}
 		
+		public function setFace(face:int):void {
+			if (!connected) {
+				return;
+			}
+			socket.writeInt(OutgoingMessageTypes.USER_FACE);
+			socket.writeInt(2);
+			socket.writeInt(id);
+			face = Math.max(Math.min(face, 15), 0);
+			socket.writeShort(face);
+			currentUser.face = face;
+			socket.flush();
+		}
+		
 		public function setColor(color:int):void {
 			if (!connected) {
 				return;
 			}
+			color = Math.max(Math.min(color, 15), 0);
+			currentUser.color = color;
 			socket.writeInt(OutgoingMessageTypes.USER_COLOR);
 			socket.writeInt(2);
 			socket.writeInt(id);
-			color = Math.max(Math.min(color, 15), 0);
 			socket.writeShort(color);
-			currentUser.color = color;
 			socket.flush();
 		}
 				
@@ -401,6 +546,12 @@ package net.codecomposer.palace.rpc
 			if (!connected) {
 				return;
 			}
+			palaceController.clearAlarms();
+			
+			needToRunSignonHandlers = false;
+			
+			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_LEAVE);
+			
 			socket.writeInt(OutgoingMessageTypes.GOTO_ROOM);
 			socket.writeInt(2); // length
 			socket.writeInt(id);
@@ -429,6 +580,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		public function setSpotState(roomId:int, spotId:int, spotState:int):void {
+			trace("Setting spot state");
 			socket.writeInt(OutgoingMessageTypes.SPOT_STATE);
 			socket.writeInt(6);
 			socket.writeInt(0);
@@ -679,20 +831,20 @@ package net.codecomposer.palace.rpc
 								handlePing(size, p);
 								break;
 								
-							case IncomingMessageTypes.RECEIVE_CHAT:
-								handleReceiveChat(size, p);
+							case IncomingMessageTypes.XTALK:
+								handleReceiveXTalk(size, p);
 								break;
 								
-							case IncomingMessageTypes.RECEIVE_WHISPER:
-								handleReceiveWhisper(size, p);
+							case IncomingMessageTypes.XWHISPER:
+								handleReceiveXWhisper(size, p);
 								break;
 							
-							case IncomingMessageTypes.ALT_RECEIVE_CHAT:
-								handleAltReceiveChat(size, p);
+							case IncomingMessageTypes.TALK:
+								handleReceiveTalk(size, p);
 								break;
 								
-							case IncomingMessageTypes.ALT_RECEIVE_WHISPER:
-								handleAltReceiveWhisper(size, p);
+							case IncomingMessageTypes.WHISPER:
+								handleReceiveWhisper(size, p);
 								break;
 							
 							case IncomingMessageTypes.ASSET_INCOMING:
@@ -904,7 +1056,7 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(0);
         
 			// desired room id
-			socket.writeShort(0);
+			socket.writeShort(initialRoom);
 
 			// Protocol spec lists these as reserved, and says there shouldn't
 			// be anything put in them... but the server records these 6 bytes
@@ -1237,6 +1389,8 @@ package net.codecomposer.palace.rpc
 			currentRoom.name = roomName;
 			trace("Room name: " + currentRoom.name);
 			
+			debugData = new DebugData(currentRoom);
+			
 			var roomChangeEvent:PalaceEvent = new PalaceEvent(PalaceEvent.ROOM_CHANGED);
 			dispatchEvent(roomChangeEvent);
 		}
@@ -1450,6 +1604,20 @@ package net.codecomposer.palace.rpc
 			currentRoom.addUser(user);
 			
 			trace("User " + user.name + " entered.");
+			
+			if (user.id == id) {
+				// Self entered
+				// Signon handlers
+				setTimeout(function():void {
+					if (needToRunSignonHandlers) {
+						palaceController.triggerHotspotEvents(IptEventHandler.TYPE_SIGNON);
+						needToRunSignonHandlers = false;
+					}
+					
+					// Enter handlers
+					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_ENTER);
+				}, 20);
+			}
 		}
 
 		private function handlePing(size:int, referenceId:int):void {
@@ -1466,7 +1634,8 @@ package net.codecomposer.palace.rpc
 			trace("Pinged.");
 		}
 		
-		private function handleAltReceiveChat(size:int, referenceId:int):void {
+		// Unencrypted TALK message
+		private function handleReceiveTalk(size:int, referenceId:int):void {
 			var messageBytes:ByteArray = new ByteArray();
 			var message:String;
 			if (utf8) {
@@ -1475,51 +1644,74 @@ package net.codecomposer.palace.rpc
 			else {
 				message = socket.readMultiByte(size-1, 'Windows-1252');
 			}
-			if (socket.bytesAvailable > 0) {
-				socket.readByte();
-			}
-			currentRoom.roomMessage(message);
-			trace("Got Room Message: " + message);
-		}
-		
-		private function handleAltReceiveWhisper(size:int, referenceId:int):void {
-			var messageBytes:ByteArray = new ByteArray();
-			var message:String;
-			if (utf8) {
-				message = socket.readUTFBytes(size-1);
+			socket.readByte();
+			if (referenceId == 0) {
+				currentRoom.roomMessage(message);
+				trace("Got Room Message: " + message);
 			}
 			else {
-				message = socket.readMultiByte(size-1, 'Windows-1252');
+				whochat = referenceId;
+				if (message.length > 0) {
+					chatstr = message;
+					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
+					currentRoom.chat(referenceId, chatstr, message);
+				}
+				trace("Got talk from userID " + referenceId + ": " + message);
 			}
-			if (socket.bytesAvailable > 0) {
-				socket.readByte();
-			}
-			currentRoom.roomWhisper(message);
-			trace("Got ESP: " + message);
-		}
-		
-		private function handleReceiveChat(size:int, referenceId:int):void {
-			var length:int = socket.readShort();
-			var messageBytes:ByteArray = new ByteArray();
-			socket.readBytes(messageBytes, 0, length-3);
-			if (socket.bytesAvailable > 0) {
-				socket.readByte();
-			}
-			var message:String = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
-			currentRoom.chat(referenceId, message);
-			trace("Got chat from userID " + referenceId + ": " + message);
 		}
 		
 		private function handleReceiveWhisper(size:int, referenceId:int):void {
-			var length:int = socket.readShort();
 			var messageBytes:ByteArray = new ByteArray();
-			socket.readBytes(messageBytes, 0, length-3);
-			if (socket.bytesAvailable > 0) {
-				socket.readByte();
+			var message:String;
+			if (utf8) {
+				message = socket.readUTFBytes(size-1);
 			}
+			else {
+				message = socket.readMultiByte(size-1, 'Windows-1252');
+			}
+			socket.readByte();
+			if (referenceId == 0) {
+				currentRoom.roomWhisper(message);
+				trace("Got ESP: " + message);
+			}
+			else {
+				whochat = referenceId;
+				if (message.length > 0) {
+					chatstr = message;
+					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
+					currentRoom.whisper(referenceId, chatstr, message);
+				}
+				trace("Got whisper from userID " + referenceId + ": " + message);
+			}
+		}
+		
+		private function handleReceiveXTalk(size:int, referenceId:int):void {
+			var length:int = socket.readShort();
+			trace("XTALK.  Size: " + size + " Length: " + length);
+			var messageBytes:ByteArray = new ByteArray();
+			socket.readBytes(messageBytes, 0, length-3); // Length field lies
+			socket.readByte(); // Last byte is unnecessary?
 			var message:String = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
-			currentRoom.whisper(referenceId, message);
-			trace("Got whisper from userID " + referenceId + ": " + message);
+			chatstr = message;
+			whochat = referenceId;
+			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
+			currentRoom.chat(referenceId, chatstr, message);
+			trace("Got xtalk from userID " + referenceId + ": " + chatstr);
+		}
+		
+		private function handleReceiveXWhisper(size:int, referenceId:int):void {
+			var length:int = socket.readShort();
+			trace("XWHISPER.  Size: " + size + " Length: " + length);
+			var messageBytes:ByteArray = new ByteArray();
+			socket.readBytes(messageBytes, 0, length-3); // Length field lies.
+			socket.readByte(); // Last byte is unnecessary?
+			var message:String = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
+			chatstr = message;
+			whochat = referenceId;
+			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
+			
+			currentRoom.whisper(referenceId, chatstr, message);
+			trace("Got xwhisper from userID " + referenceId + ": " + chatstr);
 		}
 		
 		private function handleMovement(size:int, referenceId:int):void {
@@ -1695,6 +1887,7 @@ package net.codecomposer.palace.rpc
 			if (roomId == currentRoom.id) {
 				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
 				hs.changeState(1);
+				palaceController.triggerHotspotEvent(hs, IptEventHandler.TYPE_LOCK);
 			}
 		}
 		
@@ -1705,6 +1898,7 @@ package net.codecomposer.palace.rpc
 			if (roomId == currentRoom.id) {
 				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
 				hs.changeState(0);
+				palaceController.triggerHotspotEvent(hs, IptEventHandler.TYPE_UNLOCK);
 			}
 		}
 		

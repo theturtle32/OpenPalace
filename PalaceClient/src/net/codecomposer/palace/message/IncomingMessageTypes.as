@@ -47,10 +47,10 @@ package net.codecomposer.palace.message
 		
 		public static const PINGED:int = 1885957735;
 		
-		public static const RECEIVE_CHAT:int = 2020895851;
-		public static const RECEIVE_WHISPER:int = 2021091699;
-		public static const ALT_RECEIVE_CHAT:int = 1952541803; // Whisper/chat?
-		public static const ALT_RECEIVE_WHISPER:int = 2003331443; // Whisper/chat/
+		public static const XTALK:int = 0x78746c6b; // Encrypted
+		public static const XWHISPER:int = 0x78776973; // Encrypted
+		public static const TALK:int = 0x74616C6B; // Unencrypted
+		public static const WHISPER:int = 0x77686973; // Unencrypted
 		public static const MOVEMENT:int = 1967943523;
 		public static const USER_COLOR:int = 1970500163;
 		public static const USER_FACE:int = 1970500166;

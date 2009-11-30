@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/halo"
+			   creationComplete="handleCreationComplete()" xmlns:local="*">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<fx:String id="infoText">
+This interpreter console runs a non-Palace-specific version of Iptscrae. All the core commands and operators are supported, but the Palace-specific ones are not.
+
+You cannot use any commands that draw, manipulate spots, work with props, etc.
+
+For log output, use the "_TRACE" command:
+"Hello there!" _TRACE
+
+To add a breakpoint, type the keyword "_BREAKPOINT" into the code where you want to pause execution.
+		</fx:String>
+	</fx:Declarations>
+
+	<fx:Script>
+		<![CDATA[
+			import customCommands.SAYCommand;
+			
+			import mx.controls.Alert;
+			
+			import org.openpalace.iptscrae.IptEngineEvent;
+			
+			private var iptManager:TestIptscraeManager;
+			
+			private function handleCreationComplete():void {
+				resetEngine();
+				Alert.show(infoText, "Message", Alert.OK);
+			}
+			
+			private function doScript():void {
+				executeButton.enabled = false;
+				iptManager.execute(scriptInput.text);
+				iptManager.start();
+			}
+						
+			private var commands:Object = {
+				"SAY": SAYCommand,
+				"LOCALMSG": SAYCommand,
+				"LOGMSG": SAYCommand,
+				"ROOMMSG": SAYCommand,
+				"GLOBALMSG": SAYCommand,
+				"SUSRMSG": SAYCommand,
+				"STATUSMSG": SAYCommand
+			};
+			
+			private function resetEngine():void {
+				iptManager = new TestIptscraeManager();
+				iptManager.debugMode = true;
+				iptManager.addEventListener(IptEngineEvent.TRACE, handleScriptTrace);
+				iptManager.parser.addCommands(commands);
+				iptManager.addEventListener(IptEngineEvent.FINISH, handleScriptEnd);
+				iptManager.addEventListener(IptEngineEvent.ABORT, handleScriptEnd);
+				debugConsole.iptManager = iptManager;
+				scriptOutput.text = "";
+				executeButton.enabled = true;
+			}
+			
+			private function handleScriptEnd(event:IptEngineEvent):void {
+				executeButton.enabled = true;
+				trace("Script end.");
+			}
+			
+			private function handleScriptTrace(event:IptEngineEvent):void {
+				scriptOutput.text += (event.message + "\n"); 
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Group width="100%" height="100%">
+		<s:layout>
+			<s:VerticalLayout
+				gap="5"
+				paddingBottom="10"
+				paddingRight="10"
+				paddingLeft="10"
+				paddingTop="10"
+				horizontalAlign="left" />
+		</s:layout>
+	
+		<s:Group width="100%" height="100%">
+			<s:layout>
+				<s:HorizontalLayout
+						gap="5"
+				/>
+			</s:layout>
+		
+			<s:Group width="100%" height="100%">
+				<s:layout>
+					<s:VerticalLayout
+						gap="5"
+						horizontalAlign="left" />
+				</s:layout>
+				
+				<s:Label text="Script:" />
+				<s:TextArea id="scriptInput" width="100%" height="100%">
+					<s:text>
+						<![CDATA[; FizzBuz example in Iptscrae
+1 a =
+{
+"" b =
+{ "fizz" b &= } a 3 % 0 == IF
+{ "buzz" b &= } a 5 % 0 == IF
+{ a ITOA } { b } b STRLEN 0 == IFELSE _TRACE
+a ++
+}
+{ a 100 <= } WHILE]]>
+					</s:text>
+				</s:TextArea>
+				
+				<s:HGroup gap="10">
+					<s:Button id="executeButton" label="Execute!" click="doScript()" />
+					<s:Button label="Reset Engine" click="resetEngine()" />
+				</s:HGroup>
+			</s:Group>
+			
+			<local:DebugConsole id="debugConsole" width="100%" height="100%" />
+		
+		</s:Group>
+		
+		<s:VGroup height="100%" width="100%">
+			<s:Label text="Output:" />
+			<s:TextArea id="scriptOutput" fontFamily="Courier New" width="100%" height="100%" />
+		</s:VGroup>
+	</s:Group>
+	
+</s:Application>
