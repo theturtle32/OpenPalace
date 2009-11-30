@@ -171,20 +171,34 @@ package net.codecomposer.palace.model
 			dispatchEvent(event);
 		}
 		
-		public function chat(userId:int, message:String):void {
+		public function chat(userId:int, message:String, logMessage:String = null):void {
 			var user:PalaceUser = getUserById(userId);
-			recordChat("<b>", PalaceUtil.htmlEscape(user.name), ":</b> ", PalaceUtil.htmlEscape(message), "\n");
-			dispatchEvent(new Event('chatLogUpdated'));
-			var event:ChatEvent = new ChatEvent(ChatEvent.CHAT, message, user);
-			dispatchEvent(event);
+			if (logMessage == null) {
+				logMessage = message;
+			}
+			if (logMessage.length > 0) {
+				recordChat("<b>", PalaceUtil.htmlEscape(user.name), ":</b> ", PalaceUtil.htmlEscape(logMessage), "\n");
+				dispatchEvent(new Event('chatLogUpdated'));
+			}
+			if (message.length > 0) {
+				var event:ChatEvent = new ChatEvent(ChatEvent.CHAT, message, user);
+				dispatchEvent(event);
+			}
 		}
 		
-		public function whisper(userId:int, message:String):void {
+		public function whisper(userId:int, message:String, logMessage:String = null):void {
 			var user:PalaceUser = getUserById(userId);
-			recordChat("<em><b>", PalaceUtil.htmlEscape(user.name), " (whisper):</b> ", PalaceUtil.htmlEscape(message), "</em>\n");
-			dispatchEvent(new Event('chatLogUpdated'));
-			var event:ChatEvent = new ChatEvent(ChatEvent.WHISPER, message, user);
-			dispatchEvent(event);
+			if (logMessage == null) {
+				logMessage = message;
+			}
+			if (logMessage.length > 0) {
+				recordChat("<em><b>", PalaceUtil.htmlEscape(user.name), " (whisper):</b> ", PalaceUtil.htmlEscape(logMessage), "</em>\n");
+				dispatchEvent(new Event('chatLogUpdated'));
+			}
+			if (message.length > 0) {
+				var event:ChatEvent = new ChatEvent(ChatEvent.WHISPER, message, user);
+				dispatchEvent(event);
+			}
 		}
 		
 		public function localMessage(message:String):void {
