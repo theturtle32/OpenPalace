@@ -12,7 +12,7 @@ package org.openpalace.iptscrae.command
 		override public function execute(context:IptExecutionContext):void {
 			var index:IntegerToken = context.stack.popType(IntegerToken);
 			var array:ArrayToken = context.stack.popType(ArrayToken);
-			if (index.data > array.data.length - 1) {
+			if (index.data > array.data.length - 1 || index.data < 0) {
 				throw new IptError("Attempted to fetch nonexistant array item at index " + index.data.toString() + ".");
 			}
 			var element:IptToken;
