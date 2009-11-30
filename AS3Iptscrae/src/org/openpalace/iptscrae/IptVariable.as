@@ -61,6 +61,10 @@ package org.openpalace.iptscrae
 			return value;
 		}
 		
+		override public function toBoolean() : Boolean {
+			return dereference().toBoolean();
+		}
+		
 		override public function toString():String {
 			var string:String = "[IptVariable ";
 			if (_globalized) {
