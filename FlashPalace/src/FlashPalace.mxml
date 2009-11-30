@@ -377,7 +377,7 @@
 		<s:ToggleButton id="logButton" label="Log" click="handleLogClick(event)" />
 		<s:ToggleButton id="propsButton" label="Props" click="handlePropsClick(event)" />
 		<s:ToggleButton id="preferencesButton" label="Preferences" click="handlePreferencesClick(event)" />
-		<s:ToggleButton id="debugButton" label="Debug" click="handleDebugClick(event)" />
+		<s:ToggleButton id="debugButton" label="Debug" click="handleDebugClick(event)" visible="false" includeInLayout="false" />
 		<mx:Spacer width="15" />
 		<s:Label text="Zoom:" />
 		<s:HSlider id="zoomSlider" width="75" value="1.0" minimum="0.5" maximum="1.5" snapInterval="0.01" liveDragging="true" change="handleZoomChange(event)" />
