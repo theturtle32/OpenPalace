@@ -36,6 +36,7 @@ package org.openpalace.iptscrae
 			"OR": LogicalOrOperator,
 			"OVER": OVERCommand,
 			"PICK": PICKCommand,
+			"POP": POPCommand,
 			"PUT": PUTCommand,
 			"RANDOM": RANDOMCommand,
 			"RETURN": RETURNCommand,
