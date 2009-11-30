@@ -30,6 +30,7 @@ package net.codecomposer.palace.rpc
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
 	import flash.utils.Timer;
+	import flash.utils.setTimeout;
 	
 	import mx.collections.ArrayCollection;
 	import mx.controls.Alert;
@@ -314,7 +315,7 @@ package net.codecomposer.palace.rpc
 			if (!connected || message == null || message.length == 0) {
 				return;
 			}
-						
+			trace("Saying: " + message);
 			var messageBytes:ByteArray = PalaceEncryption.getInstance().encrypt(message, utf8, 254);
 			messageBytes.position = 0;
 
@@ -830,20 +831,20 @@ package net.codecomposer.palace.rpc
 								handlePing(size, p);
 								break;
 								
-							case IncomingMessageTypes.RECEIVE_CHAT:
-								handleReceiveChat(size, p);
+							case IncomingMessageTypes.XTALK:
+								handleReceiveXTalk(size, p);
 								break;
 								
-							case IncomingMessageTypes.RECEIVE_WHISPER:
-								handleReceiveWhisper(size, p);
+							case IncomingMessageTypes.XWHISPER:
+								handleReceiveXWhisper(size, p);
 								break;
 							
-							case IncomingMessageTypes.ALT_RECEIVE_CHAT:
-								handleAltReceiveChat(size, p);
+							case IncomingMessageTypes.TALK:
+								handleReceiveTalk(size, p);
 								break;
 								
-							case IncomingMessageTypes.ALT_RECEIVE_WHISPER:
-								handleAltReceiveWhisper(size, p);
+							case IncomingMessageTypes.WHISPER:
+								handleReceiveWhisper(size, p);
 								break;
 							
 							case IncomingMessageTypes.ASSET_INCOMING:
@@ -1605,16 +1606,17 @@ package net.codecomposer.palace.rpc
 			trace("User " + user.name + " entered.");
 			
 			if (user.id == id) {
-				var hotspot:PalaceHotspot;
 				// Self entered
 				// Signon handlers
-				if (needToRunSignonHandlers) {
-					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_SIGNON);
-					needToRunSignonHandlers = false;
-				}
-				
-				// Enter handlers
-				palaceController.triggerHotspotEvents(IptEventHandler.TYPE_ENTER);
+				setTimeout(function():void {
+					if (needToRunSignonHandlers) {
+						palaceController.triggerHotspotEvents(IptEventHandler.TYPE_SIGNON);
+						needToRunSignonHandlers = false;
+					}
+					
+					// Enter handlers
+					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_ENTER);
+				}, 20);
 			}
 		}
 
@@ -1632,7 +1634,8 @@ package net.codecomposer.palace.rpc
 			trace("Pinged.");
 		}
 		
-		private function handleAltReceiveChat(size:int, referenceId:int):void {
+		// Unencrypted TALK message
+		private function handleReceiveTalk(size:int, referenceId:int):void {
 			var messageBytes:ByteArray = new ByteArray();
 			var message:String;
 			if (utf8) {
@@ -1641,70 +1644,74 @@ package net.codecomposer.palace.rpc
 			else {
 				message = socket.readMultiByte(size-1, 'Windows-1252');
 			}
-			if (socket.bytesAvailable > 0) {
-				socket.readByte();
-			}
-			currentRoom.roomMessage(message);
-			trace("Got Room Message: " + message);
-		}
-		
-		private function handleAltReceiveWhisper(size:int, referenceId:int):void {
-			var messageBytes:ByteArray = new ByteArray();
-			var message:String;
-			if (utf8) {
-				message = socket.readUTFBytes(size-1);
+			socket.readByte();
+			if (referenceId == 0) {
+				currentRoom.roomMessage(message);
+				trace("Got Room Message: " + message);
 			}
 			else {
-				message = socket.readMultiByte(size-1, 'Windows-1252');
+				whochat = referenceId;
+				if (message.length > 0) {
+					chatstr = message;
+					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
+					currentRoom.chat(referenceId, chatstr, message);
+				}
+				trace("Got talk from userID " + referenceId + ": " + message);
 			}
-			if (socket.bytesAvailable > 0) {
-				socket.readByte();
-			}
-			
-			// Inchat for esp?
-//			chatstr = message;
-//			whochat = referenceId;
-//			
-//			for each (var hotspot:PalaceHotspot in currentRoom.hotSpots) {
-//				palaceController.triggerHotspotEvent(hotspot, IptEventHandler.TYPE_INCHAT);
-//			}
-//			
-//			message = chatstr;
-			
-			currentRoom.roomWhisper(message);
-			trace("Got ESP: " + message);
-		}
-		
-		private function handleReceiveChat(size:int, referenceId:int):void {
-			var length:int = socket.readShort();
-			var messageBytes:ByteArray = new ByteArray();
-			socket.readBytes(messageBytes, 0, length-3);
-			if (socket.bytesAvailable > 0) {
-				socket.readByte();
-			}
-			chatstr = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
-			whochat = referenceId;
-			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
-			
-			if (chatstr.length > 0) {
-				currentRoom.chat(referenceId, chatstr);
-			}
-			trace("Got chat from userID " + referenceId + ": " + chatstr);
 		}
 		
 		private function handleReceiveWhisper(size:int, referenceId:int):void {
-			var length:int = socket.readShort();
 			var messageBytes:ByteArray = new ByteArray();
-			socket.readBytes(messageBytes, 0, length-3);
-			if (socket.bytesAvailable > 0) {
-				socket.readByte();
+			var message:String;
+			if (utf8) {
+				message = socket.readUTFBytes(size-1);
 			}
-			chatstr = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
+			else {
+				message = socket.readMultiByte(size-1, 'Windows-1252');
+			}
+			socket.readByte();
+			if (referenceId == 0) {
+				currentRoom.roomWhisper(message);
+				trace("Got ESP: " + message);
+			}
+			else {
+				whochat = referenceId;
+				if (message.length > 0) {
+					chatstr = message;
+					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
+					currentRoom.whisper(referenceId, chatstr, message);
+				}
+				trace("Got whisper from userID " + referenceId + ": " + message);
+			}
+		}
+		
+		private function handleReceiveXTalk(size:int, referenceId:int):void {
+			var length:int = socket.readShort();
+			trace("XTALK.  Size: " + size + " Length: " + length);
+			var messageBytes:ByteArray = new ByteArray();
+			socket.readBytes(messageBytes, 0, length-3); // Length field lies
+			socket.readByte(); // Last byte is unnecessary?
+			var message:String = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
+			chatstr = message;
+			whochat = referenceId;
+			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
+			currentRoom.chat(referenceId, chatstr, message);
+			trace("Got xtalk from userID " + referenceId + ": " + chatstr);
+		}
+		
+		private function handleReceiveXWhisper(size:int, referenceId:int):void {
+			var length:int = socket.readShort();
+			trace("XWHISPER.  Size: " + size + " Length: " + length);
+			var messageBytes:ByteArray = new ByteArray();
+			socket.readBytes(messageBytes, 0, length-3); // Length field lies.
+			socket.readByte(); // Last byte is unnecessary?
+			var message:String = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
+			chatstr = message;
 			whochat = referenceId;
 			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
 			
-			currentRoom.whisper(referenceId, chatstr);
-			trace("Got whisper from userID " + referenceId + ": " + chatstr);
+			currentRoom.whisper(referenceId, chatstr, message);
+			trace("Got xwhisper from userID " + referenceId + ": " + chatstr);
 		}
 		
 		private function handleMovement(size:int, referenceId:int):void {
