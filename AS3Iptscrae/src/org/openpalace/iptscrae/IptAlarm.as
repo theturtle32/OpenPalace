@@ -14,7 +14,10 @@ package org.openpalace.iptscrae
 		
 		public function set delayTicks(ticks:int):void {
 			_delay = ticksToMS(ticks);
-			timer.delay = _delay;			
+			if (_delay < 10) {
+				_delay = 10;
+			}
+			timer.delay = _delay;
 		}
 		public function get delayTicks():int {
 			return msToTicks(_delay);
