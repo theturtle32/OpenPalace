@@ -714,7 +714,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					var fade:Fade = new Fade(backgroundImage);
 					fade.duration = 600;
 					fade.alphaFrom = 0;
-					fade.alphaTo = room.dimLevel;
+					fade.alphaTo = 1;
 					fade.play();
 					currentState = "normal";
 				}
