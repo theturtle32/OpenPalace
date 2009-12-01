@@ -132,8 +132,14 @@ package net.codecomposer.palace.model
 		public function setProps(props:Vector.<PalaceProp>):void {
 			this.props.removeAll();
 			for each (var prop:PalaceProp in props) {
-				prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
-				this.props.addItem(prop);
+				// Fixing a bug where if you specified the same prop multiple
+				// times in a SETPROPS command, you wouldn't ever be able to
+				// remove the duplicate prop.  So we ignore any duplicate props
+				// when adding them.
+				if (this.props.getItemIndex(prop) == -1) {
+					prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
+					this.props.addItem(prop);
+				}
 			}
 			syncPropIdsToProps();
 			checkFaceProps();
