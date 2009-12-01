@@ -58,6 +58,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
 	import net.codecomposer.palace.record.PalaceDrawRecord;
+	import net.codecomposer.palace.util.PalaceUtil;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
 
 	[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
@@ -66,6 +67,7 @@ package net.codecomposer.palace.rpc
 	[Event(type="net.codecomposer.event.PalaceEvent",name="disconnected")]
 	[Event(type="net.codecomposer.event.PalaceEvent",name="gotoURL")]
 	[Event(type="net.codecomposer.event.PalaceEvent",name="roomChanged")]
+	[Event(type="net.codecomposer.event.PalaceEvent",name="authenticationRequested")]
 	
 	public class PalaceClient extends EventDispatcher
 	{
@@ -284,6 +286,19 @@ package net.codecomposer.palace.rpc
 			socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 			socket.addEventListener(Event.CONNECT, onConnect);
 			socket.addEventListener(Event.CLOSE, onClose);
+		}
+		
+		public function authenticate(username:String, password:String):void {
+			if (socket && socket.connected) {
+				trace("Sending auth response");
+				var userPass:ByteArray = PalaceEncryption.getInstance().encrypt(username + ":" + password);
+				socket.writeInt(OutgoingMessageTypes.AUTHRESPONSE);
+				socket.writeInt(userPass.length + 1);
+				socket.writeInt(0);
+				socket.writeByte(userPass.length);
+				socket.writeBytes(userPass);
+				socket.flush();
+			}
 		}
 		
 		public function disconnect():void {
@@ -733,10 +748,11 @@ package net.codecomposer.palace.rpc
 		}
 		
 		private function onClose(event:Event):void {
+			trace("Disconnected");
 			onSocketData();
 			connected = false;
-			resetState();
-			trace("Disconnected");
+			disconnect();
+			dispatchEvent(new PalaceEvent(PalaceEvent.DISCONNECTED));
 			//Alert.show("Connection to server lost.");
 		}
 		
@@ -932,6 +948,10 @@ package net.codecomposer.palace.rpc
 	//							handleIncomingFile(size, p);
 	//							break;
 							
+							case IncomingMessageTypes.AUTHENTICATE:
+								handleAuthenticate(size, p);
+								break;
+							
 							case IncomingMessageTypes.BLOWTHRU:
 								trace("Blowthru message.");
 								// fall through to default...
@@ -969,7 +989,7 @@ package net.codecomposer.palace.rpc
 		private function onSecurityError(event:SecurityErrorEvent):void {
 			trace("Security Error!");
 		}
-		
+	
 		// Handshake
 		private function handshake():void {
 			var messageID:int;
@@ -1094,9 +1114,6 @@ package net.codecomposer.palace.rpc
 			state = STATE_READY;
 			connecting = false;
 			dispatchEvent(new PalaceEvent(PalaceEvent.CONNECT_COMPLETE));
-			
-			requestRoomList();
-			requestUserList();
 		}
 		
 		
@@ -1136,6 +1153,7 @@ package net.codecomposer.palace.rpc
 			 var ul3DEngineCaps:uint = socket.readUnsignedInt();
 			 
 			 if (puidCtr != this.puidCounter || puidCRC != this.puidCRC) {
+				trace("PUID Changed by server");
 			 	this.puidCRC = puidCRC;
 			 	this.puidCounter = puidCtr;
 			 	puidChanged = true;
@@ -1159,6 +1177,11 @@ package net.codecomposer.palace.rpc
 //			serverInfo.uploadCapabilities = socket.readUnsignedInt();
 //			serverInfo.downloadCapabilities = socket.readUnsignedInt();
 			trace("Server name: " + serverName);
+		}
+		
+		private function handleAuthenticate(size:int, referenceId:int):void {
+			trace("Authentication requested.");
+			dispatchEvent(new PalaceEvent(PalaceEvent.AUTHENTICATION_REQUESTED));
 		}
 		
 		// not fully implemented

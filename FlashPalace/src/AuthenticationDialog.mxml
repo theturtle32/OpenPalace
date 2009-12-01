@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<code:MDIWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:code="http://code.google.com/p/flexlib/" width="370" height="150"
+				creationComplete="handleCreationComplete()"
+				paddingBottom="10"
+				paddingTop="10"
+				paddingLeft="10"
+				paddingRight="10"
+				layout="vertical">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import net.codecomposer.palace.event.PalaceEvent;
+			import net.codecomposer.palace.rpc.PalaceClient;
+			private var client:PalaceClient = PalaceClient.getInstance();
+			
+			private function handleCreationComplete():void {
+				client.addEventListener(PalaceEvent.DISCONNECTED, handleDisconnect);
+				client.addEventListener(PalaceEvent.CONNECT_START, handleDisconnect);
+			}
+			
+			private function handleDisconnect(event:PalaceEvent):void {
+				close();
+			}
+			
+			private function handleCancel():void {
+				client.disconnect();
+				close();
+			}
+			
+			private function handleLogon():void {
+				client.authenticate(username.text, password.text);
+				close();
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Label text="You must provide a username and password to access this site." />
+	<s:HGroup gap="3" width="100%" verticalAlign="middle">
+		<s:Label width="100" text="Username:" textAlign="right" />
+		<s:TextInput width="100%" id="username" />
+	</s:HGroup>
+	<s:HGroup gap="3" width="100%" verticalAlign="middle">
+		<s:Label width="100" text="Password:" textAlign="right" />
+		<s:TextInput width="100%" id="password" displayAsPassword="true" />
+	</s:HGroup>
+	<s:VGroup width="100%" horizontalAlign="right">
+		<s:HGroup>
+			<s:Button label="Cancel" click="handleCancel()" />
+			<s:Button label="Log On" click="handleLogon()" />
+		</s:HGroup>
+	</s:VGroup>
+	
+</code:MDIWindow>

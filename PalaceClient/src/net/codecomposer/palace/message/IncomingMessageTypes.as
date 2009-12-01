@@ -86,5 +86,8 @@ package net.codecomposer.palace.message
 		// Blowthru...
 		public static const BLOWTHRU:int = 1651273591;
 		
+		// Authentication...
+		public static const AUTHENTICATE:int = 0x61757468;
+		
 	}
 }

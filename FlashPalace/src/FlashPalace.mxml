@@ -78,6 +78,12 @@
 				palace.addEventListener(PalaceEvent.CONNECT_START, handleConnectStart);
 				palace.addEventListener(PalaceEvent.DISCONNECTED, handleDisconnected);
 				palace.addEventListener(PalaceEvent.GOTO_URL, handleGotoURL);
+				palace.addEventListener(PalaceEvent.AUTHENTICATION_REQUESTED, handleAuthenticationRequested);
+			}
+			
+			private function handleAuthenticationRequested(event:PalaceEvent):void {
+				var authenticationDialog:AuthenticationDialog = new AuthenticationDialog();
+				mdic.windowManager.addCenter(authenticationDialog);
 			}
 			
 			private function handleGotoURL(event:PalaceEvent):void {

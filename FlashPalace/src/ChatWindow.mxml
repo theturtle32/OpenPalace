@@ -49,6 +49,7 @@
 		</s:layout>
 		
 		<view:PalaceRoomView id="roomView"
+							 enabled="{palace.connected}"
 							 room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
 		
 		<code:PromptingTextInput prompt="Type here to chat..."
