@@ -19,6 +19,8 @@ package net.codecomposer.palace.view
 {
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
+	import flash.ui.Mouse;
+	import flash.ui.MouseCursor;
 	
 	import mx.core.FlexSprite;
 	
@@ -34,6 +36,7 @@ package net.codecomposer.palace.view
 		public var client:PalaceClient = PalaceClient.getInstance();		
 
 		private var mouseOver:Boolean = false;
+		private var useHand:Boolean = false;
 		
 		public function HotSpotSprite(hotSpot:PalaceHotspot, highlightOnMouseOver:Boolean = false)
 		{
@@ -55,8 +58,7 @@ package net.codecomposer.palace.view
 					addEventListener(MouseEvent.ROLL_OVER, handleMouseOver);
 					addEventListener(MouseEvent.ROLL_OUT, handleMouseOut);
 				}
-				buttonMode = true;
-				useHandCursor = true;
+				useHand = true;
 			}
 			trace("Hotspot " + hotSpot.name + " is type: " + hotSpot.type);
 		}
@@ -110,30 +112,29 @@ package net.codecomposer.palace.view
 				case PalaceHotspot.TYPE_NORMAL:
 					break;
 				case PalaceHotspot.TYPE_PASSAGE:
-					event.stopPropagation();
 					if (hotSpot.dest != 0) {
 						client.gotoRoom(hotSpot.dest);
 					}
 					break;
 				case PalaceHotspot.TYPE_LOCKABLE_DOOR:
 					if (hotSpot.state == PalaceHotspot.STATE_UNLOCKED) {
-						event.stopPropagation();
 						if (hotSpot.dest != 0) {
 							client.gotoRoom(hotSpot.dest);
 						}
 					}
 					else if (hotSpot.state == PalaceHotspot.STATE_LOCKED) {
+						event.stopPropagation();
 						client.currentRoom.roomMessage("Sorry, the door is locked.");
 					}
 					break;
 				case PalaceHotspot.TYPE_SHUTABLE_DOOR:
 					if (hotSpot.state == PalaceHotspot.STATE_UNLOCKED) {
-						event.stopPropagation();
 						if (hotSpot.dest != 0) {
 							client.gotoRoom(hotSpot.dest);
 						}
 					}
 					else if (hotSpot.state == PalaceHotspot.STATE_LOCKED) {
+						event.stopPropagation();
 						client.currentRoom.roomMessage("Sorry, the door is closed.");
 					}
 					break;
@@ -155,11 +156,17 @@ package net.codecomposer.palace.view
 		}
 		
 		private function handleMouseOver(event:MouseEvent):void {
+			if (useHand) {
+				Mouse.cursor = MouseCursor.BUTTON;
+			}
 			mouseOver = true;
 			draw();
 		}
 		
 		private function handleMouseOut(event:MouseEvent):void {
+			if (useHand) {
+				Mouse.cursor = MouseCursor.ARROW;
+			}
 			mouseOver = false;
 			draw();
 		}
