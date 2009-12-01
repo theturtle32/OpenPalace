@@ -1633,6 +1633,11 @@ package net.codecomposer.palace.rpc
 				// Signon handlers
 				setTimeout(function():void {
 					if (needToRunSignonHandlers) {
+						
+						// download the room/user lists when you first log on.
+						requestRoomList();
+						requestUserList();
+						
 						palaceController.triggerHotspotEvents(IptEventHandler.TYPE_SIGNON);
 						needToRunSignonHandlers = false;
 					}
