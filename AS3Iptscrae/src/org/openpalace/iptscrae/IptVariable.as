@@ -1,5 +1,6 @@
 package org.openpalace.iptscrae
 {
+	import org.openpalace.iptscrae.token.IntegerToken;
 
 	public class IptVariable extends IptToken implements IIptVariable
 	{
@@ -8,9 +9,10 @@ package org.openpalace.iptscrae
 		private var context:IptExecutionContext;
 		private var _globalized:Boolean;
 		private var _globalVariable:IptVariable;
+		public var initialized:Boolean = false;
 		public var external:Boolean = false;
 		
-		public function IptVariable(context:IptExecutionContext, name:String, value:IptToken)
+		public function IptVariable(context:IptExecutionContext, name:String, value:IptToken=null)
 		{
 			super();
 			this.context = context;
@@ -29,6 +31,9 @@ package org.openpalace.iptscrae
 			else if (_globalized) {
 				return _globalVariable.value;
 			}
+			else if (_value == null) {
+				return new IntegerToken(0);
+			}
 			return _value;
 		}
 		
@@ -39,8 +44,9 @@ package org.openpalace.iptscrae
 			else if (_globalized) {
 				_globalVariable.value = newValue;
 			}
-			else {
+			else if (newValue != null) {
 				_value = newValue;
+				initialized = true;
 			}
 		}
 		
@@ -48,6 +54,7 @@ package org.openpalace.iptscrae
 			var newVariable:IptVariable = new IptVariable(context, _name, _value);
 			newVariable._globalized = _globalized;
 			newVariable._globalVariable = _globalVariable;
+			newVariable.initialized = initialized;
 			return newVariable;
 		}
 		

@@ -9,6 +9,9 @@ package org.openpalace.iptscrae.command
 		override public function execute(context:IptExecutionContext):void {
 			var variable:IptVariable = context.stack.popType(IptVariable);
 			var globalVariable:IptVariable = context.manager.globalVariableStore.getVariable(variable.name);
+			if (variable.initialized) {
+				globalVariable.value = variable.value;
+			}
 			variable.globalize(globalVariable);
 		}
 	}

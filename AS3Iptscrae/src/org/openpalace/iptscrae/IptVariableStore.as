@@ -19,7 +19,7 @@ package org.openpalace.iptscrae
 			var ucVariableName:String = variableName.toUpperCase();
 			var variable:IptVariable = variables[ucVariableName];
 			if (variable == null) {
-				variable = new IptVariable(context, ucVariableName, new IntegerToken(0));
+				variable = new IptVariable(context, ucVariableName);
 				if (context.isExternalVariable(ucVariableName)) {
 					variable.external = true;
 				}
