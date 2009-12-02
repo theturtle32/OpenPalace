@@ -89,8 +89,10 @@ package net.codecomposer.palace.model
 		
 		[Bindable(event="faceChanged")]
 		public function set face(newValue:int):void {
+			if (newValue > 12) {
+				newValue = 0;
+			}
 			newValue = Math.max(0, newValue);
-			newValue = Math.min(12, newValue);
 			if (_face != newValue) {
 				_face = newValue;
 				dispatchEvent(new Event("faceChanged"));
