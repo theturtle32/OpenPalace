@@ -1,6 +1,5 @@
 package org.openpalace.iptscrae
 {
-	import org.openpalace.iptscrae.token.IIptVariable;
 
 	public class IptVariable extends IptToken implements IIptVariable
 	{

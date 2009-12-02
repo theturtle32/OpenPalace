@@ -13,7 +13,7 @@
     <classEntry path="org.openpalace.iptscrae.IptParser"/>
     <classEntry path="org.openpalace.iptscrae.token.IntegerToken"/>
     <classEntry path="org.openpalace.iptscrae.token.StringToken"/>
-    <classEntry path="org.openpalace.iptscrae.token.IIptVariable"/>
+    <classEntry path="org.openpalace.iptscrae.IIptVariable"/>
     <classEntry path="org.openpalace.iptscrae.IIptManager"/>
     <classEntry path="org.openpalace.iptscrae.command.ITOACommand"/>
     <classEntry path="org.openpalace.iptscrae.command.ATOICommand"/>

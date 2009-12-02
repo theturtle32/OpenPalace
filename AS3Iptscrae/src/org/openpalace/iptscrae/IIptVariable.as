@@ -1,7 +1,5 @@
-package org.openpalace.iptscrae.token
+package org.openpalace.iptscrae
 {
-	import org.openpalace.iptscrae.IptVariable;
-	import org.openpalace.iptscrae.IptToken;
 
 	public interface IIptVariable
 	{
