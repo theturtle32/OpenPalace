@@ -712,7 +712,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (PalaceConfig.fadeBackgroundImages) { 
 					backgroundImage.alpha = 0;
 					var fade:Fade = new Fade(backgroundImage);
-					fade.duration = 600;
+					fade.duration = 400;
 					fade.alphaFrom = 0;
 					fade.alphaTo = 1;
 					fade.play();
@@ -813,7 +813,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	
 	<mx:ProgressBar bottom="0" width="100%"
 		source="{backgroundImage}"
-		visible="{!backgroundImage.visible &amp;&amp; backgroundImage.source != null &amp;&amp; progressBar.percentComplete &lt; 100}"
+		visible="{backgroundImage.source != null &amp;&amp; progressBar.percentComplete &lt; 100}"
 		labelPlacement="center"
 		id="progressBar"
 		label="Downloading Background... {Math.ceil(progressBar.percentComplete)}%" />
