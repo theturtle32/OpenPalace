@@ -68,6 +68,8 @@ package net.codecomposer.palace.model
 		}
 		
 		public function dimRoom(level:int):void {
+			level = Math.max(0, level);
+			level = Math.min(100, level);
 			dimLevel = level / 100;
 		}
 		

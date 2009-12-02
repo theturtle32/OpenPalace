@@ -1414,6 +1414,8 @@ package net.codecomposer.palace.rpc
 			
 			debugData = new DebugData(currentRoom);
 			
+			currentRoom.dimRoom(100);
+			
 			var roomChangeEvent:PalaceEvent = new PalaceEvent(PalaceEvent.ROOM_CHANGED);
 			dispatchEvent(roomChangeEvent);
 		}
