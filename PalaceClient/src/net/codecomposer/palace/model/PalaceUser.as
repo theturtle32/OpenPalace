@@ -17,6 +17,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.model
 {
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	
 	import mx.collections.ArrayCollection;
@@ -75,7 +76,7 @@ package net.codecomposer.palace.model
 		public var roomID:int;
 		public var roomName:String;
 		public var propCount:int;
-		public var face:int = 1;
+		private var _face:int = 1;
 		public var color:int = 2;
 		public var flags:int = 0;
 		public var propIds:Array = [];
@@ -85,6 +86,20 @@ package net.codecomposer.palace.model
 		public var showFace:Boolean = true;
 		
 		private var propStore:PalacePropStore = PalacePropStore.getInstance();
+		
+		[Bindable(event="faceChanged")]
+		public function set face(newValue:int):void {
+			newValue = Math.max(0, newValue);
+			newValue = Math.min(12, newValue);
+			if (_face != newValue) {
+				_face = newValue;
+				dispatchEvent(new Event("faceChanged"));
+			}
+		}
+		public function get face():int {
+			return _face;
+		}
+		
 		
 		private static function filterBadProps(object:Object):Boolean {
 			var prop:PalaceProp = PalaceProp(object);

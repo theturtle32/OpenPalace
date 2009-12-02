@@ -48,7 +48,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				0xFF9999, // 0  Red
 				0xFF9966, // 1  Orange
 				0xFFCC88, // 2  Gold
-				0xFFFFAA, // 3  Yellow
+				0xFFEE99, // 3  Yellow
 				0xD0F29F, // 4  Yellow-Green
 				0xB9F29F, // 5  Green
 				0xAFF2AE, // 6  Green 2
