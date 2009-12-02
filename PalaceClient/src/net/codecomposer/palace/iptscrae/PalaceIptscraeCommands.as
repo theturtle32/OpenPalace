@@ -45,6 +45,7 @@ package net.codecomposer.palace.iptscrae
 			"NBRROOMUSERS": NBRROOMUSERSCommand,
 			"NBRSPOTS": NBRSPOTSCommand,
 			"NBRUSERPROPS": NBRUSERPROPSCommand,
+			"OPENPALACE": OPENPALACECommand,
 			"POSX": POSXCommand,
 			"POSY": POSYCommand,
 			"PRIVATEMSG": PRIVATEMSGCommand,
