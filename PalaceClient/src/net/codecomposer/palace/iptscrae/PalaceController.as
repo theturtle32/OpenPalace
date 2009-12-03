@@ -7,7 +7,6 @@ package net.codecomposer.palace.iptscrae
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceUser;
 	import net.codecomposer.palace.rpc.PalaceClient;
-	import net.codecomposer.palace.util.PalaceUtil;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
 	
 	import org.openpalace.iptscrae.IptAlarm;
@@ -623,5 +622,46 @@ package net.codecomposer.palace.iptscrae
 				}
 			}
 		}
+		
+		public function drawLineAbs(startX:int, startY:int, endX:int, endY:int):void {
+			
+		}
+		
+		public function drawLineRel(xBy:int, yBy:int):void {
+			
+		}
+		
+		public function movePenAbs(xTo:int, yTo:int):void {
+			
+		}
+		
+		public function movePenRel(xBy:int, yBy:int):void {
+			
+		}
+		
+		public function setPenColor(r:uint, g:uint, b:uint):void {
+			
+		}
+		
+		public function setPenSize(size:uint):void {
+			
+		}
+		
+		public function paintBackLayer():void {
+			
+		}
+		
+		public function paintFrontLayer():void {
+			
+		}
+		
+		public function paintUndo():void {
+			
+		}
+		
+		public function paintClear():void {
+			
+		}
+		
 	}
 }

@@ -17,13 +17,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.record
 {
+	import flash.events.EventDispatcher;
 	import flash.geom.Point;
 	import flash.utils.ByteArray;
+	import flash.utils.Endian;
 	
 	import net.codecomposer.palace.util.DrawColorUtil;
 
 	[Bindable]
-	public class PalaceDrawRecord
+	public class PalaceDrawRecord extends EventDispatcher
 	{
 		
 		public static const CMD_PATH:uint = 0;
@@ -41,7 +43,7 @@ package net.codecomposer.palace.record
 		
 		
 		public var command:uint;
-		public var flags:uint;
+		public var flags:uint = 0;
 		public var nextOffset:int;
 		public var penSize:int;
 		public var numPoints:int;
@@ -54,16 +56,102 @@ package net.codecomposer.palace.record
 		
 		public var polygon:Vector.<Point> = new Vector.<Point>();
 		
+		[Bindable(event="fillChanged")]
+		public function set useFill(newValue:Boolean):void {
+			var startFlags:uint = flags;
+			if (newValue) {
+				flags |= USE_FILL;
+			}
+			else {
+				flags &= ~USE_FILL;
+			}
+			if (startFlags != flags) {
+				dispatchEvent(new Event('fillChanged'));
+			}
+		}
 		public function get useFill():Boolean {
 			return Boolean(flags & USE_FILL);
 		}
-		
+
+		[Bindable(event="ellipseChanged")]
+		public function set isEllipse(newValue:Boolean):void {
+			var startFlags:uint = flags;
+			if (newValue) {
+				flags |= IS_ELLIPSE;
+			}
+			else {
+				flags &= ~IS_ELLIPSE;
+			}
+			if (startFlags != flags) {
+				dispatchEvent(new Event('ellipseChanged'));
+			}
+		}
 		public function get isEllipse():Boolean { 
 			return Boolean(flags & IS_ELLIPSE);
 		}
 		
+		[Bindable(event="layerChanged")]
+		public function set layer(newValue:uint):void {
+			var startFlags:uint = flags;
+			if (newValue == LAYER_FRONT) {
+				flags |= LAYER_FRONT;
+			}
+			else if (newValue == LAYER_BACK) {
+				flags &= ~LAYER_FRONT;
+			}
+			if (startFlags != flags) {
+				dispatchEvent(new Event('layerChanged'));
+			}
+		}
 		public function get layer():uint {
 			return flags & LAYER_FRONT;
+		}
+		
+		public function generatePacket(endian:String = Endian.LITTLE_ENDIAN):ByteArray {
+			var ba:ByteArray = new ByteArray();
+			ba.endian = endian;
+			
+			ba.writeShort(0); // unused -- nextOffset
+			ba.writeShort(0); // unused
+			
+			var data:ByteArray = new ByteArray();
+			data.endian = endian;
+			
+			if (command != CMD_DETONATE && command != CMD_DELETE) {
+				data.writeShort(penSize);
+				data.writeShort(polygon.length);
+				data.writeByte(((lineColor & 0x00FF0000) >> 16) & 0xFF); // red
+				data.writeByte(((lineColor & 0x00FF0000) >> 16) & 0xFF); // red
+				data.writeByte(((lineColor & 0x0000FF00) >> 8) & 0xFF);  // green
+				data.writeByte(((lineColor & 0x0000FF00) >> 8) & 0xFF);  // green
+				data.writeByte(  lineColor & 0x000000FF);                // blue
+				data.writeByte(  lineColor & 0x000000FF);                // blue
+				for each (var point:Point in polygon) {
+					data.writeShort(point.y);
+					data.writeShort(point.x);
+				}
+				
+				// lineColor with alpha
+				data.writeByte(Math.ceil(lineAlpha * 0xFF))
+				data.writeByte(((lineColor & 0x00FF0000) >> 16) & 0xFF); // red
+				data.writeByte(((lineColor & 0x0000FF00) >> 8) & 0xFF);  // green
+				data.writeByte(  lineColor & 0x000000FF);                // blue
+				
+				// fillColor with alpha 
+				data.writeByte(Math.ceil(fillAlpha * 0xFF))
+				data.writeByte(((fillColor & 0x00FF0000) >> 16) & 0xFF); // red
+				data.writeByte(((fillColor & 0x0000FF00) >> 8) & 0xFF);  // green
+				data.writeByte(  fillColor & 0x000000FF);                // blue
+			}
+			
+			data.position = 0
+			
+			// Command and flags are combined into one field.
+			ba.writeShort(command | (flags << 8));
+			ba.writeShort(data.length); // commandLength
+			ba.writeShort(0); // start position
+			ba.writeBytes(data);
+			return ba;
 		}
 				
 		public function readData(endian:String, roomBytes:Array, offset:int):void {
