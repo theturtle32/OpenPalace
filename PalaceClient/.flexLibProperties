@@ -142,6 +142,16 @@
     <classEntry path="net.codecomposer.util.MultiPartFormBuilder"/>
     <classEntry path="net.codecomposer.palace.iptscrae.DebugView"/>
     <classEntry path="net.codecomposer.palace.iptscrae.DebugData"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.LINECommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.LINETOCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.PAINTCLEARCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.PAINTUNDOCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.PENBACKCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.PENCOLORCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.PENFRONTCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.PENPOSCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.PENSIZECommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.PENTOCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
