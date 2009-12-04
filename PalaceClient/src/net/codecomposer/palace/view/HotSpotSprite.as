@@ -21,13 +21,14 @@ package net.codecomposer.palace.view
 	import flash.geom.Point;
 	import flash.ui.Mouse;
 	import flash.ui.MouseCursor;
+	import flash.utils.setTimeout;
 	
 	import mx.core.FlexSprite;
 	
 	import net.codecomposer.palace.event.HotspotEvent;
+	import net.codecomposer.palace.iptscrae.IptEventHandler;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.rpc.PalaceClient;
-	import net.codecomposer.palace.iptscrae.IptEventHandler;
 
 	public class HotSpotSprite extends FlexSprite
 	{
@@ -96,15 +97,18 @@ package net.codecomposer.palace.view
 			graphics.lineTo(firstPoint.x, firstPoint.y);
 			graphics.endFill();
 		}
-		
+
 		private function handleHotSpotClick(event:MouseEvent):void {
 			trace("Clicked hotspot - id: " + hotSpot.id + " Destination: " + hotSpot.dest + " type: " + hotSpot.type + " state: " + hotSpot.state);
+			
 			if (hotSpot.dontMoveHere) {
 				event.stopImmediatePropagation();
 			}
 			
 			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_SELECT)) {
-				client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_SELECT);
+				setTimeout(function():void {
+					client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_SELECT);
+				}, 1);
 				return;
 			}
 			
