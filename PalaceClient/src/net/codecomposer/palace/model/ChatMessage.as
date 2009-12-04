@@ -13,7 +13,7 @@ package net.codecomposer.palace.model
 		public var chatBubble:ChatBubble;
 		public var displayFailureCount:uint = 0;
 		
-		private static const locationRegex:RegExp = /^\@([\d]+),([\d]+)\s*(.*)$/; 
+		private static const locationRegex:RegExp = /^[\!\^\:]?\@([\d]+)[, ]([\d]+)\s*(.*)$/; 
 		
 		public function get isStickyBubble():Boolean {
 			return Boolean(text.charAt(0) == "^");

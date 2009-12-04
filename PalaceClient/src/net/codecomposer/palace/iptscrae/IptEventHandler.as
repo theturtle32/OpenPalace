@@ -30,7 +30,12 @@ package net.codecomposer.palace.iptscrae
 		public static const TYPE_MACRO8:int = 23;
 		public static const TYPE_MACRO9:int = 24;
 		public static const TYPE_PPA_MACRO:int = 25; // ?? Unused.. PalacePresents
+		public static const TYPE_MOUSEMOVE:int = 26;
 		public static const TYPE_UNHANDLED:int = 27;
+		public static const TYPE_ROLLOVER:int = 28;
+		public static const TYPE_ROLLOUT:int = 29;
+		public static const TYPE_USERMOVE:int = 30;
+		public static const TYPE_USERENTER:int = 31;
 		public static const TYPE_PPA_MESSAGE:int = 32; // Unused... PalacePresents Message
 		
 		public static const EVENT_NAME:Object = {
@@ -60,7 +65,12 @@ package net.codecomposer.palace.iptscrae
 			23: "MACRO8",
 			24: "MACRO9",
 			25: "PPA_MACRO",
+			26: "MOUSEMOVE",
 			27: "UNHANDLED",
+			28: "ROLLOVER",
+			29: "ROLLOUT",
+			30: "USERMOVE",
+			31: "USERENTER",
 			32: "PPA_MESSAGE"
 		};
 		
@@ -131,6 +141,21 @@ package net.codecomposer.palace.iptscrae
 					break;
 				case "MACRO9":
 					return IptEventHandler.TYPE_MACRO9;
+					break;
+				case "ROLLOVER":
+					return IptEventHandler.TYPE_ROLLOVER;
+					break;
+				case "ROLLOUT":
+					return IptEventHandler.TYPE_ROLLOUT;
+					break;
+				case "MOUSEMOVE":
+					return IptEventHandler.TYPE_MOUSEMOVE;
+					break;
+				case "USERMOVE":
+					return IptEventHandler.TYPE_USERMOVE;
+					break;
+				case "USERENTER":
+					return IptEventHandler.TYPE_USERENTER;
 					break;
 				default:
 					return IptEventHandler.TYPE_UNHANDLED;

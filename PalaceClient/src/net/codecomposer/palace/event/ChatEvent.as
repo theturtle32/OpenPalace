@@ -39,7 +39,7 @@ package net.codecomposer.palace.event
 			logText = chatText;
 			
 			var match:Array;
-			if (chatText.charAt(0) == ';') {
+			if (chatText.charAt(0) == ';' || chatText.charAt(0) == "%") {
 				logOnly = true;
 			}
 			

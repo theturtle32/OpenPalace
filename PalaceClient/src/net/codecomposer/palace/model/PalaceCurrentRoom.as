@@ -34,6 +34,7 @@ package net.codecomposer.palace.model
 	[Event(name="userEntered",type="net.codecomposer.palace.event.PalaceRoomEvent")]
 	[Event(name="userLeft",type="net.codecomposer.palace.event.PalaceRoomEvent")]
 	[Event(name="roomCleared",type="net.codecomposer.palace.event.PalaceRoomEvent")]
+	[Event(name="userMoved",type="net.codecomposer.palace.event.PalaceRoomEvent")]
 	
 	[Bindable]
 	public class PalaceCurrentRoom extends EventDispatcher
@@ -241,9 +242,9 @@ package net.codecomposer.palace.model
 		}
 		
 		public function roomMessage(message:String):void {
-			recordChat("<b>*** " + PalaceUtil.htmlEscape(message), "</b>\n");
-			dispatchEvent(new Event('chatLogUpdated'));
 			if (shouldDisplayMessage(message) && message.length > 0) {
+				recordChat("<b>*** " + PalaceUtil.htmlEscape(message), "</b>\n");
+				dispatchEvent(new Event('chatLogUpdated'));
 				var event:ChatEvent = new ChatEvent(ChatEvent.ROOM_MESSAGE, message);
 				dispatchEvent(event);
 			}
@@ -265,9 +266,9 @@ package net.codecomposer.palace.model
 		}
 		
 		public function roomWhisper(message:String):void {
-			recordChat("<b><i>*** " + PalaceUtil.htmlEscape(message), "</i></b>\n");
-			dispatchEvent(new Event('chatLogUpdated'));
 			if (shouldDisplayMessage(message) && message.length > 0) {
+				recordChat("<b><i>*** " + PalaceUtil.htmlEscape(message), "</i></b>\n");
+				dispatchEvent(new Event('chatLogUpdated'));
 				var event:ChatEvent = new ChatEvent(ChatEvent.ROOM_MESSAGE, message);
 				dispatchEvent(event);
 			}
@@ -282,6 +283,15 @@ package net.codecomposer.palace.model
 				temp += args[i];
 			}
 			chatLog = temp + "\n";
+		}
+		
+		public function moveUser(userId:int, x:int, y:int):void {
+			var user:PalaceUser = getUserById(userId);
+			user.x = x;
+			user.y = y;
+			var event:PalaceRoomEvent = new PalaceRoomEvent(PalaceRoomEvent.USER_MOVED, user);
+			dispatchEvent(event);
+			trace("User " + userId + " moved to " + x + "," + y);
 		}
 	}
 }

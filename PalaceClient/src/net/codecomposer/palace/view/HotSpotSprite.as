@@ -18,15 +18,18 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 package net.codecomposer.palace.view
 {
 	import flash.events.MouseEvent;
+	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.ui.Mouse;
 	import flash.ui.MouseCursor;
+	import flash.utils.Timer;
 	import flash.utils.setTimeout;
 	
 	import mx.core.FlexSprite;
 	
 	import net.codecomposer.palace.event.HotspotEvent;
 	import net.codecomposer.palace.iptscrae.IptEventHandler;
+	import net.codecomposer.palace.model.PalaceConfig;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.rpc.PalaceClient;
 
@@ -47,7 +50,18 @@ package net.codecomposer.palace.view
 			x = hotSpot.location.x;
 			y = hotSpot.location.y;
 			draw();
-			addEventListener(MouseEvent.CLICK, handleHotSpotClick);
+			addEventListener(MouseEvent.MOUSE_DOWN, handleHotSpotMouseDown);
+			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_ROLLOVER)) {
+				addEventListener(MouseEvent.ROLL_OVER, handleIptscraeRollOver);
+			}
+			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_ROLLOUT)) {
+				addEventListener(MouseEvent.ROLL_OUT, handleIptscraeRollOut);
+			}
+			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEMOVE)) {
+				addEventListener(MouseEvent.MOUSE_MOVE, handleIptscraeMouseMove);
+				mouseMoveTimer.addEventListener(TimerEvent.TIMER, handleMouseMoveThrottleTimer);
+				mouseMoveTimer.start();
+			}
 			if (hotSpot.dest != 0 &&
 					(hotSpot.type == PalaceHotspot.TYPE_PASSAGE ||
 					 hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
@@ -62,6 +76,36 @@ package net.codecomposer.palace.view
 				useHand = true;
 			}
 			trace("Hotspot " + hotSpot.name + " is type: " + hotSpot.type);
+		}
+		
+		private function handleIptscraeRollOver(event:MouseEvent):void {
+			client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_ROLLOVER);
+			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEMOVE)) {
+				mouseMoveTimer.addEventListener(TimerEvent.TIMER, handleMouseMoveThrottleTimer);
+			}
+		}
+		
+		private function handleIptscraeRollOut(event:MouseEvent):void {
+			client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_ROLLOUT);
+			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEMOVE)) {
+				mouseMoveTimer.removeEventListener(TimerEvent.TIMER, handleMouseMoveThrottleTimer);
+			}
+		}
+		
+		private var mouseMoveTimer:Timer = new Timer(1000/15, 0);
+		private var mousePos:Point = new Point(-1, -1);
+		private var lastMousePos:Point = new Point(-1, -1);
+		
+		private function handleIptscraeMouseMove(event:MouseEvent):void {
+			mousePos.x = event.localX;
+			mousePos.y = event.localY;
+		}
+		
+		private function handleMouseMoveThrottleTimer(event:TimerEvent):void {
+			if (mousePos.x != lastMousePos.x || mousePos.y != lastMousePos.y) {
+				lastMousePos = mousePos.clone();
+				client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEMOVE);
+			}
 		}
 		
 		private function handleHotspotMoved(event:HotspotEvent):void {
@@ -98,7 +142,7 @@ package net.codecomposer.palace.view
 			graphics.endFill();
 		}
 
-		private function handleHotSpotClick(event:MouseEvent):void {
+		private function handleHotSpotMouseDown(event:MouseEvent):void {
 			trace("Clicked hotspot - id: " + hotSpot.id + " Destination: " + hotSpot.dest + " type: " + hotSpot.type + " state: " + hotSpot.state);
 			
 			if (hotSpot.dontMoveHere) {
@@ -163,16 +207,20 @@ package net.codecomposer.palace.view
 			if (useHand) {
 				Mouse.cursor = MouseCursor.BUTTON;
 			}
-			mouseOver = true;
-			draw();
+			if (PalaceConfig.highlightHotspotsOnMouseover) {
+				mouseOver = true;
+				draw();
+			}
 		}
 		
 		private function handleMouseOut(event:MouseEvent):void {
 			if (useHand) {
 				Mouse.cursor = MouseCursor.ARROW;
 			}
-			mouseOver = false;
-			draw();
+			if (PalaceConfig.highlightHotspotsOnMouseover) {
+				mouseOver = false;
+				draw();
+			}
 		}
 
 	}

@@ -376,6 +376,7 @@ package net.codecomposer.palace.rpc
 			
 			if (message.toLocaleLowerCase() == "clean") {
 				deleteLooseProp(-1); // clear loose props
+				palaceController.paintClear();
 				return;
 			}
 			
@@ -1756,10 +1757,7 @@ package net.codecomposer.palace.rpc
 			// a is four, b is userID
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
-			var user:PalaceUser = currentRoom.getUserById(referenceId);
-			user.x = x;
-			user.y = y;
-			trace("User " + referenceId + " moved to " + x + "," + y);
+			currentRoom.moveUser(referenceId, x, y);
 		}
 		
 		private function handleUserColor(size:int, referenceId:int):void {

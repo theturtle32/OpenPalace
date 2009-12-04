@@ -1,11 +1,19 @@
 package net.codecomposer.palace.view
 {
+	import flash.events.IOErrorEvent;
+	import flash.media.Sound;
+	import flash.media.SoundChannel;
 	import flash.media.SoundTransform;
+	import flash.net.URLRequest;
 	
 	import mx.core.SoundAsset;
+	
+	import net.codecomposer.palace.rpc.PalaceClient;
 
 	public class PalaceSoundPlayer
 	{
+		
+		private var client:PalaceClient = PalaceClient.getInstance();
 		
 		[Embed(source="assets/sounds/amen.mp3")]
 		private static const amen:Class;
@@ -118,6 +126,18 @@ package net.codecomposer.palace.view
 			if (sound != null) {
 				playSoundAsset(SoundAsset(new sound()));
 			}
+			else {
+				var request:URLRequest = new URLRequest(client.mediaServer + soundName.toLowerCase() + ".mp3");
+				var soundFactory:Sound = new Sound();
+				soundFactory.addEventListener(IOErrorEvent.IO_ERROR, handleIOError);
+				soundFactory.load(request);
+				var soundTransform:SoundTransform = new SoundTransform(1,0);
+				var dynamicSound:SoundChannel = soundFactory.play(0,0,soundTransform);
+			}
+		}
+		
+		private function handleIOError(error:IOErrorEvent):void {
+			
 		}
 	}
 }

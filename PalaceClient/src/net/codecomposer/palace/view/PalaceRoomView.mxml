@@ -56,7 +56,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			import net.codecomposer.palace.model.ChatMessage;
 			import net.codecomposer.palace.model.PalaceConfig;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
-			import net.codecomposer.palace.model.PalaceHotspot;
 			import net.codecomposer.palace.model.PalaceLooseProp;
 			import net.codecomposer.palace.model.PalaceUser;
 			import net.codecomposer.palace.rpc.PalaceClient;
@@ -71,6 +70,16 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private var roomBackgroundWatcher:ChangeWatcher;
 					
 			private var imagesByLooseProp:Dictionary = new Dictionary();
+
+			[Bindable]
+			public var mediaServer:String;
+			
+			private var avatarsByUser:Dictionary = new Dictionary();
+			private var nameTagsByUser:Dictionary = new Dictionary();
+			
+			private var baseBackgroundFile:String;
+			private var forcingPng:Boolean = false;
+			private var forcingJpeg:Boolean = false;
 			
 			[Bindable(event="roomChanged")]
 			public function get room():PalaceCurrentRoom {
@@ -84,6 +93,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					_room.removeEventListener(PalaceRoomEvent.ROOM_CLEARED, handleRoomCleared);
 					_room.removeEventListener(PalaceRoomEvent.USER_ENTERED, handleUserEntered);
 					_room.removeEventListener(PalaceRoomEvent.USER_LEFT, handleUserLeft);
+					_room.removeEventListener(PalaceRoomEvent.USER_MOVED, handleUserMoved);
 					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_ADDED, handleLoosePropAdded);
 					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_MOVED, handleLoosePropMoved);
 					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_REMOVED, handleLoosePropRemoved);
@@ -99,6 +109,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					_room.addEventListener(PalaceRoomEvent.ROOM_CLEARED, handleRoomCleared);
 					_room.addEventListener(PalaceRoomEvent.USER_ENTERED, handleUserEntered);
 					_room.addEventListener(PalaceRoomEvent.USER_LEFT, handleUserLeft);
+					_room.addEventListener(PalaceRoomEvent.USER_MOVED, handleUserMoved);
 					_room.addEventListener(PalaceRoomEvent.LOOSE_PROP_ADDED, handleLoosePropAdded);
 					_room.addEventListener(PalaceRoomEvent.LOOSE_PROP_MOVED, handleLoosePropMoved);
 					_room.addEventListener(PalaceRoomEvent.LOOSE_PROP_REMOVED, handleLoosePropRemoved);
@@ -109,19 +120,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				};
 			}
 			
-			[Bindable]
-			public var mediaServer:String;
-			
-			private var avatarsByUser:Dictionary = new Dictionary();
-			private var nameTagsByUser:Dictionary = new Dictionary();
-			
-			private var baseBackgroundFile:String;
-			private var forcingPng:Boolean = false;
-			private var forcingJpeg:Boolean = false;
-			
 			private function handleCreationComplete():void {
 				initializeLoosePropContextMenu();
-				this.addEventListener(MouseEvent.CLICK, handleClick);
+				this.addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown);
+			}
+			
+			private function handleUserMoved(event:PalaceRoomEvent):void {
+				
 			}
 			
 			private function initializeLoosePropContextMenu():void {
@@ -245,6 +250,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					looseProp: room.looseProps.getItemAt(propIndex)
 				}, "prop");
 				DragManager.doDrag(event.currentTarget as IUIComponent, dragSource, event);
+				event.stopPropagation();
 			}
 			
 			private function handleLoosePropDragEnter(event:DragEvent):void {
@@ -342,7 +348,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				removeEventListener(MouseEvent.MOUSE_MOVE, handleAvatarDragMouseMove);
 			}
 			
-			private function handleClick(event:MouseEvent):void {
+			private function handleMouseDown(event:MouseEvent):void {
 				updateSelfPosition();
 				sendCurrentPositionToServer();
 			}
@@ -382,7 +388,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			
 
-			private function handleAvatarClick(event:MouseEvent):void {
+			private function handleAvatarMouseDown(event:MouseEvent):void {
 				if (event.currentTarget is Avatar) {
 					var user:PalaceUser = Avatar(event.currentTarget).user;
 					trace("Clicked avatar " + user.id + " - self is " + room.selfUserId);
@@ -398,6 +404,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 						room.selectedUser = null;
 					}
 					updateAvatarTransparencies();
+					event.stopPropagation();
 				}
 			}
 			
@@ -599,7 +606,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				var avatar:Avatar = new Avatar();
 				avatar.user = event.user;
 				avatar.alpha = 1;
-				avatar.addEventListener(MouseEvent.CLICK, handleAvatarClick);
+				avatar.addEventListener(MouseEvent.MOUSE_DOWN, handleAvatarMouseDown);
 				avatar.addEventListener(MouseEvent.MOUSE_DOWN, handleAvatarDragMouseDown);
 				avatar.addEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
 				avatar.addEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
@@ -623,10 +630,14 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				fade.play();
 			}
 			
+			private function handleAvatarMove(event:Event):void {
+				trace("avatar moved... id: " + Avatar(event.target).user.id);
+			}
+			
 			private function handleUserLeft(event:PalaceRoomEvent):void {
 				var avatar:Avatar = avatarsByUser[event.user];
 				if (avatar != null) {
-					avatar.removeEventListener(MouseEvent.CLICK, handleAvatarClick);
+					avatar.removeEventListener(MouseEvent.MOUSE_DOWN, handleAvatarMouseDown);
 					avatar.removeEventListener(MouseEvent.MOUSE_DOWN, handleAvatarDragMouseDown);
 					avatar.removeEventListener(DragEvent.DRAG_ENTER, handleLoosePropDragEnter);
 					avatar.removeEventListener(DragEvent.DRAG_DROP, handleLoosePropDragDrop);
@@ -650,7 +661,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function handleRoomCleared(event:PalaceRoomEvent):void {
 				for each (var avatar:Object in avatarsByUser) {
-					Avatar(avatar).removeEventListener(MouseEvent.CLICK, handleAvatarClick);
+					Avatar(avatar).removeEventListener(MouseEvent.MOUSE_DOWN, handleAvatarMouseDown);
 				}
 				avatarsGroup.removeAllElements();
 				avatarsByUser = new Dictionary();

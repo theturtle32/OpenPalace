@@ -47,6 +47,38 @@
 			}
 			
 			private function handleStageKeyDown(event:KeyboardEvent):void {
+				if (event.ctrlKey) {
+					trace(event.charCode);
+					if (event.charCode == "g".charCodeAt(0) || event.charCode == 7 ||
+					    event.charCode == "r".charCodeAt(0) || event.charCode == 18) {
+						event.stopImmediatePropagation();
+						if (roomsButton.selected) {
+							hideRoomList();
+						}
+						else {
+							showRoomList();
+						}
+					}
+					else if (event.charCode == "f".charCodeAt(0) || event.charCode == 6) {
+						event.stopImmediatePropagation();
+						if (usersButton.selected) {
+							hideUserList();
+						}
+						else {
+							showUserList();
+						}
+					}
+					else if (event.charCode == "l".charCodeAt(0) || event.charCode == 12) {
+						event.stopImmediatePropagation();
+						if (logButton.selected) {
+							hideLogWindow();
+						}
+						else {
+							showLogWindow();
+						}
+					}
+				}
+				
 				if (palace.connected) {
 					var newColor:int;
 					if (event.keyCode == Keyboard.NUMPAD_ADD) {
@@ -151,7 +183,7 @@
 				var parameters:Object = URLUtil.stringToObject(browserManager.fragment);
 				if (parameters.palace != null) {
 					var url:String = String(parameters.palace).toLowerCase();
-					var match:Array = url.match(/^(palace:\/\/){0,1}(.*?):?([0-9]*)\/?([0-9]*)$/);
+					var match:Array = url.match(/^(palace:\/\/){0,1}(.*?):?([0-9]*)\/?([0-9]*)$/i);
 					var port:uint = 9998;
 					var initialRoom:uint = 0;
 					var hostName:String;
@@ -196,6 +228,7 @@
 			}
 			
 			private function showLogWindow():void {
+				logButton.selected = true;
 				logWindow = new LogWindow();
 				logWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
 					logButton.selected = false;
@@ -204,6 +237,7 @@
 			}
 			
 			private function hideLogWindow():void {
+				logButton.selected = false;
 				mdic.windowManager.remove(logWindow);
 				logWindow = null;
 			}
@@ -262,6 +296,7 @@
 			}
 			
 			private function showUserList():void {
+				usersButton.selected = true;
 				palace.requestUserList();
 				userListWindow = new UserListWindow();
 				userListWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
@@ -271,6 +306,7 @@
 			}
 			
 			private function hideUserList():void {
+				usersButton.selected = false;
 				mdic.windowManager.remove(userListWindow);
 				userListWindow = null;
 			}
@@ -360,6 +396,7 @@
 			}
 						
 			private function showRoomList():void {
+				roomsButton.selected = true;
 				palace.requestRoomList();
 				roomListWindow = new RoomListWindow();
 				roomListWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
@@ -369,6 +406,7 @@
 			}
 			
 			private function hideRoomList():void {
+				roomsButton.selected = false;
 				mdic.windowManager.remove(roomListWindow);
 				roomListWindow = null;
 			}
