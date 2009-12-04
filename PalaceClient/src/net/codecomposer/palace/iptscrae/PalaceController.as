@@ -86,7 +86,7 @@ package net.codecomposer.palace.iptscrae
 		
 		public function gotoURL(url:String):void
 		{
-			var match:Array = url.match(/^palace:\/\/(.*)$/);
+			var match:Array = url.match(/^palace:\/\/(.*)$/i);
 			if (match && match.length > 0) {
 				url = match[1];
 			}
