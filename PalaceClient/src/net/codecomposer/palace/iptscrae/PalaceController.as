@@ -1,12 +1,17 @@
 package net.codecomposer.palace.iptscrae
 {
+	import flash.geom.Point;
+	import flash.utils.setTimeout;
+	
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
 	import net.codecomposer.palace.model.PalaceHotspot;
 	import net.codecomposer.palace.model.PalaceLooseProp;
 	import net.codecomposer.palace.model.PalaceProp;
 	import net.codecomposer.palace.model.PalacePropStore;
 	import net.codecomposer.palace.model.PalaceUser;
+	import net.codecomposer.palace.record.PalaceDrawRecord;
 	import net.codecomposer.palace.rpc.PalaceClient;
+	import net.codecomposer.palace.util.DrawColorUtil;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
 	
 	import org.openpalace.iptscrae.IptAlarm;
@@ -20,6 +25,16 @@ package net.codecomposer.palace.iptscrae
 		[Bindable]
 		public var output:String;
 		public var client:PalaceClient;
+		
+		// pen starts in the center of the old size viewport
+		private var penPosition:Point = new Point(256,192);
+		private var lineColor:uint = 0x00000000;
+		private var lineSize:uint = 1;
+		private var lineAlpha:Number = 1;
+		private var fillColor:uint = 0x00000000;
+		private var fillAlpha:Number = 1;
+		private var useFill:Boolean = false;
+		private var drawLayer:uint = PalaceDrawRecord.LAYER_BACK;
 		
 		public function PalaceController()
 		{
@@ -624,43 +639,93 @@ package net.codecomposer.palace.iptscrae
 		}
 		
 		public function drawLineAbs(startX:int, startY:int, endX:int, endY:int):void {
+			var drawRec:PalaceDrawRecord = new PalaceDrawRecord();
+			drawRec.lineColor = lineColor;
+			drawRec.lineAlpha = lineAlpha;
+			drawRec.fillColor = fillColor;
+			drawRec.fillAlpha = fillAlpha;
+			drawRec.penSize = lineSize;
+			drawRec.command = PalaceDrawRecord.CMD_PATH;
+			drawRec.layer = drawLayer;
+			drawRec.useFill = useFill;
+			drawRec.isEllipse = false;
 			
+			// all points are relative to the one before them.
+			drawRec.polygon.push(new Point(startX, startY)); // start point
+			drawRec.polygon.push(new Point(endX-startX, endY-startY)); // end point
+			
+			setTimeout(function():void {
+				client.sendDrawPacket(drawRec);
+			}, 1);
+			
+			penPosition.x = endX;
+			penPosition.y = endY;
 		}
 		
 		public function drawLineRel(xBy:int, yBy:int):void {
+			var drawRec:PalaceDrawRecord = new PalaceDrawRecord();
+			drawRec.lineColor = lineColor;
+			drawRec.lineAlpha = lineAlpha;
+			drawRec.fillColor = fillColor;
+			drawRec.fillAlpha = fillAlpha;
+			drawRec.penSize = lineSize;
+			drawRec.command = PalaceDrawRecord.CMD_PATH;
+			drawRec.layer = drawLayer;
+			drawRec.useFill = useFill;
+			drawRec.isEllipse = false;
 			
+			// all points are relative to the one before them.
+			drawRec.polygon.push(penPosition.clone()); // start point
+			drawRec.polygon.push(new Point(xBy, yBy)); // end point
+			
+			setTimeout(function():void {
+				client.sendDrawPacket(drawRec);
+			}, 1);
+			
+			penPosition.x += xBy;
+			penPosition.y += yBy;
 		}
 		
 		public function movePenAbs(xTo:int, yTo:int):void {
-			
+			penPosition.x = xTo;
+			penPosition.y = yTo;
 		}
 		
 		public function movePenRel(xBy:int, yBy:int):void {
-			
+			penPosition.x += xBy;
+			penPosition.y += yBy;
 		}
 		
 		public function setPenColor(r:uint, g:uint, b:uint):void {
-			
+			fillColor = lineColor = DrawColorUtil.ARGBtoUint(255, r, g, b);
 		}
 		
 		public function setPenSize(size:uint):void {
-			
+			lineSize = Math.min(9, Math.max(0, size));
 		}
 		
 		public function paintBackLayer():void {
-			
+			drawLayer = PalaceDrawRecord.LAYER_BACK;
 		}
 		
 		public function paintFrontLayer():void {
-			
+			drawLayer = PalaceDrawRecord.LAYER_FRONT;
 		}
 		
 		public function paintUndo():void {
-			
+			var drawRec:PalaceDrawRecord = new PalaceDrawRecord();
+			drawRec.command = PalaceDrawRecord.CMD_DELETE;
+			setTimeout(function():void {
+				client.sendDrawPacket(drawRec);
+			}, 1);
 		}
 		
 		public function paintClear():void {
-			
+			var drawRec:PalaceDrawRecord = new PalaceDrawRecord();
+			drawRec.command = PalaceDrawRecord.CMD_DETONATE;
+			setTimeout(function():void {
+				client.sendDrawPacket(drawRec);
+			}, 1);
 		}
 		
 	}

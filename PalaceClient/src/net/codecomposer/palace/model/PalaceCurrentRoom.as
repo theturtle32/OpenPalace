@@ -19,9 +19,10 @@ package net.codecomposer.palace.model
 {
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.TimerEvent;
+	import flash.utils.Timer;
 	
 	import mx.collections.ArrayCollection;
-	import mx.events.CollectionEvent;
 	
 	import net.codecomposer.palace.event.ChatEvent;
 	import net.codecomposer.palace.event.PalaceRoomEvent;
@@ -58,9 +59,40 @@ package net.codecomposer.palace.model
 		
 		public var chatLog:String = "";
 		
+		public var lastMessage:String;
+		public var lastMessageCount:int = 0;
+		public var lastMessageReceived:Number = 0;
+		public var lastMessageTimer:Timer = new Timer(250, 1);
+		
 		
 		public function PalaceCurrentRoom()
 		{
+			lastMessageTimer.addEventListener(TimerEvent.TIMER, handleLastMessageTimer);
+		}
+		
+		private function handleLastMessageTimer(event:TimerEvent):void {
+			logMessage("(Last message received " + lastMessageCount.toString() + ((lastMessageCount == 1) ? " time.)" : " times.)"));
+			lastMessage = "";
+			lastMessageCount = 0;
+			lastMessageReceived = 0;
+		}
+		
+		private function shouldDisplayMessage(message:String):Boolean {
+			var retValue:Boolean = true;
+			trace("last message: " + lastMessage + " message: " + message + " lastMessageReceived: " + lastMessageReceived + " Now: " + (new Date()).valueOf());
+			if (lastMessage == message && lastMessageReceived > (new Date()).valueOf() - 250) {
+				lastMessageTimer.stop();
+				lastMessageTimer.reset();
+				lastMessageTimer.start();
+				lastMessageCount ++;
+				retValue = false;
+			}
+			else {
+				lastMessageCount = 1;
+			}
+			lastMessage = message;
+			lastMessageReceived = (new Date()).valueOf();
+			return retValue;
 		}
 		
 		public function getHotspotById(spotId:int):PalaceHotspot {
@@ -175,6 +207,7 @@ package net.codecomposer.palace.model
 		
 		public function chat(userId:int, message:String, logMessage:String = null):void {
 			var user:PalaceUser = getUserById(userId);
+			
 			if (logMessage == null) {
 				logMessage = message;
 			}
@@ -182,7 +215,7 @@ package net.codecomposer.palace.model
 				recordChat("<b>", PalaceUtil.htmlEscape(user.name), ":</b> ", PalaceUtil.htmlEscape(logMessage), "\n");
 				dispatchEvent(new Event('chatLogUpdated'));
 			}
-			if (message.length > 0) {
+			if (shouldDisplayMessage(message) && message.length > 0) {
 				var event:ChatEvent = new ChatEvent(ChatEvent.CHAT, message, user);
 				dispatchEvent(event);
 			}
@@ -197,7 +230,7 @@ package net.codecomposer.palace.model
 				recordChat("<em><b>", PalaceUtil.htmlEscape(user.name), " (whisper):</b> ", PalaceUtil.htmlEscape(logMessage), "</em>\n");
 				dispatchEvent(new Event('chatLogUpdated'));
 			}
-			if (message.length > 0) {
+			if (shouldDisplayMessage(message) && message.length > 0) {
 				var event:ChatEvent = new ChatEvent(ChatEvent.WHISPER, message, user);
 				dispatchEvent(event);
 			}
@@ -210,8 +243,10 @@ package net.codecomposer.palace.model
 		public function roomMessage(message:String):void {
 			recordChat("<b>*** " + PalaceUtil.htmlEscape(message), "</b>\n");
 			dispatchEvent(new Event('chatLogUpdated'));
-			var event:ChatEvent = new ChatEvent(ChatEvent.ROOM_MESSAGE, message);
-			dispatchEvent(event);
+			if (shouldDisplayMessage(message) && message.length > 0) {
+				var event:ChatEvent = new ChatEvent(ChatEvent.ROOM_MESSAGE, message);
+				dispatchEvent(event);
+			}
 		}
 		
 		public function statusMessage(message:String):void {
@@ -232,8 +267,10 @@ package net.codecomposer.palace.model
 		public function roomWhisper(message:String):void {
 			recordChat("<b><i>*** " + PalaceUtil.htmlEscape(message), "</i></b>\n");
 			dispatchEvent(new Event('chatLogUpdated'));
-			var event:ChatEvent = new ChatEvent(ChatEvent.ROOM_MESSAGE, message);
-			dispatchEvent(event);
+			if (shouldDisplayMessage(message) && message.length > 0) {
+				var event:ChatEvent = new ChatEvent(ChatEvent.ROOM_MESSAGE, message);
+				dispatchEvent(event);
+			}
 		}
 		
 		private function recordChat(... args):void {

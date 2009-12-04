@@ -119,7 +119,7 @@ package net.codecomposer.palace.record
 			
 			if (command != CMD_DETONATE && command != CMD_DELETE) {
 				data.writeShort(penSize);
-				data.writeShort(polygon.length);
+				data.writeShort(polygon.length - 1);
 				data.writeByte(((lineColor & 0x00FF0000) >> 16) & 0xFF); // red
 				data.writeByte(((lineColor & 0x00FF0000) >> 16) & 0xFF); // red
 				data.writeByte(((lineColor & 0x0000FF00) >> 8) & 0xFF);  // green

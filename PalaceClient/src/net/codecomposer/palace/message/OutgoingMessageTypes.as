@@ -49,5 +49,6 @@ package net.codecomposer.palace.message
 		public static const ROOM_MSG:int = 0x726d7367;
 		public static const SUSR_MSG:int = 0x736d7367;
 		public static const AUTHRESPONSE:int = 0x61757472;
+		public static const DRAW:int = 0x64726177;
 	}
 }

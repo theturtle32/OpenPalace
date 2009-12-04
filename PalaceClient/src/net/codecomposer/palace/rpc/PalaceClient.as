@@ -58,7 +58,6 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
 	import net.codecomposer.palace.record.PalaceDrawRecord;
-	import net.codecomposer.palace.util.PalaceUtil;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
 
 	[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
@@ -638,6 +637,15 @@ package net.codecomposer.palace.rpc
 			socket.flush();
 		}
 		
+		public function sendDrawPacket(drawRecord:PalaceDrawRecord):void {
+			var data:ByteArray = drawRecord.generatePacket(socket.endian);
+			socket.writeInt(OutgoingMessageTypes.DRAW);
+			socket.writeInt(data.length);
+			socket.writeInt(0);
+			socket.writeBytes(data);
+			socket.flush();
+		}
+		
 		public function requestAsset(assetType:int, assetId:uint, assetCrc:uint):void {
 			// Assets are requested in packets of up to 20 requests, separated by 1000ms
 			// to prevent flooding the server and getting killed.
@@ -710,7 +718,7 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(0);
 			
 			socket.writeBytes(assetResponse);
-		}
+		} 
 
 		public function get currentUser():PalaceUser {
 			return currentRoom.getUserById(id);
