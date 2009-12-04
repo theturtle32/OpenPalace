@@ -493,11 +493,11 @@ package net.codecomposer.palace.rpc
 		}
 		
 		public function move(x:int, y:int):void {
-			var user:PalaceUser = currentRoom.getUserById(id);
-			
-			if (!connected || !user || x < 0 || y < 0) {
+			if (!connected || !currentUser || x < 0 || y < 0) {
 				return;
 			}
+			
+			trace("Moving user to " + x + "," + y);
 			
 			socket.writeInt(OutgoingMessageTypes.MOVE);
 			socket.writeInt(4);
@@ -506,12 +506,12 @@ package net.codecomposer.palace.rpc
 			socket.writeShort(x);
 			socket.flush();
 			
-			user.x = x;
-			user.y = y;
+			currentUser.x = x;
+			currentUser.y = y;
 		}
 		
 		public function setFace(face:int):void {
-			if (!connected) {
+			if (!connected || currentUser.face == face) {
 				return;
 			}
 			socket.writeInt(OutgoingMessageTypes.USER_FACE);
@@ -524,7 +524,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		public function setColor(color:int):void {
-			if (!connected) {
+			if (!connected || currentUser.color == color) {
 				return;
 			}
 			color = Math.max(Math.min(color, 15), 0);

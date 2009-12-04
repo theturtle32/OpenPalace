@@ -56,10 +56,24 @@
 						}
 						palace.setColor(newColor);
 					}
-					else if (event.keyCode == Keyboard.NUMPAD_SUBTRACT) {
+					else if (event.keyCode == Keyboard.NUMPAD_SUBTRACT){
 						newColor = palace.currentUser.color - 1;
 						if (newColor < 0) { newColor = 15; }
 						palace.setColor(newColor);
+					}
+					else if (event.keyCode >= Keyboard.NUMPAD_0 &&
+						     event.keyCode <= Keyboard.NUMPAD_9)
+					{
+						palace.setFace(event.keyCode - Keyboard.NUMPAD_0);
+					}
+					else if (event.keyCode == Keyboard.NUMPAD_DECIMAL) {
+						palace.setFace(10);
+					}
+					else if (event.keyCode == Keyboard.NUMPAD_DIVIDE) {
+						palace.setFace(11);
+					}
+					else if (event.keyCode == Keyboard.NUMPAD_MULTIPLY) {
+						palace.setFace(12);
 					}
 				}
 			}
