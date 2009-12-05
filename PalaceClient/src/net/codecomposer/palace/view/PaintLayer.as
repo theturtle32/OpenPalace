@@ -73,8 +73,8 @@ package net.codecomposer.palace.view
 				// the positioning of thicker lines matches the positioning of
 				// the Palace32, which positions the top-left of its square
 				// brush at the specified coordinates.
-				originX = x = drawCommand.polygon[0].x + Math.ceil(drawCommand.penSize / 2);
-				originY = y = drawCommand.polygon[0].y + Math.ceil(drawCommand.penSize / 2);
+				originX = x = drawCommand.polygon[0].x + Math.floor(drawCommand.penSize / 2);
+				originY = y = drawCommand.polygon[0].y + Math.floor(drawCommand.penSize / 2);
 
 				if (drawCommand.isEllipse) {
 				   graphics.lineStyle(drawCommand.penSize, drawCommand.lineColor, drawCommand.lineAlpha);
