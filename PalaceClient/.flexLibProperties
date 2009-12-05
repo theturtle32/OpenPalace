@@ -152,6 +152,7 @@
     <classEntry path="net.codecomposer.palace.iptscrae.command.PENPOSCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.PENSIZECommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.PENTOCommand"/>
+    <classEntry path="net.codecomposer.palace.record.PalaceChatRecord"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
