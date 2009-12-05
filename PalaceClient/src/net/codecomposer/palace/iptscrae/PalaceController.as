@@ -59,20 +59,27 @@ package net.codecomposer.palace.iptscrae
 			trace(value);
 		}
 				
-		public function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):void {
+		public function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):Boolean {
 			var tokenList:IptTokenList = hotspot.getEventHandler(eventType);
 			if (tokenList) {
 				var context:PalaceIptExecutionContext = new PalaceIptExecutionContext(scriptManager);
 				context.hotspotId = hotspot.id;
 				scriptManager.executeTokenListWithContext(tokenList, context);
 				scriptManager.start();
+				return true;
 			}
+			return false;
 		}
 		
-		public function triggerHotspotEvents(eventType:int):void {
-			for each (var hotspot:PalaceHotspot in client.currentRoom.hotSpots) {
-				triggerHotspotEvent(hotspot, eventType);
+		public function triggerHotspotEvents(eventType:int):Boolean {
+			var ranScripts:Boolean = false;
+			for (var i:int = client.currentRoom.hotSpots.length-1; i > -1; i --) {
+				var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpots.getItemAt(i));
+				if (triggerHotspotEvent(hotspot, eventType)) {
+					ranScripts = true;
+				};				
 			}
+			return ranScripts;
 		}
 		
 		
