@@ -12,7 +12,10 @@ package net.codecomposer.palace.iptscrae.command
 			var b:IntegerToken = context.stack.popType(IntegerToken);
 			var g:IntegerToken = context.stack.popType(IntegerToken);
 			var r:IntegerToken = context.stack.popType(IntegerToken);
-			PalaceIptManager(context.manager).pc.setPenColor(r.data, g.data, b.data);
+			var red:int = r.data & 0xFF;
+			var green:int = g.data & 0xFF;
+			var blue:int = b.data & 0xFF;
+			PalaceIptManager(context.manager).pc.setPenColor(red, green, blue);
 		}
 	}
 }
