@@ -8,6 +8,7 @@ package org.openpalace.iptscrae
 	[Event(name="resume", type="org.openpalace.iptscrae.IptEngineEvent")]
 	[Event(name="abort", type="org.openpalace.iptscrae.IptEngineEvent")]
 	[Event(name="start", type="org.openpalace.iptscrae.IptEngineEvent")]
+	[Event(name="finish", type="org.openpalace.iptscrae.IptEngineEvent")]
 	public class IptManager extends EventDispatcher implements IIptManager
 	{
 		public var callStack:Vector.<Runnable> = new Vector.<Runnable>();
@@ -18,7 +19,7 @@ package org.openpalace.iptscrae
 		public var currentScript:String;
 		public var paused:Boolean = false;
 		public var debugMode:Boolean = false;
-		public var stepsPerTimeSlice:int = 800;
+		public var stepsPerTimeSlice:int = 700;
 		public var delayBetweenTimeSlices:int = 1;
 		public var stepThroughScript:Boolean = false;
 		private var _running:Boolean = false;
@@ -148,7 +149,9 @@ package org.openpalace.iptscrae
 		
 		public function start():void {
 			if (!_running) {
-				run();
+				// Everything must be async.
+				_running = true;
+				setTimeout(run, 1);
 			}
 			if (debugMode && stepThroughScript) {
 				pause();
@@ -156,7 +159,6 @@ package org.openpalace.iptscrae
 		}
 		
 		private function run():void {
-			_running = true;
 			// Pseudo-threading.  Execute a group of commands and then yield
 			// before scheduling the next group.
 			for (var i:int = 0; i < stepsPerTimeSlice; i++) {
