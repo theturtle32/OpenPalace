@@ -1767,9 +1767,6 @@ package net.codecomposer.palace.rpc
 					}
 					
 				}
-				else {
-					throw new Error("Unexpected value for chat item direction");
-				}
 				
 				currentChatItem = null;
 			}

@@ -80,7 +80,6 @@ package net.codecomposer.palace.model
 		
 		private function shouldDisplayMessage(message:String):Boolean {
 			var retValue:Boolean = true;
-			trace("last message: " + lastMessage + " message: " + message + " lastMessageReceived: " + lastMessageReceived + " Now: " + (new Date()).valueOf());
 			if (lastMessage == message && lastMessageReceived > (new Date()).valueOf() - 250) {
 				lastMessageTimer.stop();
 				lastMessageTimer.reset();
