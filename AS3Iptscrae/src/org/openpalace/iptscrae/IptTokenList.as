@@ -98,7 +98,7 @@ package org.openpalace.iptscrae
 		
 		public function end():void {
 			_running = false;
-			trace("TokenList End");
+			trace("TokenList End: " + sourceScript);
 			dispatchEvent(new IptEngineEvent(IptEngineEvent.FINISH));
 		}
 		
@@ -116,10 +116,7 @@ package org.openpalace.iptscrae
 				
 				// Process next token...
 				var token:IptToken = getNextToken();
-				if (token is IptTokenList) {
-					context.stack.push(token);
-				}
-				else if (token is IptCommand) {
+				if (token is IptCommand) {
 					try {
 						IptCommand(token).execute(context);
 					}
@@ -134,9 +131,6 @@ package org.openpalace.iptscrae
 				}
 				else {
 					context.stack.push(token);
-				}
-				if (!tokensAvailable) {
-					end();
 				}
 			}
 			else {
