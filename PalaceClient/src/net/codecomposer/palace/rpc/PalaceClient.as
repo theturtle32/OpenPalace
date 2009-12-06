@@ -57,8 +57,12 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.model.PalaceRoom;
 	import net.codecomposer.palace.model.PalaceServerInfo;
 	import net.codecomposer.palace.model.PalaceUser;
+	import net.codecomposer.palace.record.PalaceChatRecord;
 	import net.codecomposer.palace.record.PalaceDrawRecord;
 	import net.codecomposer.palace.view.PalaceSoundPlayer;
+	
+	import org.openpalace.iptscrae.IptEngineEvent;
+	import org.openpalace.iptscrae.IptTokenList;
 
 	[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
 	[Event(type="net.codecomposer.event.PalaceEvent",name="connectComplete")]
@@ -163,6 +167,9 @@ package net.codecomposer.palace.rpc
 		private var assetRequestQueue:Array = [];
 		private var assetRequestQueueCounter:int = 0;
 		private var assetsLastRequestedAt:Date = new Date();
+		
+		private var chatQueue:Vector.<PalaceChatRecord> = new Vector.<PalaceChatRecord>;
+		private var currentChatItem:PalaceChatRecord;
 		
 		private var puidChanged:Boolean = false;
 		private var puidCounter:uint = 0xf5dc385e;
@@ -367,7 +374,6 @@ package net.codecomposer.palace.rpc
 			
 			if (handleClientCommand(message)) { return; }
 			
-			whochat = currentUser.id;
 			if (message.charAt(0) == "/") {
 				// Run iptscrae
 				palaceController.executeScript(message.substr(1));
@@ -380,19 +386,18 @@ package net.codecomposer.palace.rpc
 				return;
 			}
 			
-			chatstr = message;
+			var selectedUserId:int = currentRoom.selectedUser ?
+				currentRoom.selectedUser.id : 0;
 			
-			// Handle room outchat handlers
-			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_OUTCHAT);
-			
-			var whispering:Boolean = currentRoom.selectedUser != null;
-			
-			if (whispering) {
-				privateMessage(chatstr, currentRoom.selectedUser.id);
-			}
-			else {
-				roomChat(chatstr);
-			}
+			var chatRecord:PalaceChatRecord = new PalaceChatRecord(
+				PalaceChatRecord.OUTCHAT,
+				currentUser.id,
+				selectedUserId,
+				message
+			);
+			chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_OUTCHAT);
+			chatQueue.push(chatRecord);
+			processChatQueue();
 		}
 		
 		public function globalMessage(message:String):void {
@@ -1673,6 +1678,106 @@ package net.codecomposer.palace.rpc
 			trace("Pinged.");
 		}
 		
+		/*
+			Iptscrae event handlers have to process chat one piece at a time.
+			Since iptscrae is run asynchronously, we have to wait for all event
+			handlers for one chat event to complete before we process the next
+			one.
+		*/
+		private function processChatQueue():void {
+			if (chatQueue.length > 0) {
+				if (currentChatItem) {
+					// Bail if the current item isn't finished yet.
+					return;
+				}
+				var currentItem:PalaceChatRecord = chatQueue.shift();
+				currentChatItem = currentItem;
+				
+				// These are global variables that need to persist even after
+				// the last chat message has been processed, for compatibility
+				// with the old Palace32 behavior.
+				whochat = currentItem.whochat;
+				chatstr = currentItem.chatstr;
+				
+				if (currentItem.eventHandlers) {
+					for each (var handler:IptTokenList in currentItem.eventHandlers) {
+						handler.addEventListener(IptEngineEvent.FINISH, handleChatEventFinish);
+					}
+					palaceController.triggerHotspotEvents(
+						(currentItem.direction == PalaceChatRecord.INCHAT) ?
+							IptEventHandler.TYPE_INCHAT :
+							IptEventHandler.TYPE_OUTCHAT
+					);
+				}
+				else {
+					// If there aren't any event handlers, skip directly to
+					// processing the chat.
+					handleChatEventFinish();
+				}
+			}
+		}
+		
+		private function handleChatEventFinish(event:IptEngineEvent=null):void {
+			if (currentChatItem) {
+				
+				if (event) {
+					// If an event handler has fired, pull it from the
+					// currentChatItem's list of events, and continue
+					// processing the chat only after all event handlers
+					// have executed.
+					IptTokenList(event.target).removeEventListener(IptEngineEvent.FINISH, handleChatEventFinish);
+					var listIndex:int = currentChatItem.eventHandlers.indexOf(IptTokenList(event.target));
+					if (listIndex != -1) {
+						currentChatItem.eventHandlers.splice(listIndex, 1);
+					}
+					else {
+						return;
+					}
+					if (currentChatItem.eventHandlers.length > 0) {
+						// If there are more event handlers still to run,
+						// bail and wait for them to finish.
+						return;
+					}
+				}
+				else if (currentChatItem.eventHandlers != null) {
+					throw new Error("There are event handlers to run for this " +
+                                    "chat record, but processing was attempted " +
+									"without an event triggering it!");
+				}
+				
+				currentChatItem.chatstr = chatstr;
+				
+				if (currentChatItem.direction == PalaceChatRecord.INCHAT) {
+
+					if (currentChatItem.whisper) {
+						currentRoom.whisper(currentChatItem.whochat, currentChatItem.chatstr, currentChatItem.originalChatstr);
+					}
+					else {
+						currentRoom.chat(currentChatItem.whochat, currentChatItem.chatstr, currentChatItem.originalChatstr);
+					}
+					
+				}
+				else if (currentChatItem.direction == PalaceChatRecord.OUTCHAT) {
+					
+					if (currentChatItem.whisper) {
+						privateMessage(currentChatItem.chatstr, currentChatItem.whotarget);
+					}
+					else {
+						roomChat(currentChatItem.chatstr);
+					}
+					
+				}
+				else {
+					throw new Error("Unexpected value for chat item direction");
+				}
+				
+				currentChatItem = null;
+			}
+			
+			// Keep processing the queue until it's empty.
+			processChatQueue();
+		}
+		
 		// Unencrypted TALK message
 		private function handleReceiveTalk(size:int, referenceId:int):void {
 			var messageBytes:ByteArray = new ByteArray();
@@ -1689,11 +1794,16 @@ package net.codecomposer.palace.rpc
 				trace("Got Room Message: " + message);
 			}
 			else {
-				whochat = referenceId;
 				if (message.length > 0) {
-					chatstr = message;
-					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
-					currentRoom.chat(referenceId, chatstr, message);
+					var chatRecord:PalaceChatRecord = new PalaceChatRecord(
+						PalaceChatRecord.INCHAT,
+						referenceId,
+						0,
+						message
+					);
+					chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_INCHAT);
+					chatQueue.push(chatRecord);
+					processChatQueue();
 				}
 				trace("Got talk from userID " + referenceId + ": " + message);
 			}
@@ -1714,11 +1824,16 @@ package net.codecomposer.palace.rpc
 				trace("Got ESP: " + message);
 			}
 			else {
-				whochat = referenceId;
 				if (message.length > 0) {
-					chatstr = message;
-					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
-					currentRoom.whisper(referenceId, chatstr, message);
+					var chatRecord:PalaceChatRecord = new PalaceChatRecord(
+						PalaceChatRecord.INCHAT,
+						referenceId,
+						0,
+						message
+					);
+					chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_INCHAT);
+					chatQueue.push(chatRecord);
+					processChatQueue();
 				}
 				trace("Got whisper from userID " + referenceId + ": " + message);
 			}
@@ -1731,10 +1846,15 @@ package net.codecomposer.palace.rpc
 			socket.readBytes(messageBytes, 0, length-3); // Length field lies
 			socket.readByte(); // Last byte is unnecessary?
 			var message:String = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
-			chatstr = message;
-			whochat = referenceId;
-			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
-			currentRoom.chat(referenceId, chatstr, message);
+			var chatRecord:PalaceChatRecord = new PalaceChatRecord(
+				PalaceChatRecord.INCHAT,
+				referenceId,
+				0,
+				message
+			);
+			chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_INCHAT);
+			chatQueue.push(chatRecord);
+			processChatQueue();
 			trace("Got xtalk from userID " + referenceId + ": " + chatstr);
 		}
 		
@@ -1745,11 +1865,15 @@ package net.codecomposer.palace.rpc
 			socket.readBytes(messageBytes, 0, length-3); // Length field lies.
 			socket.readByte(); // Last byte is unnecessary?
 			var message:String = PalaceEncryption.getInstance().decrypt(messageBytes, utf8);
-			chatstr = message;
-			whochat = referenceId;
-			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_INCHAT);
-			
-			currentRoom.whisper(referenceId, chatstr, message);
+			var chatRecord:PalaceChatRecord = new PalaceChatRecord(
+				PalaceChatRecord.INCHAT,
+				referenceId,
+				0,
+				message
+			);
+			chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_INCHAT);
+			chatQueue.push(chatRecord);
+			processChatQueue();
 			trace("Got xwhisper from userID " + referenceId + ": " + chatstr);
 		}
 		

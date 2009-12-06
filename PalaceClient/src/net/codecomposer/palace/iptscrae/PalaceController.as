@@ -82,6 +82,17 @@ package net.codecomposer.palace.iptscrae
 			return ranScripts;
 		}
 		
+		public function getHotspotEvents(eventType:int):Vector.<IptTokenList> {
+			var scripts:Vector.<IptTokenList> = new Vector.<IptTokenList>;
+			for (var i:int = client.currentRoom.hotSpots.length-1; i > -1; i --) {
+				var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpots.getItemAt(i));
+				var handler:IptTokenList = hotspot.getEventHandler(eventType);
+				if (handler) {
+					scripts.push(handler);
+				}				
+			}
+			return scripts.length > 0 ? scripts : null;
+		}
 		
 		
 		public function executeScript(script:String):void {
@@ -533,6 +544,7 @@ package net.codecomposer.palace.iptscrae
 		
 		public function setChatString(message:String):void
 		{
+			trace("Setting chat message to: \"" + message + "\"");
 			if (message.length > 254) {
 				message = message.substr(0, 254);
 			}

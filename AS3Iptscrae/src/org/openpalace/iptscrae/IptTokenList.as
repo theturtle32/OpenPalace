@@ -1,6 +1,7 @@
 package org.openpalace.iptscrae
 {
 
+	[Event(name="finish", type="org.openpalace.iptscrae.IptEngineEvent")]
 	public class IptTokenList extends IptToken implements Runnable
 	{
 		public var sourceScript:String;
@@ -97,6 +98,8 @@ package org.openpalace.iptscrae
 		
 		public function end():void {
 			_running = false;
+			trace("TokenList End");
+			dispatchEvent(new IptEngineEvent(IptEngineEvent.FINISH));
 		}
 		
 		public function step():void {

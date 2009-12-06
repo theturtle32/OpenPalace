@@ -1,6 +1,8 @@
 package org.openpalace.iptscrae
 {
-	public class IptToken
+	import flash.events.EventDispatcher;
+
+	public class IptToken extends EventDispatcher
 	{
 		public var scriptCharacterOffset:int;
 		
@@ -21,7 +23,7 @@ package org.openpalace.iptscrae
 			return this;
 		}
 		
-		public function toString():String {
+		override public function toString():String {
 			return "[" + IptUtil.className(this) + "]";
 		}
 	}
