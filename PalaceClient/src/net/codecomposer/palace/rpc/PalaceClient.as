@@ -562,16 +562,54 @@ package net.codecomposer.palace.rpc
 			socket.flush();
 		}
 		
+		private var leaveEventHandlers:Vector.<IptTokenList>;
+		private var requestedRoomId:int = 0;
+		
 		public function gotoRoom(roomId:int):void {
 			if (!connected) {
 				return;
 			}
+			
 			palaceController.clearAlarms();
 			
 			needToRunSignonHandlers = false;
 			
-			palaceController.triggerHotspotEvents(IptEventHandler.TYPE_LEAVE);
+			requestedRoomId = roomId;
 			
+			leaveEventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_LEAVE);
+			if (leaveEventHandlers) {
+				for each (var handler:IptTokenList in leaveEventHandlers) {
+					handler.addEventListener(IptEngineEvent.FINISH, handleLeaveEventHandlersFinish);
+				}
+				palaceController.triggerHotspotEvents(IptEventHandler.TYPE_LEAVE);
+			}
+			else {
+				actuallyGotoRoom(roomId);
+			}
+		}
+		
+		private function handleLeaveEventHandlersFinish(event:IptEngineEvent):void {
+			if (leaveEventHandlers == null) {
+				actuallyGotoRoom(requestedRoomId);
+			}
+			
+			// Make sure each ON LEAVE handler has finished before actually
+			// leaving the room.
+			var index:int = leaveEventHandlers.indexOf(IptTokenList(event.target));
+			if (index != -1) {
+				leaveEventHandlers.splice(index, 1);
+			}
+			if (leaveEventHandlers.length < 1) {
+				actuallyGotoRoom(requestedRoomId);
+				leaveEventHandlers = null;
+				requestedRoomId = 0;
+			}
+		}
+		
+		private function actuallyGotoRoom(roomId:int):void {
+			if (!connected) {
+				return;
+			}
 			socket.writeInt(OutgoingMessageTypes.GOTO_ROOM);
 			socket.writeInt(2); // length
 			socket.writeInt(id);

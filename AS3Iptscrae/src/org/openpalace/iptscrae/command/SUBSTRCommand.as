@@ -10,7 +10,7 @@ package org.openpalace.iptscrae.command
 		override public function execute(context:IptExecutionContext) : void {
 			var fragment:StringToken = context.stack.popType(StringToken);
 			var whole:StringToken = context.stack.popType(StringToken);
-			context.stack.push(new IntegerToken(whole.data.indexOf(fragment.data) != -1 ? 1 : 0));
+			context.stack.push(new IntegerToken(whole.data.toLowerCase().indexOf(fragment.data.toLowerCase()) != -1 ? 1 : 0));
 		}
 	}
 }
