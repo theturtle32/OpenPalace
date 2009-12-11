@@ -5,6 +5,7 @@ package org.openpalace.iptscrae
 	import org.openpalace.iptscrae.token.IntegerToken;
 	import org.openpalace.iptscrae.token.StringToken;
 	import org.openpalace.iptscrae.token.VariableToken;
+	import flash.utils.ByteArray;
 
 	public class IptParser
 	{
@@ -127,7 +128,6 @@ package org.openpalace.iptscrae
 							so ++;
 						}
 					}
-
 
 					else if(char == '=') {
 						if(sc(1) == '=') {
@@ -314,12 +314,15 @@ package org.openpalace.iptscrae
 					if(currentChar() == 'x') {
 						var hexNumChars:String = "0x";
 						so++;
-						while (hexNumberTest.test(currentChar())) {
+						for (var i:int = 0; i < 2 && hexNumberTest.test(currentChar()); i ++) {
 							hexNumChars += currentChar();
 							so ++;
 						}
 						
-						result += String.fromCharCode(parseInt(hexNumChars));
+						var charsetBA:ByteArray = new ByteArray();
+						charsetBA.writeByte(parseInt(hexNumChars));
+						charsetBA.position = 0;
+						result += charsetBA.readMultiByte(1, "Windows-1252");
 					}
 					else {
 						result += currentChar();
