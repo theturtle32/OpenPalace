@@ -137,7 +137,7 @@ package net.codecomposer.palace.model
 		}
 		
 		public function moveLooseProp(index:int, x:int, y:int):void {
-			trace("Moving prop index " + index);
+//			trace("Moving prop index " + index);
 			var prop:PalaceLooseProp = PalaceLooseProp(looseProps.getItemAt(index));
 			prop.x = x;
 			prop.y = y;
@@ -290,7 +290,7 @@ package net.codecomposer.palace.model
 			user.y = y;
 			var event:PalaceRoomEvent = new PalaceRoomEvent(PalaceRoomEvent.USER_MOVED, user);
 			dispatchEvent(event);
-			trace("User " + userId + " moved to " + x + "," + y);
+//			trace("User " + userId + " moved to " + x + "," + y);
 		}
 	}
 }

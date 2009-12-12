@@ -117,7 +117,7 @@ package net.codecomposer.palace.iptscrae
 			} 
 			
 			if (match) {
-				trace("Taking you to host: " + hostName + " port " + port);
+//				trace("Taking you to host: " + hostName + " port " + port);
 				client.connect(client.userName, hostName, port);
 			}
 			else {
@@ -544,7 +544,7 @@ package net.codecomposer.palace.iptscrae
 		
 		public function setChatString(message:String):void
 		{
-			trace("Setting chat message to: \"" + message + "\"");
+//			trace("Setting chat message to: \"" + message + "\"");
 			if (message.length > 254) {
 				message = message.substr(0, 254);
 			}

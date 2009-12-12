@@ -38,7 +38,7 @@ package net.codecomposer.palace.model
 				for each (var propDef:Array in so.data.propIds) {
 					var id:int = propDef[0];
 					var crc:int = propDef[1];
-					trace("Got prop: " + id + " CRC: " + crc);
+//					trace("Got prop: " + id + " CRC: " + crc);
 					props.addItem(propStore.getProp(null, id, crc));
 				}
 			}
@@ -48,7 +48,7 @@ package net.codecomposer.palace.model
 			
 			if (so.data.avatars) {
 				for each (var avatar:Array in so.data.avatars) {
-					trace("Have an avatar.");
+//					trace("Have an avatar.");
 				}
 			}
 			else {

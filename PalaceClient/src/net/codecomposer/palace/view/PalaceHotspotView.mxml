@@ -61,7 +61,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					}
 				}
 				else if (event.kind == CollectionEventKind.RESET) {
-					trace("Resetting hotspots");
 					resetHotSpots();
 				}
 			}
@@ -103,7 +102,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			}
 			
 			private function removeHotSpot(hotSpot:PalaceHotspot):void {
-				trace("Removing hotspot " + hotSpot.name + " - " + hotSpot.id);
 				
 			}
 			

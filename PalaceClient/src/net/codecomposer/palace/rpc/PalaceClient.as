@@ -296,7 +296,7 @@ package net.codecomposer.palace.rpc
 		
 		public function authenticate(username:String, password:String):void {
 			if (socket && socket.connected) {
-				trace("Sending auth response");
+//				trace("Sending auth response");
 				var userPass:ByteArray = PalaceEncryption.getInstance().encrypt(username + ":" + password);
 				socket.writeInt(OutgoingMessageTypes.AUTHRESPONSE);
 				socket.writeInt(userPass.length + 1);
@@ -426,7 +426,7 @@ package net.codecomposer.palace.rpc
 			if (!connected || message == null || message.length == 0) {
 				return;
 			}
-			trace("ROOMMSG");
+//			trace("ROOMMSG");
 			if (message.length > 254) {
 				message = message.substr(0, 254);
 			}
@@ -448,7 +448,7 @@ package net.codecomposer.palace.rpc
 			if (!connected || message == null || message.length == 0) {
 				return;
 			}
-			trace("SUSRMSG");
+//			trace("SUSRMSG");
 			if (message.length > 254) {
 				message = message.substr(0, 254);
 			}
@@ -473,8 +473,8 @@ package net.codecomposer.palace.rpc
 				var argument:String = clientCommandMatch[2];
 				switch (command) {
 					case "susr":
-						trace("You are attempting to become a superuser with password \"" +
-								argument + "\"");
+//						trace("You are attempting to become a superuser with password \"" +
+//								argument + "\"");
 						becomeWizard(argument);
 						break;
 					default:
@@ -503,7 +503,7 @@ package net.codecomposer.palace.rpc
 				return;
 			}
 			
-			trace("Moving user to " + x + "," + y);
+//			trace("Moving user to " + x + "," + y);
 			
 			socket.writeInt(OutgoingMessageTypes.MOVE);
 			socket.writeInt(4);
@@ -638,7 +638,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		public function setSpotState(roomId:int, spotId:int, spotState:int):void {
-			trace("Setting spot state");
+//			trace("Setting spot state");
 			socket.writeInt(OutgoingMessageTypes.SPOT_STATE);
 			socket.writeInt(6);
 			socket.writeInt(0);
@@ -696,7 +696,7 @@ package net.codecomposer.palace.rpc
 			if (!connected) {
 				return;	
 			}
-			trace("Requesting asset (Type:" + assetType.toString(16) + ") (ID:" + assetId + ") (CRC:" + assetCrc + ")");
+//			trace("Requesting asset (Type:" + assetType.toString(16) + ") (ID:" + assetId + ") (CRC:" + assetCrc + ")");
 			if (assetRequestQueueTimer == null) {
 				assetRequestQueueTimer = new Timer(100, 1);
 				assetRequestQueueTimer.addEventListener(TimerEvent.TIMER, sendAssetRequests);
@@ -728,7 +728,7 @@ package net.codecomposer.palace.rpc
 			// only do 20 requests at a time
 			var count:int = (assetRequestQueue.length > 20) ? 20 : assetRequestQueue.length;
 			
-			trace("Requesting a group of props");
+//			trace("Requesting a group of props");
 			for (var i:int = 0; i < count; i++) {
 				var request:Array = assetRequestQueue.shift() as Array;
 				socket.writeInt(OutgoingMessageTypes.REQUEST_ASSET);
@@ -809,7 +809,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		private function onSocketData(event:ProgressEvent=null):void {
-			trace("Got data: " + socket.bytesAvailable + " bytes available");
+//			trace("Got data: " + socket.bytesAvailable + " bytes available");
 			var size:int;
 			var p:int;
 			
@@ -828,7 +828,6 @@ package net.codecomposer.palace.rpc
 								messageP = socket.readInt();
 							}
 							else {
-								trace("Not enough bytes to grab the next message header.  Waiting for more data.");
 								return;
 							}
 						}
@@ -836,13 +835,11 @@ package net.codecomposer.palace.rpc
 						p = messageP;
 	
 						if (size > socket.bytesAvailable) {
-							trace("Message " + messageID + " expected bytes: " + size + " socket bytesAvailable: " + socket.bytesAvailable);
 							return;
 						}
 	
 						switch (messageID) {
 							case IncomingMessageTypes.ALTERNATE_LOGON_REPLY:
-								trace("Alternate Logon Reply");
 								alternateLogon(size, p);
 								break;
 								
@@ -1055,14 +1052,12 @@ package net.codecomposer.palace.rpc
 					Alert.show("Got MSG_TROPSER.  Don't know how to proceed.","Logon Error");
 					break;
 				case IncomingMessageTypes.LITTLE_ENDIAN_SERVER: // MSG_DIYIT
-					trace("Server is Little Endian");
 					socket.endian = Endian.LITTLE_ENDIAN;
 					size = socket.readInt();
 					p = socket.readInt();
 					logOn(size, p);
 					break;
 				case IncomingMessageTypes.BIG_ENDIAN_SERVER: // MSG_TIYID
-					trace("Server is Big Endian");
 					socket.endian = Endian.BIG_ENDIAN;
 					size = socket.readInt();
 					p = socket.readInt();
@@ -1078,7 +1073,7 @@ package net.codecomposer.palace.rpc
 		private function logOn(size:int, referenceId:int):void {
 			var i:int;
 			
-			trace("Logging on.  a: " + size + " - b: " + referenceId);
+//			trace("Logging on.  a: " + size + " - b: " + referenceId);
 			// a is validation
 			currentRoom.selfUserId = id = referenceId;
 
@@ -1228,11 +1223,11 @@ package net.codecomposer.palace.rpc
 //			serverInfo.options = socket.readUnsignedInt();
 //			serverInfo.uploadCapabilities = socket.readUnsignedInt();
 //			serverInfo.downloadCapabilities = socket.readUnsignedInt();
-			trace("Server name: " + serverName);
+//			trace("Server name: " + serverName);
 		}
 		
 		private function handleAuthenticate(size:int, referenceId:int):void {
-			trace("Authentication requested.");
+//			trace("Authentication requested.");
 			dispatchEvent(new PalaceEvent(PalaceEvent.AUTHENTICATION_REQUESTED));
 		}
 		
@@ -1265,12 +1260,12 @@ package net.codecomposer.palace.rpc
 				}
 			});
 			timer.start();
-			trace("User ID: " + referenceId + " just logged on.  Population: " + population);
+//			trace("User ID: " + referenceId + " just logged on.  Population: " + population);
 		}
 		
 		private function handleReceiveMediaServer(size:int, referenceId:int):void {
 			mediaServer = socket.readMultiByte(size, 'Windows-1252');
-			trace("Got media server: " + mediaServer);
+//			trace("Got media server: " + mediaServer);
 		}
 		
 		private function outputHexView(bytes:Array):void {
@@ -1345,7 +1340,7 @@ package net.codecomposer.palace.rpc
 			var roomDataLength:int = messageBytes.readShort();
 			var rb:Array = new Array(roomDataLength);
 
-			trace("Reading in room description: " + roomDataLength + " bytes to read.");
+//			trace("Reading in room description: " + roomDataLength + " bytes to read.");
 			for (var i:int = 0; i < roomDataLength; i++) {
 				rb[i] = messageBytes.readUnsignedByte();
 			}
@@ -1396,7 +1391,7 @@ package net.codecomposer.palace.rpc
 				imageOverlay.id = imageBA.readShort();
 				var picNameOffset:int = imageBA.readShort(); // pstring offset
 				imageOverlay.transparencyIndex = imageBA.readShort();
-				trace("Transparency Index: " + imageOverlay.transparencyIndex);
+//				trace("Transparency Index: " + imageOverlay.transparencyIndex);
 				imageBA.readShort(); // Reserved.  Padding.. field alignment
 				var picNameLength:int = rb[picNameOffset];
 				var picName:String = "";
@@ -1409,7 +1404,7 @@ package net.codecomposer.palace.rpc
 				}
 				imageOverlay.filename = picName;
 				images[imageOverlay.id] = imageOverlay; 
-				trace("picture id: " + imageOverlay.id + " - Name: " + imageOverlay.filename);
+//				trace("picture id: " + imageOverlay.id + " - Name: " + imageOverlay.filename);
 				imageOffset += 12;
 			}
 			currentRoom.images = images;
@@ -1459,10 +1454,10 @@ package net.codecomposer.palace.rpc
 			}
 			
 			currentRoom.backgroundFile = imageName;
-			trace("Background Image: " + currentRoom.backgroundFile);
+//			trace("Background Image: " + currentRoom.backgroundFile);
 			
 			currentRoom.name = roomName;
-			trace("Room name: " + currentRoom.name);
+//			trace("Room name: " + currentRoom.name);
 			
 			debugData = new DebugData(currentRoom);
 			
@@ -1565,7 +1560,7 @@ package net.codecomposer.palace.rpc
 				
 				currentRoom.addUser(user);
 			}
-			trace("Got list of users in room.  Count: " + currentRoom.users.length);
+//			trace("Got list of users in room.  Count: " + currentRoom.users.length);
 		}
 		
 		private function handleReceiveRoomList(size:int, referenceId:int):void {
@@ -1583,7 +1578,7 @@ package net.codecomposer.palace.rpc
 				roomList.addItem(room);
 				roomById[room.id] = room;
 			}
-			trace("There are " + roomCount + " rooms in this palace.");
+//			trace("There are " + roomCount + " rooms in this palace.");
 		}
 		
 		private function handleReceiveFullUserList(size:int, referenceId:int):void {
@@ -1613,7 +1608,7 @@ package net.codecomposer.palace.rpc
 				//trace("User List - got user: " + user.name);
 				userList.addItem(user);
 			}
-			trace("There are " + userList.length + " users in this palace.");
+//			trace("There are " + userList.length + " users in this palace.");
 		}
 		
 		private function handleReceiveRoomDescend(size:int, referenceId:int):void {
@@ -1680,7 +1675,7 @@ package net.codecomposer.palace.rpc
 			
 			currentRoom.addUser(user);
 			
-			trace("User " + user.name + " entered.");
+//			trace("User " + user.name + " entered.");
 			
 			if (user.id == id) {
 				// Self entered
@@ -1704,7 +1699,7 @@ package net.codecomposer.palace.rpc
 
 		private function handlePing(size:int, referenceId:int):void {
 			if (referenceId != id) {
-				trace("ID didn't match during ping, bailing");
+//				trace("ID didn't match during ping, bailing");
 				return;
 			}
 			
@@ -1713,7 +1708,7 @@ package net.codecomposer.palace.rpc
 			socket.writeInt(0);
 			socket.flush();
 			
-			trace("Pinged.");
+//			trace("Pinged.");
 		}
 		
 		/*
@@ -1826,7 +1821,7 @@ package net.codecomposer.palace.rpc
 			socket.readByte();
 			if (referenceId == 0) {
 				currentRoom.roomMessage(message);
-				trace("Got Room Message: " + message);
+//				trace("Got Room Message: " + message);
 			}
 			else {
 				if (message.length > 0) {
@@ -1840,7 +1835,7 @@ package net.codecomposer.palace.rpc
 					chatQueue.push(chatRecord);
 					processChatQueue();
 				}
-				trace("Got talk from userID " + referenceId + ": " + message);
+//				trace("Got talk from userID " + referenceId + ": " + message);
 			}
 		}
 		
@@ -1856,7 +1851,7 @@ package net.codecomposer.palace.rpc
 			socket.readByte();
 			if (referenceId == 0) {
 				currentRoom.roomWhisper(message);
-				trace("Got ESP: " + message);
+//				trace("Got ESP: " + message);
 			}
 			else {
 				if (message.length > 0) {
@@ -1870,13 +1865,13 @@ package net.codecomposer.palace.rpc
 					chatQueue.push(chatRecord);
 					processChatQueue();
 				}
-				trace("Got whisper from userID " + referenceId + ": " + message);
+//				trace("Got whisper from userID " + referenceId + ": " + message);
 			}
 		}
 		
 		private function handleReceiveXTalk(size:int, referenceId:int):void {
 			var length:int = socket.readShort();
-			trace("XTALK.  Size: " + size + " Length: " + length);
+//			trace("XTALK.  Size: " + size + " Length: " + length);
 			var messageBytes:ByteArray = new ByteArray();
 			socket.readBytes(messageBytes, 0, length-3); // Length field lies
 			socket.readByte(); // Last byte is unnecessary?
@@ -1890,12 +1885,12 @@ package net.codecomposer.palace.rpc
 			chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_INCHAT);
 			chatQueue.push(chatRecord);
 			processChatQueue();
-			trace("Got xtalk from userID " + referenceId + ": " + chatstr);
+//			trace("Got xtalk from userID " + referenceId + ": " + chatstr);
 		}
 		
 		private function handleReceiveXWhisper(size:int, referenceId:int):void {
 			var length:int = socket.readShort();
-			trace("XWHISPER.  Size: " + size + " Length: " + length);
+//			trace("XWHISPER.  Size: " + size + " Length: " + length);
 			var messageBytes:ByteArray = new ByteArray();
 			socket.readBytes(messageBytes, 0, length-3); // Length field lies.
 			socket.readByte(); // Last byte is unnecessary?
@@ -1909,7 +1904,7 @@ package net.codecomposer.palace.rpc
 			chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_INCHAT);
 			chatQueue.push(chatRecord);
 			processChatQueue();
-			trace("Got xwhisper from userID " + referenceId + ": " + chatstr);
+//			trace("Got xwhisper from userID " + referenceId + ": " + chatstr);
 		}
 		
 		private function handleMovement(size:int, referenceId:int):void {
@@ -1922,13 +1917,13 @@ package net.codecomposer.palace.rpc
 		private function handleUserColor(size:int, referenceId:int):void {
 			var user:PalaceUser = currentRoom.getUserById(referenceId);
 			user.color = socket.readShort();
-			trace("User " + referenceId + " changed color to " + user.color); 
+//			trace("User " + referenceId + " changed color to " + user.color); 
 		}
 		
 		private function handleUserFace(size:int, referenceId:int):void {
 			var user:PalaceUser = currentRoom.getUserById(referenceId);
 			user.face = socket.readShort();
-			trace("User " + referenceId + " changed face to " + user.face);
+//			trace("User " + referenceId + " changed face to " + user.face);
 		}
 		
 		private function handleUserRename(size:int, referenceId:int):void {
@@ -1942,13 +1937,13 @@ package net.codecomposer.palace.rpc
 //			else {
 				userName = socket.readMultiByte(userNameLength, 'Windows-1252');
 //			}
-			trace("User " + user.name + " changed their name to " + userName);
+//			trace("User " + user.name + " changed their name to " + userName);
 			user.name = userName;
 		}
 		
 		private function handleUserExitRoom(size:int, referenceId:int):void {
 			currentRoom.removeUserById(referenceId);
-			trace("User " + referenceId + " left the room");
+//			trace("User " + referenceId + " left the room");
 		}
 		
 		private function handleUserLeaving(size:int, referenceId:int):void {
@@ -1957,14 +1952,14 @@ package net.codecomposer.palace.rpc
 				currentRoom.removeUserById(referenceId);
 				PalaceSoundPlayer.getInstance().playConnectionPing();
 			}
-			trace("User " + referenceId + " logged off");
+//			trace("User " + referenceId + " logged off");
 		}
 		
 		private function handleAssetQuery(size:int, referenceId:int):void {
 			var type:int = socket.readInt();
 			var assetId:int = socket.readInt();
 			var assetCrc:uint = socket.readUnsignedInt();
-			trace("Got asset request for type: " + type + ", assetId: " + assetId + ", assetCrc: " + assetCrc);
+//			trace("Got asset request for type: " + type + ", assetId: " + assetId + ", assetCrc: " + assetCrc);
 			var prop:PalaceProp = PalacePropStore.getInstance().getProp(null, assetId, assetCrc);
 
 			if (prop.ready) {
@@ -2017,7 +2012,7 @@ package net.codecomposer.palace.rpc
 			asset.data = data;
 			asset.type = assetType;
 			asset.name = assetName;
-			trace("Received asset: (Type:" + asset.type.toString(16) + ") (ID:"+asset.id+") (CRC:" + asset.crc + ") (Name:" + asset.name + ")");
+//			trace("Received asset: (Type:" + asset.type.toString(16) + ") (ID:"+asset.id+") (CRC:" + asset.crc + ") (Name:" + asset.name + ")");
 			if (asset.type == AssetManager.ASSET_TYPE_PROP) {
 				PalacePropStore.getInstance().injectAsset(asset);
 			}
@@ -2078,7 +2073,7 @@ package net.codecomposer.palace.rpc
 		private function handleDoorLock(size:int, referenceId:int):void {
 			var roomId:int = socket.readShort();
 			var spotId:int = socket.readShort();
-			trace("Spot id " + spotId + " in room id " + roomId + " has been locked");
+//			trace("Spot id " + spotId + " in room id " + roomId + " has been locked");
 			if (roomId == currentRoom.id) {
 				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
 				hs.changeState(1);
@@ -2089,7 +2084,7 @@ package net.codecomposer.palace.rpc
 		private function handleDoorUnlock(size:int, referenceId:int):void {
 			var roomId:int = socket.readShort();
 			var spotId:int = socket.readShort();
-			trace("Spot id " + spotId + " in room id " + roomId + " has been unlocked");
+//			trace("Spot id " + spotId + " in room id " + roomId + " has been unlocked");
 			if (roomId == currentRoom.id) {
 				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
 				hs.changeState(0);
@@ -2101,14 +2096,14 @@ package net.codecomposer.palace.rpc
 			var roomId:int = socket.readShort();
 			var spotId:int = socket.readShort();
 			var spotState:int = socket.readUnsignedShort();
-			trace("Spot State Changed: Spot id " + spotId + " in room id " + roomId + " is now in state " + spotState);
+//			trace("Spot State Changed: Spot id " + spotId + " in room id " + roomId + " is now in state " + spotState);
 			if (roomId == currentRoom.id) {
 				var hs:PalaceHotspot = currentRoom.hotSpotsById[spotId];
 				if (hs != null) {
 					hs.changeState(spotState);
 				}
 				else {
-					trace("Unable to access spot id " + spotId); 
+//					trace("Unable to access spot id " + spotId); 
 				}
 			}
 		}
@@ -2119,7 +2114,7 @@ package net.codecomposer.palace.rpc
 			var spotId:int = socket.readShort();
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
-			trace("Picture in HotSpot " + spotId + " in room " + roomId + " moved offset to " + x + "," + y);
+//			trace("Picture in HotSpot " + spotId + " in room " + roomId + " moved offset to " + x + "," + y);
 			if (roomId != currentRoom.id) { return; }
 			var hotSpot:PalaceHotspot = currentRoom.hotSpotsById[spotId];
 			if (hotSpot != null) {
@@ -2132,7 +2127,7 @@ package net.codecomposer.palace.rpc
 			var spotId:int = socket.readShort();
 			var y:int = socket.readShort();
 			var x:int = socket.readShort();
-			trace("Hotspot " + spotId + " in room " + roomId + " moved to " + x + "," + y);
+//			trace("Hotspot " + spotId + " in room " + roomId + " moved to " + x + "," + y);
 			if (roomId != currentRoom.id) { return; }
 			var hotSpot:PalaceHotspot = currentRoom.hotSpotsById[spotId];
 			if (hotSpot != null) {
@@ -2203,7 +2198,7 @@ package net.codecomposer.palace.rpc
 			for (var i:int = 0; i < a && socket.bytesAvailable > 0; i++) {
 				socket.readByte();
 			}
-			trace("Throwing away data.");
+//			trace("Throwing away data.");
 		}
 
 	}

@@ -143,7 +143,7 @@ package net.codecomposer.palace.model
 		}
 		
 		private function handlePropsUploadConfirmResult(event:OPWSEvent):void {
-			trace("Props upload confirmed");
+//			trace("Props upload confirmed");
 		}
 		
 		private function handleNewPropsResult(event:OPWSEvent):void {
@@ -181,13 +181,13 @@ package net.codecomposer.palace.model
 			request.data = builder.data;
 			request.contentType = builder.contentType;
 			
-			trace("Uploading prop id " + prop.asset.id + " - guid " + prop.asset.guid + " - to Amazon S3");
+//			trace("Uploading prop id " + prop.asset.id + " - guid " + prop.asset.guid + " - to Amazon S3");
 			var guid:String = prop.asset.guid;
 			var loader:URLLoader = new URLLoader();
 			loader.addEventListener(Event.COMPLETE, function(event:Event):void {
 				var prop:PalaceProp = getProp(guid);
 				confirmPropUpload(prop);
-				trace("Upload complete for prop guid: " + prop.asset.guid)
+//				trace("Upload complete for prop guid: " + prop.asset.guid)
 			});
 			loader.addEventListener(IOErrorEvent.IO_ERROR, function(event:IOErrorEvent):void {
 				trace("IO Error while uploading prop guid " + prop.asset.guid);
@@ -210,7 +210,7 @@ package net.codecomposer.palace.model
 		private function handleGetPropsResult(event:OPWSEvent):void {
 			for each (var response:Object in event.result['props'] as Array) {
 				if (!response['success']) {
-					trace("Unable to get prop " + response['legacy_identifier']['id'] + " from web service, downloading from palace server.");
+//					trace("Unable to get prop " + response['legacy_identifier']['id'] + " from web service, downloading from palace server.");
 					client.requestAsset(AssetManager.ASSET_TYPE_PROP,
 						response['legacy_identifier']['id'],
 						response['legacy_identifier']['crc']
@@ -219,11 +219,11 @@ package net.codecomposer.palace.model
 				else if (response['legacy_identifier']) {
 					var prop:PalaceProp = getProp(null, response['legacy_identifier']['id'], response['legacy_identifier']['crc']);
 					if (response['status'] && !response['status']['ready']) {
-						trace("Web service knows about the prop but it's not ready.  Trying again.");
+//						trace("Web service knows about the prop but it's not ready.  Trying again.");
 						requestAsset(prop);
 					}
 					else {
-						trace("Got prop " + response['legacy_identifier']['id'] + " - " + response['guid'] + " from web service.");
+//						trace("Got prop " + response['legacy_identifier']['id'] + " - " + response['guid'] + " from web service.");
 						var flags:Object = response['flags'];
 						prop.width = response['size']['width'];
 						prop.height = response['size']['height'];
@@ -244,7 +244,7 @@ package net.codecomposer.palace.model
 		}
 		
 		private function handleGetPropsFault(event:OPWSEvent):void {
-			trace("There was a problem getting props from the webservice.");
+//			trace("There was a problem getting props from the webservice.");
 		}
 		
 		public function loadImage(prop:PalaceProp):void {

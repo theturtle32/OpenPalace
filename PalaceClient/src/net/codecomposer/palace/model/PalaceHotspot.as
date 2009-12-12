@@ -93,7 +93,7 @@ package net.codecomposer.palace.model
 		public function get label():String {
 			var string:String = "id " + id.toString() + ": ";
 			string += (name) ? name : "(no name)";
-			trace(string);
+//			trace(string);
 			return string;
 		}
 		
@@ -183,7 +183,7 @@ package net.codecomposer.palace.model
 		}
 
 		public function readData(endian:String, roomBytes:Array, offset:int):void {
-			trace("Hotspot offset " + offset);
+//			trace("Hotspot offset " + offset);
 			location = new FlexPoint();
 			
 			var ba:ByteArray = new ByteArray();
@@ -195,18 +195,18 @@ package net.codecomposer.palace.model
 			
 			scriptEventMask = ba.readInt();
 			flags = ba.readInt();
-			trace("Hotspot Flags: 0x" + flags.toString(16));
+//			trace("Hotspot Flags: 0x" + flags.toString(16));
 			secureInfo = ba.readInt();
 			refCon = ba.readInt();
 			location.y = ba.readShort();
 			location.x = ba.readShort();
-			trace("Location X: " + location.x + " - Location Y: " + location.y);
+//			trace("Location X: " + location.x + " - Location Y: " + location.y);
 			id = ba.readShort();
 			dest = ba.readShort();
 			var numPoints:int = ba.readShort();
-			trace("Number points: " + numPoints);
+//			trace("Number points: " + numPoints);
 			var pointsOffset:int = ba.readShort();
-			trace("Points offset: " + pointsOffset);
+//			trace("Points offset: " + pointsOffset);
 			type = ba.readShort();
 			groupId = ba.readShort();
 			nbrScripts = ba.readShort();
@@ -242,7 +242,7 @@ package net.codecomposer.palace.model
 				scriptByteArray.position = 0;
 				scriptString = scriptByteArray.readMultiByte(scriptChars, 'Windows-1252');
 			}
-			trace("Script: " + scriptString);
+//			trace("Script: " + scriptString);
 			loadScripts();
 
 			ba = new ByteArray();
@@ -273,7 +273,7 @@ package net.codecomposer.palace.model
 				states.addItem(state);
 			}
 			
-			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + numPoints);
+//			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + numPoints);
 		}
 		
 		public function hasEventHandler(eventType:int):Boolean {
@@ -309,7 +309,7 @@ package net.codecomposer.palace.model
 					var eventHandler:IptEventHandler =
 						new IptEventHandler(eventType, handler.sourceScript, handler);
 					eventHandlers.push(eventHandler);
-					trace("Got event handler.  Type: " + eventHandler.eventType + " Script: \n" + eventHandler.script);
+//					trace("Got event handler.  Type: " + eventHandler.eventType + " Script: \n" + eventHandler.script);
 					nbrScripts ++;
 					scriptEventMask |= (1 << eventType);
 				}

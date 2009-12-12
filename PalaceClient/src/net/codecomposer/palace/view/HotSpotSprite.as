@@ -75,7 +75,7 @@ package net.codecomposer.palace.view
 				}
 				useHand = true;
 			}
-			trace("Hotspot " + hotSpot.name + " is type: " + hotSpot.type);
+//			trace("Hotspot " + hotSpot.name + " is type: " + hotSpot.type);
 		}
 		
 		private function handleIptscraeRollOver(event:MouseEvent):void {
@@ -117,7 +117,7 @@ package net.codecomposer.palace.view
 			graphics.clear();
 			var points:Array = hotSpot.polygon;
 			if (points.length < 3) {
-				trace("Not enough vertices to draw hotspot: " + points.length);
+//				trace("Not enough vertices to draw hotspot: " + points.length);
 				return;
 			}
 			var firstPoint:Point = Point(points[0]);
@@ -143,7 +143,7 @@ package net.codecomposer.palace.view
 		}
 
 		private function handleHotSpotMouseDown(event:MouseEvent):void {
-			trace("Clicked hotspot - id: " + hotSpot.id + " Destination: " + hotSpot.dest + " type: " + hotSpot.type + " state: " + hotSpot.state);
+//			trace("Clicked hotspot - id: " + hotSpot.id + " Destination: " + hotSpot.dest + " type: " + hotSpot.type + " state: " + hotSpot.state);
 			
 			if (hotSpot.dontMoveHere) {
 				event.stopImmediatePropagation();
@@ -187,7 +187,7 @@ package net.codecomposer.palace.view
 					}
 					break;
 				case PalaceHotspot.TYPE_NAVAREA:
-					trace("You clicked a nav area");
+//					trace("You clicked a nav area");
 					break;
 				case PalaceHotspot.TYPE_BOLT:
 					var doorToBolt:PalaceHotspot = client.currentRoom.hotSpotsById[hotSpot.dest];

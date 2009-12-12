@@ -204,7 +204,7 @@ package net.codecomposer.palace.model
             
             propFormat = flags & formatMask;
             
-            trace("Non-Standard flags: " + uint(flags & mask).toString(16));
+//            trace("Non-Standard flags: " + uint(flags & mask).toString(16));
             
            	head = Boolean(flags & HEAD_FLAG);
            	ghost = Boolean(flags & GHOST_FLAG);
@@ -215,27 +215,27 @@ package net.codecomposer.palace.model
 
             if ((flags & mask) == 0xff80) {
             	//WTF?!  Bizarre flags...
-            	trace("16bit prop");
+//            	trace("16bit prop");
 				webServiceFormat = PalacePropFormat.FORMAT_16_BIT;
             	decode16BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_S20BIT)) {
-            	trace("s20bit prop");
+//            	trace("s20bit prop");
 				webServiceFormat = PalacePropFormat.FORMAT_S20_BIT;
             	decodeS20BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_32BIT)) {
-            	trace("32bit prop");
+//            	trace("32bit prop");
 				webServiceFormat = PalacePropFormat.FORMAT_32_BIT;
 	       		decode32BitProp();
             }
             else if (Boolean(propFormat & PROP_FORMAT_20BIT)) {
-            	trace("20bit prop");
+//            	trace("20bit prop");
 				webServiceFormat = PalacePropFormat.FORMAT_20_BIT;
 	       		decode20BitProp();
             }
             else {
-            	trace("8bit prop");
+//            	trace("8bit prop");
 				webServiceFormat = PalacePropFormat.FORMAT_8_BIT;
             	decode8BitProp();
             }
@@ -266,7 +266,7 @@ package net.codecomposer.palace.model
 		}
 		
 		public function assetData(endian:String = Endian.LITTLE_ENDIAN):ByteArray {
-			trace("Generating asset for server...");
+//			trace("Generating asset for server...");
 			var ba:ByteArray = new ByteArray();
 			ba.endian = endian;
 			
@@ -323,7 +323,7 @@ package net.codecomposer.palace.model
 			for (var ct:int = 0; ct < 31 - asset.name.length; ct ++) {
 				paddedName += " ";
 			}
-			trace("PaddedName: \"" + paddedName + "\" length: " + paddedName.length);
+//			trace("PaddedName: \"" + paddedName + "\" length: " + paddedName.length);
 			ba.writeMultiByte(paddedName, 'Windows-1252');
 		
 			// Data -- first 12 bytes are info about prop
