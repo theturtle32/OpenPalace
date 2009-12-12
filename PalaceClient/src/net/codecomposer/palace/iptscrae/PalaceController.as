@@ -395,8 +395,16 @@ package net.codecomposer.palace.iptscrae
 		
 		public function inSpot(spotId:int):Boolean
 		{
-			// TODO: Implement this hit testing
-			logResult("inSpot spotId: " + spotId);
+			var x:int = client.currentUser.x;
+			var y:int = client.currentUser.y;
+			var point:Point = new Point(x, y);
+			var globalPoint:Point = client.currentRoom.roomView.localToGlobal(point);
+			
+			var hotspot:PalaceHotspot = client.currentRoom.getHotspotById(spotId);
+			if (hotspot) {
+				return client.currentRoom.roomView.hotSpotCanvas.hitTestHotSpot(hotspot, globalPoint);
+			}
+			
 			return false;
 		}
 		

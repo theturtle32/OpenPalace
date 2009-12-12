@@ -22,16 +22,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	creationComplete="handleCreationComplete()" xmlns:view="net.codecomposer.palace.view.*">
 	<fx:Script>
 		<![CDATA[
-			import net.codecomposer.palace.model.PalaceAsset;
-			import net.codecomposer.palace.event.HotspotEvent;
-			import net.codecomposer.palace.model.PalaceImageOverlay;
-			import net.codecomposer.palace.model.PalaceHotspotState;
-			import net.codecomposer.palace.model.PalaceCurrentRoom;
-			import mx.binding.utils.ChangeWatcher;
+			import mx.collections.ArrayCollection;
 			import mx.events.CollectionEvent;
 			import mx.events.CollectionEventKind;
-			import mx.collections.ArrayCollection;
+			
+			import net.codecomposer.palace.event.HotspotEvent;
+			import net.codecomposer.palace.model.PalaceCurrentRoom;
 			import net.codecomposer.palace.model.PalaceHotspot;
+			import net.codecomposer.palace.model.PalaceHotspotState;
+			import net.codecomposer.palace.model.PalaceImageOverlay;
 			
 			[Bindable]
 			public var hotSpots:ArrayCollection;
@@ -46,6 +45,14 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function handleCreationComplete():void {
 				hotSpots.addEventListener(CollectionEvent.COLLECTION_CHANGE, handleHotSpotsChange);
+			}
+			
+			public function hitTestHotSpot(hotSpot:PalaceHotspot, globalPoint:Point):Boolean {
+				var view:HotSpotSprite = HotSpotSprite(viewsByHotSpot[hotSpot]);
+				if (view) {
+					return view.hitTestPoint(globalPoint.x, globalPoint.y, true);
+				}
+				return false;
 			}
 			
 			private function handleHotSpotsChange(event:CollectionEvent):void {
