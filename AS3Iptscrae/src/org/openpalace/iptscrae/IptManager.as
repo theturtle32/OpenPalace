@@ -19,7 +19,7 @@ package org.openpalace.iptscrae
 		public var currentScript:String;
 		public var paused:Boolean = false;
 		public var debugMode:Boolean = false;
-		public var stepsPerTimeSlice:int = 700;
+		public var stepsPerTimeSlice:int = 800;
 		public var delayBetweenTimeSlices:int = 1;
 		public var stepThroughScript:Boolean = false;
 		private var _running:Boolean = false;
