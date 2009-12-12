@@ -87,11 +87,17 @@ package org.openpalace.iptscrae
 		}
 		
 		public override function clone():IptToken {
-			return new IptTokenList(tokenList);
+			var newTokenList:IptTokenList = new IptTokenList(tokenList);
+			newTokenList.sourceScript = sourceScript;
+			newTokenList.scriptCharacterOffset = scriptCharacterOffset;
+			return newTokenList;
 		}
 
 		public function execute(context:IptExecutionContext):void {
 			this.context = context;
+			if (context.manager.callStack.length > IptConstants.RECURSION_LIMIT) {
+				throw new IptError("Max call stack depth of " + IptConstants.RECURSION_LIMIT + " exceeded.");
+			}
 			reset();
 			context.manager.callStack.push(this);
 		}
@@ -128,6 +134,11 @@ package org.openpalace.iptscrae
 						end();
 						throw new IptError("  " + IptUtil.className(token) + ":\n" + e.message, offsetToReport);
 					}
+				}
+				else if (token is IptTokenList) {
+					// prevents errant FINISH events firing when a
+					// tokenlist is executed recursively.
+					context.stack.push(IptTokenList(token).clone());
 				}
 				else {
 					context.stack.push(token);
