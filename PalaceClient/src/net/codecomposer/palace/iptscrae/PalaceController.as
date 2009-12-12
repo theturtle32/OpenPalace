@@ -216,7 +216,6 @@ package net.codecomposer.palace.iptscrae
 		
 		public function doffProp():void
 		{
-			logResult("doffProp");
 			if (client.currentUser.props && client.currentUser.props.length > 0) { 
 				var prop:PalaceProp = PalaceProp(client.currentUser.props.getItemAt(client.currentUser.props.length-1));
 				if (prop) {
@@ -603,7 +602,6 @@ package net.codecomposer.palace.iptscrae
 		
 		public function showLooseProps():void
 		{
-			logResult("showLooseProps");
 			var string:String = "";
 			for each (var prop:PalaceLooseProp in client.currentRoom.looseProps) {
 				string += prop.id + " " + prop.x + " " + prop.y + " ADDLOOSEPROP\n";
