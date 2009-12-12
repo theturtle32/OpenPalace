@@ -104,7 +104,6 @@ package org.openpalace.iptscrae
 		
 		public function end():void {
 			_running = false;
-			trace("TokenList End: " + sourceScript);
 			dispatchEvent(new IptEngineEvent(IptEngineEvent.FINISH));
 		}
 		
