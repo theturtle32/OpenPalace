@@ -43,7 +43,13 @@
 
 			private function handleApplicationComplete():void {
 				stage.addEventListener(KeyboardEvent.KEY_DOWN, handleStageKeyDown);
-				MacMouseWheel.setup(stage);
+				trace("Flash Player Version: " + Capabilities.version);
+				var version:Array = Capabilities.version.split(",");
+				var maj:int = parseInt(version[0]);
+				var min:int = parseInt(version[1]);
+				if (maj == 10 && min < 1) {
+					MacMouseWheel.setup(stage);
+				}
 			}
 			
 			private function handleStageKeyDown(event:KeyboardEvent):void {
@@ -257,7 +263,6 @@
 			}
 			
 			private function handleNewProp(event:PropEvent):void {
-				trace("New Prop: " + event.fileReference.name);
 				newPropWindow = new NewPropWindow();
 				newPropWindow.addEventListener(MDIWindowEvent.CLOSE, handleNewPropWindowClose);
 				newPropWindow.addEventListener(PropEvent.SAVE_PROP, handleSaveProp);
@@ -266,14 +271,12 @@
 			}
 			
 			private function handleSaveProp(event:PropEvent):void {
-				trace("Prop Name: " + event.newPropDefinition.name);
 				if (propsWindow) {
 					propsWindow.addNewProp(event.newPropDefinition);
 				}
 			}
 			
 			private function handleNewPropWindowClose(event:MDIWindowEvent):void {
-				trace("New Prop Window Close");
 			}
 			
 			private function handlePropsClick(event:MouseEvent):void {
