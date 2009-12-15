@@ -15,7 +15,7 @@ package net.codecomposer.palace.iptscrae.command
 			var tokenList:IptTokenList = context.stack.popType(IptTokenList);
 			var newContext:PalaceIptExecutionContext = new PalaceIptExecutionContext(context.manager);
 			newContext.hotspotId = PalaceIptExecutionContext(context).hotspotId;
-			var alarm:IptAlarm = new IptAlarm(tokenList, context.manager, delayTicks.data, context);
+			var alarm:IptAlarm = new IptAlarm(tokenList, context.manager, delayTicks.data, newContext);
 			context.manager.addAlarm(alarm);
 		}
 	}
