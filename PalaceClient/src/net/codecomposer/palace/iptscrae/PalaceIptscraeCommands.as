@@ -7,6 +7,7 @@ package net.codecomposer.palace.iptscrae
 		public static var commands:Object = {
 			"ADDLOOSEPROP": ADDLOOSEPROPCommand,
 			"ALARMEXEC": ALARMEXECCommand,
+			"CHAT": SAYCommand,
 			"CLEARLOOSEPROPS": CLEARLOOSEPROPSCommand,
 			"CLEARPROPS": NAKEDCommand,
 			"CLIENTTYPE": CLIENTTYPECommand,
