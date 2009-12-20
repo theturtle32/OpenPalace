@@ -393,7 +393,8 @@ package net.codecomposer.palace.rpc
 				PalaceChatRecord.OUTCHAT,
 				currentUser.id,
 				selectedUserId,
-				message
+				message,
+				currentRoom.selectedUser ? true : false
 			);
 			chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_OUTCHAT);
 			chatQueue.push(chatRecord);
@@ -569,9 +570,7 @@ package net.codecomposer.palace.rpc
 			if (!connected) {
 				return;
 			}
-			
-			palaceController.clearAlarms();
-			
+						
 			needToRunSignonHandlers = false;
 			
 			requestedRoomId = roomId;
@@ -1309,6 +1308,8 @@ package net.codecomposer.palace.rpc
 		
 		// not fully implemented
 		private function handleReceiveRoomDescription(size:int, referenceId:int):void {
+			palaceController.clearAlarms();
+			
 			var messageBytes:ByteArray = new ByteArray();
 			messageBytes.endian = socket.endian;
 			socket.readBytes(messageBytes, 0, size);
@@ -1859,7 +1860,8 @@ package net.codecomposer.palace.rpc
 						PalaceChatRecord.INCHAT,
 						referenceId,
 						0,
-						message
+						message,
+						true
 					);
 					chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_INCHAT);
 					chatQueue.push(chatRecord);
@@ -1899,7 +1901,8 @@ package net.codecomposer.palace.rpc
 				PalaceChatRecord.INCHAT,
 				referenceId,
 				0,
-				message
+				message,
+				true
 			);
 			chatRecord.eventHandlers = palaceController.getHotspotEvents(IptEventHandler.TYPE_INCHAT);
 			chatQueue.push(chatRecord);

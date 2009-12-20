@@ -11,20 +11,18 @@ package net.codecomposer.palace.record
 		public var whochat:int;
 		public var whotarget:int;
 		public var chatstr:String;
+		public var whisper:Boolean;
 		public var eventHandlers:Vector.<IptTokenList>;
 		private var _originalChatstr:String;
 		
-		public function PalaceChatRecord(direction:int = INCHAT, whochat:int = 0, whotarget:int = 0, chatstr:String = "")
+		public function PalaceChatRecord(direction:int = INCHAT, whochat:int = 0, whotarget:int = 0, chatstr:String = "", isWhisper:Boolean = false)
 		{
 			this.direction = direction;
 			this.whochat = whochat;
 			this.whotarget = whotarget;
 			this.chatstr = chatstr;
+			this.whisper = isWhisper;
 			this._originalChatstr = chatstr;
-		}
-		
-		public function get whisper():Boolean {
-			return whotarget != 0;
 		}
 		
 		public function get originalChatstr():String {

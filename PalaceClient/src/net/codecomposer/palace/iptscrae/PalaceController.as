@@ -535,6 +535,14 @@ package net.codecomposer.palace.iptscrae
 			logResult("setPicOffset spotId: " + spotId + " x: " + x + " y: " + y);
 		}
 		
+		public function setPicOffsetLocal(spotId:int, x:int, y:int):void
+		{
+			var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpotsById[spotId]);
+			if (hotspot) {
+				hotspot.movePicTo(x, y);
+			}
+		}
+		
 		public function killUser(userId:int):void
 		{
 			client.privateMessage("`kill", userId);

@@ -153,6 +153,9 @@
     <classEntry path="net.codecomposer.palace.iptscrae.command.PENSIZECommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.PENTOCommand"/>
     <classEntry path="net.codecomposer.palace.record.PalaceChatRecord"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.ROOMWIDTHCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.ROOMHEIGHTCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.SETPICLOCLOCALCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
