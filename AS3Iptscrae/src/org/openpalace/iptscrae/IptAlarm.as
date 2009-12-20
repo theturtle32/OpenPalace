@@ -13,7 +13,7 @@ package org.openpalace.iptscrae
 		public var completed:Boolean = false;
 		
 		public function set delayTicks(ticks:int):void {
-			_delay = ticksToMS(ticks);
+			_delay = ticksToMS(ticks-2); // timing compensation of 2 ticks...
 			if (_delay < 10) {
 				_delay = 10;
 			}
@@ -24,7 +24,7 @@ package org.openpalace.iptscrae
 		}
 		
 		private function ticksToMS(ticks:uint):uint {
-			return ticks / 60 * 1000;
+			return Math.max(0, ticks) / 60 * 1000;
 		}
 		
 		private function msToTicks(ms:uint):uint {
