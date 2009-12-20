@@ -1,11 +1,12 @@
 package org.openpalace.iptscrae
 {
+	import flash.utils.ByteArray;
+	
 	import org.openpalace.iptscrae.token.ArrayMarkToken;
 	import org.openpalace.iptscrae.token.ArrayParseToken;
 	import org.openpalace.iptscrae.token.IntegerToken;
 	import org.openpalace.iptscrae.token.StringToken;
 	import org.openpalace.iptscrae.token.VariableToken;
-	import flash.utils.ByteArray;
 
 	public class IptParser
 	{
@@ -15,6 +16,7 @@ package org.openpalace.iptscrae
 		private var so:uint;
 		private var offset:int;
 		
+		private var whiteSpaceTest:RegExp = /^[\s\r\n]{1}$/;
 		private var hexNumberTest:RegExp = /^[0-9a-fA-F]{1}$/;
 		private var tokenTest:RegExp = /^[a-zA-Z0-9_]{1}$/;
 		
@@ -365,7 +367,6 @@ package org.openpalace.iptscrae
 			return new VariableToken(token);
 		}
 		
-		private var eventHandlerSearch:RegExp = /ON[\s\r\n]*([a-zA-Z0-9_]*)[\s\r\n]*\{(.*)$/sim;
 		/**
 		 * Parses event handlers into individual token lists. 
 		 * 
@@ -376,22 +377,72 @@ package org.openpalace.iptscrae
 		 * 
 		 */		
 		public function parseEventHandlers(script:String):Object {
-			var handlers:Object = {};
 			this.script = script;
-			while (true) {
-				var match:Array = this.script.match(eventHandlerSearch);
-				if (match && match.length > 2) {
-					var handlerName:String = String(match[1]).toUpperCase();
-					this.script = match[2];
-					so = offset = 0;
-					var tokenList:IptTokenList = parseAtomList();
-					handlers[handlerName] = tokenList;
+			offset = so = 0;
+			var handlers:Object = {};
+			var char:String = "";
+			while ((char = currentChar()) != null && char.charCodeAt(0) != 0) {
+				
+				if(char == " " || char == "\t" || char == "\r" || char == "\n") {
+					so++;
+				}
+				else if(char == '#' || char == ";") {
+					while((char = currentChar()) != null && char != '\r' && char != '\n') {
+						so++;
+					}
+				}
+				else if (char.toUpperCase() == "O" &&
+					sc(1).toUpperCase() == "N" &&
+					whiteSpaceTest.test(sc(2))
+				)
+				{
+					so += 3;
+					var handlerName:String = "";
+					
+					// Grab handler name...
+					while((char = currentChar()) != null && char.charCodeAt(0) != 0) {
+						if(char == " " || char == "\t" || char == "\r" || char == "\n") {
+							so++;
+						}
+						else if(char == '#' || char == ";") {
+							while((char = currentChar()) != null && char != '\r' && char != '\n') {
+								so++;
+							}
+						}
+						else if (tokenTest.test(char)) {
+							while(tokenTest.test(currentChar())) {
+								handlerName += currentChar().toUpperCase();
+								so++;
+							}
+							break;
+						}
+						else {
+							so++;
+						}
+					}
+					
+					// Look for opening brace
+					while((char = currentChar()) != null) {
+						if(char == '#' || char == ";") {
+							while((char = currentChar()) != null && char != '\r' && char != '\n') {
+								so++;
+							}
+						}
+						if (char == '{') {
+							var tokenList:IptTokenList = parseAtomList();
+							handlers[handlerName] = tokenList;
+							break;
+						}
+						so++;
+					}
 				}
 				else {
-					break;
+					so++;
 				}
 			}
+			
 			return handlers;
 		}
+		
 	}
 }
