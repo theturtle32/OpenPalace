@@ -391,8 +391,8 @@ package org.openpalace.iptscrae
 						so++;
 					}
 				}
-				else if (char.toUpperCase() == "O" &&
-					sc(1).toUpperCase() == "N" &&
+				else if (char == "O" &&
+					sc(1) == "N" &&
 					whiteSpaceTest.test(sc(2))
 				)
 				{
@@ -411,7 +411,7 @@ package org.openpalace.iptscrae
 						}
 						else if (tokenTest.test(char)) {
 							while(tokenTest.test(currentChar())) {
-								handlerName += currentChar().toUpperCase();
+								handlerName += currentChar();
 								so++;
 							}
 							break;
