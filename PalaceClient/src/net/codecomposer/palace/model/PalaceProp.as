@@ -98,7 +98,6 @@ package net.codecomposer.palace.model
 			asset.id = assetId;
 			asset.crc = assetCrc;
 			asset.guid = guid;
-			//BindingUtils.bindProperty(this, "source", this, "bitmap")
 		}
 		
 		public static function fromObject(source:Object):PalaceProp {
