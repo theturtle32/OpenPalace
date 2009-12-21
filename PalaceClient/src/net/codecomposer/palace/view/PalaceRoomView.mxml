@@ -355,11 +355,14 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function sendCurrentPositionToServer():void {
 				var self:PalaceUser = room.getSelfUser();
-				PalaceClient.getInstance().move(self.x, self.y);
+				if (self) {
+					PalaceClient.getInstance().move(self.x, self.y);
+				}
 			}
 			
 			private function updateSelfPosition():void {
 				var self:PalaceUser = room.getSelfUser();
+				if (!self) { return; }
 				var x:int = this.contentMouseX;
 				var y:int = this.contentMouseY;
 				if (x < 22) { x = 22; }

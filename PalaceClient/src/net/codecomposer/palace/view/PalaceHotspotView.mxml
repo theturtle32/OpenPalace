@@ -91,15 +91,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					var isCurrentState:Boolean = Boolean(hotSpot.state == i);
 					
 					var state:PalaceHotspotState = PalaceHotspotState(hotSpot.states.getItemAt(i));
-					var imageOverlay:PalaceImageOverlay = PalaceImageOverlay(room.images[state.pictureId]);
+					var imageOverlay:PalaceImageOverlay = room.getSpotImageById(state.pictureId);
 					
 					if (imageOverlay && imageOverlay.filename != null) {
 						var hotSpotImage:HotSpotImage = new HotSpotImage();
 						hotSpotImage.state = state;
 						hotSpotImage.hotspot = hotSpot;
-						hotSpotImage.transparencyIndex = imageOverlay.transparencyIndex;
-						hotSpotImage.filename = imageOverlay.filename;
-						hotSpotImage.mediaServer = mediaServer;
+						hotSpotImage.imageOverlay = imageOverlay;
 						hotSpotImage.visible = isCurrentState;
 						state.hotspotImage = hotSpotImage;
 						imageGroup.addElement(hotSpotImage);

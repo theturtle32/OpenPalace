@@ -500,11 +500,15 @@ package net.codecomposer.palace.rpc
 		}
 		
 		public function move(x:int, y:int):void {
-			if (!connected || !currentUser || x < 0 || y < 0) {
+			if (!connected || !currentUser) {
 				return;
 			}
 			
-//			trace("Moving user to " + x + "," + y);
+			x = Math.max(x, 22);
+			x = Math.min(x, currentRoom.roomView.backgroundImage.width - 22);
+			
+			y = Math.max(y, 22);
+			y = Math.min(y, currentRoom.roomView.backgroundImage.height - 22);
 			
 			socket.writeInt(OutgoingMessageTypes.MOVE);
 			socket.writeInt(4);
@@ -1305,8 +1309,6 @@ package net.codecomposer.palace.rpc
 			trace(output);
 		}
 
-		
-		// not fully implemented
 		private function handleReceiveRoomDescription(size:int, referenceId:int):void {
 			palaceController.clearAlarms();
 			
@@ -1314,9 +1316,10 @@ package net.codecomposer.palace.rpc
 			messageBytes.endian = socket.endian;
 			socket.readBytes(messageBytes, 0, size);
 			
-			var roomDescription:RoomDescription = new RoomDescription();
-			roomDescription.read(messageBytes, referenceId);
-			
+			// FIXME: modularize this... but for now we don't need to decode
+			// everything twice.
+//			var roomDescription:RoomDescription = new RoomDescription();
+//			roomDescription.read(messageBytes, referenceId);
 			
 			messageBytes.position = 0;
 			
@@ -1379,9 +1382,10 @@ package net.codecomposer.palace.rpc
 
 			// Images
 			var images:Object = {};
-			currentRoom.hotspotBitmapCache = {};
+			currentRoom.clearSpotImages();
 			for (i=0; i < imageCount; i++) {
 				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
+				imageOverlay.mediaServer = mediaServer;
 				var imageBA:ByteArray = new ByteArray();
 				for (var j:int=imageOffset; j < imageOffset+12; j++) {
 					imageBA.writeByte(rb[j]);
@@ -1405,6 +1409,8 @@ package net.codecomposer.palace.rpc
 				}
 				imageOverlay.filename = picName;
 				images[imageOverlay.id] = imageOverlay; 
+				currentRoom.addSpotImage(imageOverlay);
+				imageOverlay.loadImage();
 //				trace("picture id: " + imageOverlay.id + " - Name: " + imageOverlay.filename);
 				imageOffset += 12;
 			}

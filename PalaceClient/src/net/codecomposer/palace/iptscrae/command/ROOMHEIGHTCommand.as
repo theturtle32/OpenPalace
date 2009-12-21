@@ -1,5 +1,8 @@
 package net.codecomposer.palace.iptscrae.command
 {
+	import net.codecomposer.palace.iptscrae.PalaceController;
+	import net.codecomposer.palace.iptscrae.PalaceIptManager;
+	
 	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.token.IntegerToken;
@@ -7,7 +10,8 @@ package net.codecomposer.palace.iptscrae.command
 	public class ROOMHEIGHTCommand extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext) : void {
-			context.stack.push(new IntegerToken(384));
+			var pc:PalaceController = PalaceIptManager(context.manager).pc;
+			context.stack.push(new IntegerToken(pc.getRoomHeight()));
 		}
 	}
 }

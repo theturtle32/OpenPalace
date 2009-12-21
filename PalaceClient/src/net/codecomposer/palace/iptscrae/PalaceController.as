@@ -671,6 +671,14 @@ package net.codecomposer.palace.iptscrae
 			}
 		}
 		
+		public function getRoomWidth():int {
+			return client.currentRoom.roomView.backgroundImage.width;
+		}
+		
+		public function getRoomHeight():int {
+			return client.currentRoom.roomView.backgroundImage.height;
+		}
+		
 		public function drawLineAbs(startX:int, startY:int, endX:int, endY:int):void {
 			var drawRec:PalaceDrawRecord = new PalaceDrawRecord();
 			drawRec.lineColor = lineColor;

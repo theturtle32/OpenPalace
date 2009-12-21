@@ -20,6 +20,7 @@ package net.codecomposer.palace.model
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.TimerEvent;
+	import flash.utils.Dictionary;
 	import flash.utils.Timer;
 	
 	import mx.collections.ArrayCollection;
@@ -46,7 +47,7 @@ package net.codecomposer.palace.model
 		public var usersHash:Object = {};
 		public var roomFlags:int;
 		public var images:Object = {};
-		public var hotspotBitmapCache:Object = {};
+		public var spotImages:Object = {};
 		public var hotSpots:ArrayCollection = new ArrayCollection();
 		public var hotSpotsById:Object = {};
 		public var looseProps:ArrayCollection = new ArrayCollection();
@@ -93,6 +94,19 @@ package net.codecomposer.palace.model
 			lastMessage = message;
 			lastMessageReceived = (new Date()).valueOf();
 			return retValue;
+		}
+		
+		public function getSpotImageById(imageId:int):PalaceImageOverlay {
+			var imageOverlay:PalaceImageOverlay = PalaceImageOverlay(spotImages[imageId]);
+			return imageOverlay;
+		}
+		
+		public function addSpotImage(imageOverlay:PalaceImageOverlay):void {
+			spotImages[imageOverlay.id] = imageOverlay;
+		}
+		
+		public function clearSpotImages():void {
+			spotImages = new Dictionary();
 		}
 		
 		public function getHotspotById(spotId:int):PalaceHotspot {
