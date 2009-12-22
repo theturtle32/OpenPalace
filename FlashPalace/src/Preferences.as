@@ -39,5 +39,21 @@ package
 			}
 			return returnValue;
 		}
+		
+		[Bindable(event="regCodeChanged")]
+		public function set regCode(newValue:String):void {
+			sharedObject.data.regCode = newValue;
+			sharedObject.flush();
+			dispatchEvent(new Event('regCodeChanged'));
+		}
+		public function get regCode():String {
+			var returnValue:String = sharedObject.data.regCode;
+			if (!returnValue) {
+				sharedObject.data.regCode = returnValue = "";
+				sharedObject.flush();
+			}
+			return returnValue;
+		}
+		
 	}
 }

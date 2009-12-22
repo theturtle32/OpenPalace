@@ -63,6 +63,7 @@ package net.codecomposer.palace.rpc
 	
 	import org.openpalace.iptscrae.IptEngineEvent;
 	import org.openpalace.iptscrae.IptTokenList;
+	import org.openpalace.registration.RegistrationCode;
 
 	[Event(type="net.codecomposer.event.PalaceEvent",name="connectStart")]
 	[Event(type="net.codecomposer.event.PalaceEvent",name="connectComplete")]
@@ -220,6 +221,18 @@ package net.codecomposer.palace.rpc
 			
 			palaceController = new PalaceController();
 			palaceController.client = this;
+		}
+		
+		public function setRegistrationCode(regCode:String):void {
+			if (regCode && regCode.length >= 13) {
+				var code:RegistrationCode = RegistrationCode.fromString(regCode);
+				regCounter = code.counter;
+				regCRC = code.crc;
+			}
+			else {
+				regCounter = 0xcf07309c;
+				regCRC = 0x5905f923;
+			}
 		}
 		
 		public function gotoURL(url:String):void {

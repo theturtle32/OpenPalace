@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <code:MDIWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:code="http://code.google.com/p/flexlib/"
-	width="400" height="100"
+	width="400" height="120"
 	layout="absolute"
 	label="Preferences"
 	resizable="false"
@@ -21,19 +21,25 @@
 			
 			private function handleSave():void {
 				preferences.userName = userName.text;
+				preferences.regCode = regCode.text;
 				palace.changeName(preferences.userName);
+				palace.setRegistrationCode(preferences.regCode);
 				close();
 			}
 		]]>
 	</fx:Script>
 
-	<s:Group left="5" top="5" right="5">
-		<s:layout>
-			<s:HorizontalLayout gap="3" verticalAlign="middle" />
-		</s:layout>
-		<s:Label text="Name:" />
-		<s:TextInput id="userName" text="{preferences.userName}" />
-	</s:Group>
+	<s:VGroup left="5" top="5" right="5">
+		<s:HGroup gap="3" verticalAlign="middle">
+			<s:Label text="Name:" />
+			<s:TextInput id="userName" text="{preferences.userName}" />
+		</s:HGroup>
+		<s:HGroup gap="3" verticalAlign="middle">
+			<s:Label text="Reg Code:" />
+			<s:TextInput id="regCode" text="{preferences.regCode}" />
+		</s:HGroup>
+	</s:VGroup>
+	
 	
 	<s:Button bottom="5" right="5" label="Save" click="handleSave()" />
 	

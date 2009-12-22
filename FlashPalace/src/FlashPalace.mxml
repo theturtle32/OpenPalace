@@ -130,6 +130,8 @@
 				palace.addEventListener(PalaceEvent.DISCONNECTED, handleDisconnected);
 				palace.addEventListener(PalaceEvent.GOTO_URL, handleGotoURL);
 				palace.addEventListener(PalaceEvent.AUTHENTICATION_REQUESTED, handleAuthenticationRequested);
+				
+				palace.setRegistrationCode(preferences.regCode);
 			}
 			
 			private function handleAuthenticationRequested(event:PalaceEvent):void {
