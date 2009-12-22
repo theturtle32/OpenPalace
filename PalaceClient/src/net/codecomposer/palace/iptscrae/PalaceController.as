@@ -1,5 +1,6 @@
 package net.codecomposer.palace.iptscrae
 {
+	import flash.external.ExternalInterface;
 	import flash.geom.Point;
 	import flash.utils.setTimeout;
 	
@@ -137,12 +138,20 @@ package net.codecomposer.palace.iptscrae
 		
 		public function midiLoop(loopNbr:int, name:String):void
 		{
-			logResult("midiLoop loopNbr:" + loopNbr + " name: " + name);
+			var match:Array = name.match(/(.*)\.(.*)/);
+			if (!match) {
+				name = name + ".mid";
+			}
+			ExternalInterface.call("midiLoop", client.mediaServer + name, loopNbr);
 		}
 		
 		public function midiPlay(name:String):void
 		{
-			logResult("midiPlay name: " + name);
+			var match:Array = name.match(/(.*)\.(.*)/);
+			if (!match) {
+				name = name + ".mid";
+			}
+			ExternalInterface.call("midiPlay", client.mediaServer + name);
 		}
 		
 		public function selectHotSpot(spotId:int):void
@@ -384,7 +393,7 @@ package net.codecomposer.palace.iptscrae
 		
 		public function midiStop():void
 		{
-			logResult("midiStop");
+			ExternalInterface.call("midiStop");
 		}
 		
 		public function gotoRoom(roomId:int):void

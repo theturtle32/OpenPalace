@@ -229,6 +229,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		private function resetState():void {
+			palaceController.midiStop();
 			palaceController.clearAlarms();
 			needToRunSignonHandlers = true;
 			messageID = 0;
@@ -308,6 +309,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		public function disconnect():void {
+			palaceController.midiStop();
 			if (socket && socket.connected) {
 				palaceController.triggerHotspotEvents(IptEventHandler.TYPE_LEAVE);
 				palaceController.triggerHotspotEvents(IptEventHandler.TYPE_SIGNOFF);
@@ -1311,6 +1313,7 @@ package net.codecomposer.palace.rpc
 
 		private function handleReceiveRoomDescription(size:int, referenceId:int):void {
 			palaceController.clearAlarms();
+			palaceController.midiStop();
 			
 			var messageBytes:ByteArray = new ByteArray();
 			messageBytes.endian = socket.endian;
