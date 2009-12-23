@@ -44,7 +44,8 @@
 			private function handleApplicationComplete():void {
 				stage.addEventListener(KeyboardEvent.KEY_DOWN, handleStageKeyDown);
 				trace("Flash Player Version: " + Capabilities.version);
-				var version:Array = Capabilities.version.split(",");
+				var platform:Array = Capabilities.version.split(" ");
+				var version:Array = String(platform[1]).split(",");
 				var maj:int = parseInt(version[0]);
 				var min:int = parseInt(version[1]);
 				if (maj == 10 && min < 1) {
