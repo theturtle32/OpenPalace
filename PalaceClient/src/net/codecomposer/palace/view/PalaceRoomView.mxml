@@ -683,6 +683,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private function handleBGChange(event:PropertyChangeEvent):void {
 				currentState = "normal";
 				backgroundImage.visible = false;
+				roomFader.alpha = 1;
 				if (room.backgroundFile == null) {
 					return;
 				}
@@ -724,12 +725,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function handleBackgroundLoadComplete(event:Event):void {
 				if (PalaceConfig.fadeBackgroundImages) { 
-					backgroundImage.alpha = 0;
-					var fade:Fade = new Fade(backgroundImage);
-					fade.duration = 400;
-					fade.alphaFrom = 0;
-					fade.alphaTo = 1;
+					var fade:Fade = new Fade(roomFader);
+					fade.duration = 200;
+					fade.alphaFrom = 1;
+					fade.alphaTo = 0;
 					fade.play();
+					
 					currentState = "normal";
 				}
 				backgroundImage.visible = true;
@@ -791,6 +792,12 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	<s:Rect width="100%" height="100%">
 		<s:fill>
 			<mx:SolidColor color="0x000000" alpha="{1 - room.dimLevel}" />
+		</s:fill>
+	</s:Rect>
+	
+	<s:Rect width="100%" height="100%">
+		<s:fill>
+			<mx:SolidColor color="0x000000" id="roomFader" alpha="0" />
 		</s:fill>
 	</s:Rect>
 	
