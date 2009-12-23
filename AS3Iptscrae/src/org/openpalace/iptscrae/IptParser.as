@@ -96,7 +96,7 @@ package org.openpalace.iptscrae
 				}
 				
 				else if(char == '{') {
-					tokenList.addToken(parseAtomList(so + nestedCharCountOffset), offset + nestedCharCountOffset);
+					tokenList.addToken(parseAtomList(nestedCharCountOffset), offset + nestedCharCountOffset);
 				}
 					
 				else if(char == '"') {
