@@ -300,7 +300,7 @@ package net.codecomposer.palace.model
 			scriptEventMask = 0;
 			if(scriptString)
 			{
-				trace("Hotspot " + id + " name: " + name + " script:\n" + scriptString);
+//				trace("Hotspot " + id + " name: " + name + " script:\n" + scriptString);
 				
 				var manager:PalaceIptManager = PalaceClient.getInstance().palaceController.scriptManager;
 				var foundHandlers:Object = manager.parseEventHandlers(scriptString);
