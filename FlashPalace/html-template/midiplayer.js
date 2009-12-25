@@ -1,31 +1,56 @@
 function midiPlayer() {
+  try {
 	return document.midiplayer;
+  }
+  catch (e) {
+
+  }
 }
 
 function loadMidi(url) {
+  try {
 	addPlayer();
 	setTimeout(function() {
 		midiPlayer().SetURL(url);
 		midiPlayer().SetControllerVisible(false);
 	}, 300);
+  }
+  catch (e) {
+
+  }
 }
 
 function midiStop() {
+  try {
     midiPlayer().Stop();
     document.getElementById('midiPlayerContainer').innerHTML = "";
+  }
+  catch (e) {
+
+  }
 }
 
 function midiPlay(url) {
+  try {
     loadMidi(url);
     midiPlayer().Play();
     midiPlayer().SetIsLooping(false);
+  }
+  catch (e) {
+
+  }
 }
 
 function midiLoop(url, loopCount) {
+  try {
 	// Todo: Actually make this respect the loopCount.
     loadMidi(url);
     midiPlayer().Play();
     midiPlayer().SetIsLooping(true);
+  }
+  catch (e) {
+
+  }
 }
 
 function addPlayer() {

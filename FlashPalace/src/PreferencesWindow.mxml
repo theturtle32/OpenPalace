@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <code:MDIWindow xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:code="http://code.google.com/p/flexlib/"
-	width="400" height="120"
+	width="400" height="320"
 	layout="absolute"
 	label="Preferences"
 	resizable="false"
@@ -22,24 +22,34 @@
 			private function handleSave():void {
 				preferences.userName = userName.text;
 				preferences.regCode = regCode.text;
+				preferences.cyborg = cyborg.text;
 				palace.changeName(preferences.userName);
 				palace.setRegistrationCode(preferences.regCode);
+				palace.setCyborg(preferences.cyborg);
 				close();
 			}
 		]]>
 	</fx:Script>
 
-	<s:VGroup left="5" top="5" right="5">
-		<s:HGroup gap="3" verticalAlign="middle">
-			<s:Label text="Name:" />
-			<s:TextInput id="userName" text="{preferences.userName}" />
-		</s:HGroup>
-		<s:HGroup gap="3" verticalAlign="middle">
-			<s:Label text="Reg Code:" />
-			<s:TextInput id="regCode" text="{preferences.regCode}" />
-		</s:HGroup>
-	</s:VGroup>
-	
+	<mx:TabNavigator top="5" left="5" right="5" bottom="35">
+		<mx:Canvas width="100%" height="100%" label="General">
+			<s:VGroup left="5" right="5" bottom="5" top="0">
+				<s:HGroup gap="3" verticalAlign="middle">
+					<s:Label text="Name:" />
+					<s:TextInput id="userName" text="{preferences.userName}" />
+				</s:HGroup>
+				<s:HGroup gap="3" verticalAlign="middle">
+					<s:Label text="Reg Code:" />
+					<s:TextInput id="regCode" text="{preferences.regCode}" />
+				</s:HGroup>
+			</s:VGroup>
+		</mx:Canvas>
+		<mx:Canvas width="100%" height="100%" label="Cyborg">
+			<s:TextArea width="100%" height="100%"
+						left="5" right="5" bottom="5" top="0"
+						id="cyborg" text="{preferences.cyborg}" />					
+		</mx:Canvas>
+	</mx:TabNavigator>
 	
 	<s:Button bottom="5" right="5" label="Save" click="handleSave()" />
 	

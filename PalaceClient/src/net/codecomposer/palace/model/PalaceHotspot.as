@@ -295,7 +295,7 @@ package net.codecomposer.palace.model
 			return null;
 		}
 
-		private function loadScripts():void {
+		public function loadScripts():void {
 			nbrScripts = 0;
 			scriptEventMask = 0;
 			if(scriptString)

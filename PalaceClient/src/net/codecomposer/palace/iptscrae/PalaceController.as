@@ -80,17 +80,25 @@ package net.codecomposer.palace.iptscrae
 					ranScripts = true;
 				};				
 			}
+			if (triggerHotspotEvent(client.cyborgHotspot, eventType)) {
+				ranScripts = true;
+			}
 			return ranScripts;
 		}
 		
 		public function getHotspotEvents(eventType:int):Vector.<IptTokenList> {
 			var scripts:Vector.<IptTokenList> = new Vector.<IptTokenList>;
+			var handler:IptTokenList;
 			for (var i:int = client.currentRoom.hotSpots.length-1; i > -1; i --) {
 				var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpots.getItemAt(i));
-				var handler:IptTokenList = hotspot.getEventHandler(eventType);
+				handler = hotspot.getEventHandler(eventType);
 				if (handler) {
 					scripts.push(handler);
 				}				
+			}
+			handler = client.cyborgHotspot.getEventHandler(eventType);
+			if (handler) {
+				scripts.push(handler);
 			}
 			return scripts.length > 0 ? scripts : null;
 		}

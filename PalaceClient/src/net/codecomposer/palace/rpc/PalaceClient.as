@@ -44,7 +44,6 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
-	import net.codecomposer.palace.message.RoomDescription;
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
 	import net.codecomposer.palace.model.PalaceConfig;
@@ -178,6 +177,8 @@ package net.codecomposer.palace.rpc
 		private var regCounter:uint = 0xcf07309c;
 		private var regCRC:uint = 0x5905f923;
 		
+		public var cyborgHotspot:PalaceHotspot = new PalaceHotspot();
+		
 		private var recentLogonUserIds:ArrayCollection = new ArrayCollection();
 		
 		private var _userName:String = "OpenPalace User";
@@ -221,6 +222,12 @@ package net.codecomposer.palace.rpc
 			
 			palaceController = new PalaceController();
 			palaceController.client = this;
+		}
+		
+		public function setCyborg(cyborgScript:String):void {
+			cyborgHotspot = new PalaceHotspot();
+			cyborgHotspot.scriptString = cyborgScript;
+			cyborgHotspot.loadScripts();
 		}
 		
 		public function setRegistrationCode(regCode:String):void {

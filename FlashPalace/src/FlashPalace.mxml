@@ -133,6 +133,7 @@
 				palace.addEventListener(PalaceEvent.AUTHENTICATION_REQUESTED, handleAuthenticationRequested);
 				
 				palace.setRegistrationCode(preferences.regCode);
+				palace.setCyborg(preferences.cyborg);
 			}
 			
 			private function handleAuthenticationRequested(event:PalaceEvent):void {

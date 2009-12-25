@@ -55,5 +55,20 @@ package
 			return returnValue;
 		}
 		
+		[Bindable(event="cyborgChanged")]
+		public function set cyborg(newValue:String):void {
+			sharedObject.data.cyborg = newValue;
+			sharedObject.flush();
+			dispatchEvent(new Event('cyborgChanged'));
+		}
+		public function get cyborg():String {
+			var returnValue:String = sharedObject.data.cyborg;
+			if (!returnValue) {
+				sharedObject.data.cyborg = returnValue = "";
+				sharedObject.flush();
+			}
+			return returnValue;
+		}
+		
 	}
 }
