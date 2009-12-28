@@ -15,7 +15,7 @@ package org.openpalace.iptscrae.command.operator
 			}
 			var originalValue:IntegerToken = IntegerToken(variable.value);
 			var multiplier:IntegerToken = context.stack.popType(IntegerToken);
-			context.stack.push(new IntegerToken(originalValue.data * multiplier.data));
+			variable.value = new IntegerToken(originalValue.data * multiplier.data);
 		}
 	}
 }
