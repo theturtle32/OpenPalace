@@ -22,10 +22,14 @@
 			private function handleSave():void {
 				preferences.userName = userName.text;
 				preferences.regCode = regCode.text;
-				preferences.cyborg = cyborg.text;
 				palace.changeName(preferences.userName);
 				palace.setRegistrationCode(preferences.regCode);
-				palace.setCyborg(preferences.cyborg);
+				
+				if (preferences.cyborg) {
+					preferences.cyborg = cyborg.text;
+					palace.setCyborg(preferences.cyborg);
+				}
+				
 				close();
 			}
 		]]>
