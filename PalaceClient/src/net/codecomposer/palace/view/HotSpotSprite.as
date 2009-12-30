@@ -98,15 +98,6 @@ package net.codecomposer.palace.view
 			client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEMOVE);
 		}
 		
-		private function handleMouseMoveThrottleTimer(event:Event):void {
-			mousePos.x = client.currentRoom.roomView.mouseX;
-			mousePos.y = client.currentRoom.roomView.mouseY;
-			if (mousePos.x != lastMousePos.x || mousePos.y != lastMousePos.y) {
-				lastMousePos = mousePos.clone();
-				client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEMOVE);
-			}
-		}
-		
 		private function handleHotspotMoved(event:HotspotEvent):void {
 			x = hotSpot.location.x;
 			y = hotSpot.location.y;
