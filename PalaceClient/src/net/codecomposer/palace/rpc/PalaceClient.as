@@ -593,7 +593,7 @@ package net.codecomposer.palace.rpc
 		private var requestedRoomId:int = 0;
 		
 		public function gotoRoom(roomId:int):void {
-			if (!connected) {
+			if (!connected || currentRoom.id == roomId) {
 				return;
 			}
 						
