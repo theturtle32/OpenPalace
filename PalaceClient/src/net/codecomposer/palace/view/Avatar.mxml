@@ -19,7 +19,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 <s:SkinnableContainer xmlns:mx="library://ns.adobe.com/flex/halo"
 	xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009"
-	x="{user.x-22}" y="{user.y-22}"
+	x="{user.x-21}" y="{user.y-21}"
 	height="44"
 	width="44"
 	mouseEnabled="false"
