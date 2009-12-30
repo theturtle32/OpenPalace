@@ -224,6 +224,7 @@ package org.openpalace.iptscrae
 			var quotnest:int = 0;
 			var qFlag:Boolean = false;
 			var atomListString:String = "";
+			var char:String;
 			
 			if(currentChar() == '{') {
 				so++;
@@ -242,6 +243,14 @@ package org.openpalace.iptscrae
 				}
 				else {
 					switch(currentChar()) {
+						case ";":
+						case "#":
+							while((char = currentChar()) != null && char != '\r' && char != '\n') {
+								atomListString += char;
+								so++;
+							}
+							break;
+						
 						case "\"": // '"'
 							qFlag = true;
 							break;
