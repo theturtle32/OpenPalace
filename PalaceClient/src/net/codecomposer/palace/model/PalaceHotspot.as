@@ -168,11 +168,16 @@ package net.codecomposer.palace.model
 		}
 		
 		public function movePicTo(x:int, y:int):void {
-			var stateObj:PalaceHotspotState = PalaceHotspotState(states.getItemAt(this.state));
-			stateObj.x = x;
-			stateObj.y = y;
-			var event:HotspotEvent = new HotspotEvent(HotspotEvent.MOVED);
-			dispatchEvent(event);
+			try {
+				var stateObj:PalaceHotspotState = PalaceHotspotState(states.getItemAt(this.state));
+				stateObj.x = x;
+				stateObj.y = y;
+				var event:HotspotEvent = new HotspotEvent(HotspotEvent.MOVED);
+				dispatchEvent(event);
+			}
+			catch (e:Error) {
+				// do nothing.
+			}
 		}
 		
 		public function moveTo(x:int, y:int):void {

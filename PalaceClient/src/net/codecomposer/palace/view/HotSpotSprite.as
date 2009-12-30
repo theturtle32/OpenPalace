@@ -17,12 +17,11 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 package net.codecomposer.palace.view
 {
+	import flash.events.Event;
 	import flash.events.MouseEvent;
-	import flash.events.TimerEvent;
 	import flash.geom.Point;
 	import flash.ui.Mouse;
 	import flash.ui.MouseCursor;
-	import flash.utils.Timer;
 	import flash.utils.setTimeout;
 	
 	import mx.core.FlexSprite;
@@ -51,16 +50,10 @@ package net.codecomposer.palace.view
 			y = hotSpot.location.y;
 			draw();
 			addEventListener(MouseEvent.MOUSE_DOWN, handleHotSpotMouseDown);
-			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_ROLLOVER)) {
-				addEventListener(MouseEvent.ROLL_OVER, handleIptscraeRollOver);
-			}
-			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_ROLLOUT)) {
-				addEventListener(MouseEvent.ROLL_OUT, handleIptscraeRollOut);
-			}
+			addEventListener(MouseEvent.ROLL_OVER, handleIptscraeRollOver);
+			addEventListener(MouseEvent.ROLL_OUT, handleIptscraeRollOut);
 			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEMOVE)) {
-				addEventListener(MouseEvent.MOUSE_MOVE, handleIptscraeMouseMove);
-				mouseMoveTimer.addEventListener(TimerEvent.TIMER, handleMouseMoveThrottleTimer);
-				mouseMoveTimer.start();
+				addEventListener(Event.ENTER_FRAME, handleEnterFrame);
 			}
 			if (hotSpot.dest != 0 &&
 					(hotSpot.type == PalaceHotspot.TYPE_PASSAGE ||
@@ -80,28 +73,34 @@ package net.codecomposer.palace.view
 		
 		private function handleIptscraeRollOver(event:MouseEvent):void {
 			client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_ROLLOVER);
-			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEMOVE)) {
-				mouseMoveTimer.addEventListener(TimerEvent.TIMER, handleMouseMoveThrottleTimer);
-			}
 		}
 		
 		private function handleIptscraeRollOut(event:MouseEvent):void {
 			client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_ROLLOUT);
-			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEMOVE)) {
-				mouseMoveTimer.removeEventListener(TimerEvent.TIMER, handleMouseMoveThrottleTimer);
-			}
 		}
 		
-		private var mouseMoveTimer:Timer = new Timer(1000/15, 0);
 		private var mousePos:Point = new Point(-1, -1);
 		private var lastMousePos:Point = new Point(-1, -1);
+		
+		private function handleEnterFrame(event:Event):void {
+			mousePos.x = client.currentRoom.roomView.mouseX;
+			mousePos.y = client.currentRoom.roomView.mouseY;
+			var globalPos:Point = client.currentRoom.roomView.localToGlobal(mousePos);
+			if (hitTestPoint(globalPos.x, globalPos.y, true) && (mousePos.x != lastMousePos.x || mousePos.y != lastMousePos.y)) {
+				lastMousePos = mousePos.clone();
+				client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEMOVE);
+			}
+		}
 		
 		private function handleIptscraeMouseMove(event:MouseEvent):void {
 			mousePos.x = event.localX;
 			mousePos.y = event.localY;
+			client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEMOVE);
 		}
 		
-		private function handleMouseMoveThrottleTimer(event:TimerEvent):void {
+		private function handleMouseMoveThrottleTimer(event:Event):void {
+			mousePos.x = client.currentRoom.roomView.mouseX;
+			mousePos.y = client.currentRoom.roomView.mouseY;
 			if (mousePos.x != lastMousePos.x || mousePos.y != lastMousePos.y) {
 				lastMousePos = mousePos.clone();
 				client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEMOVE);
