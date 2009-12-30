@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo"
-	x="{hotSpot.location.x - width/2}" y="{hotSpot.location.y}" mouseEnabled="false">
+	x="{Math.round(hotSpot.location.x - width/2)}" y="{Math.round(hotSpot.location.y)}" mouseEnabled="false">
 	<fx:Script>
 		<![CDATA[
 			import net.codecomposer.palace.model.PalaceHotspot;
@@ -12,11 +12,14 @@
 		<s:BasicLayout/>
 	</s:layout>
 	
-	<s:Rect top="0" left="0" right="0" bottom="0">
+	<s:Rect radiusX="6" radiusY="6" top="-1" left="0" right="0" bottom="-1">
+		<s:stroke>
+			<s:SolidColorStroke color="0xAAAAAA" />
+		</s:stroke>
 		<s:fill>
 			<mx:SolidColor color="0xFFFFFF" />
 		</s:fill>
 	</s:Rect>
 	
-	<s:Label top="3" bottom="1" left="4" right="4" textAlign="center" text="{hotSpot.name}" color="0x000000" fontFamily="Arial" fontSize="11" />
+	<s:Label mouseEnabled="false" top="3" bottom="1" left="4" right="4" textAlign="center" text="{hotSpot.name}" color="0x000000" fontFamily="Arial" fontSize="11" />
 </s:Group>
