@@ -56,6 +56,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			import net.codecomposer.palace.model.ChatMessage;
 			import net.codecomposer.palace.model.PalaceConfig;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
+			import net.codecomposer.palace.model.PalaceHotspot;
 			import net.codecomposer.palace.model.PalaceLooseProp;
 			import net.codecomposer.palace.model.PalaceUser;
 			import net.codecomposer.palace.rpc.PalaceClient;
@@ -369,6 +370,31 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (y < 22) { y = 22; }
 				if (x > width - 22) { x = width - 22; }
 				if (y > height - 22) { y = height - 22; }
+				
+				var sprite:HotSpotSprite;
+				var sourceHotSpots:Vector.<HotSpotSprite> = hotSpotCanvas.getHotspotsUnderPoint(new Point(self.x,self.y));
+				var destHotSpots:Vector.<HotSpotSprite> = hotSpotCanvas.getHotspotsUnderPoint(new Point(x,y));
+				
+				// Check the current position, to see if we're in a nav area
+				navAreaCheck: for each (sprite in sourceHotSpots) {
+					if (sprite.hotSpot.type == PalaceHotspot.TYPE_NAVAREA) {
+						// destination must also be a nav area
+						for each (var destSprite:HotSpotSprite in destHotSpots) {
+							if (destSprite.hotSpot.type == PalaceHotspot.TYPE_NAVAREA) {
+								break navAreaCheck;
+							}
+						}
+						return;
+					}
+				}
+				
+				// Check the destination, to see if we can move there
+				for each (sprite in destHotSpots) {
+					if (sprite.hotSpot.dontMoveHere) {
+						return;
+					}
+				}
+				
 				self.x = x;
 				self.y = y;
 			}

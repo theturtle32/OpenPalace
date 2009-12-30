@@ -47,6 +47,17 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				hotSpots.addEventListener(CollectionEvent.COLLECTION_CHANGE, handleHotSpotsChange);
 			}
 			
+			public function getHotspotsUnderPoint(roomPoint:Point):Vector.<HotSpotSprite> {
+				var hotSpots:Vector.<HotSpotSprite> = new Vector.<HotSpotSprite>();
+				var globalPoint:Point = localToGlobal(roomPoint);
+				for each (var sprite:HotSpotSprite in viewsByHotSpot) {
+					if (sprite.hitTestPoint(globalPoint.x, globalPoint.y, true)) {
+						hotSpots.push(sprite);
+					}
+				}
+				return hotSpots;
+			}
+			
 			public function hitTestHotSpot(hotSpot:PalaceHotspot, globalPoint:Point):Boolean {
 				var view:HotSpotSprite = HotSpotSprite(viewsByHotSpot[hotSpot]);
 				if (view) {
@@ -81,6 +92,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				if (hotSpot.showName) {
 					var nameTag:HotSpotNameTag = new HotSpotNameTag();
 					nameTag.hotSpot = hotSpot;
+					nameTag.mouseEnabled = false;
 					nameTagsByHotSpot[hotSpot] = nameTag;
 					hotspotNames.addElement(nameTag);
 				}
@@ -154,13 +166,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	</s:Group>
 
 	<s:Group id="hotspotNames" top="0" left="0" bottom="0" right="0"
-		mouseEnabled="false">
+			 mouseEnabled="false">
 		<s:layout>
 			<s:BasicLayout />
 		</s:layout>
 	</s:Group>
 	
 	<mx:Canvas id="hotspotCanvas" top="0" left="0" bottom="0" right="0" 
-		verticalScrollPolicy="off" horizontalScrollPolicy="off"/>
+			   verticalScrollPolicy="off" horizontalScrollPolicy="off"/>
 	
 </s:Group>
