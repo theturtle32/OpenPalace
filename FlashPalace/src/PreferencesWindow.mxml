@@ -25,7 +25,7 @@
 				palace.changeName(preferences.userName);
 				palace.setRegistrationCode(preferences.regCode);
 				
-				if (preferences.cyborg) {
+				if (cyborg) {
 					preferences.cyborg = cyborg.text;
 					palace.setCyborg(preferences.cyborg);
 				}
