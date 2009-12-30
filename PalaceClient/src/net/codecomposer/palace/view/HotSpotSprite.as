@@ -55,12 +55,10 @@ package net.codecomposer.palace.view
 			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEMOVE)) {
 				addEventListener(Event.ENTER_FRAME, handleEnterFrame);
 			}
-			if (hotSpot.dest != 0 &&
-					(hotSpot.type == PalaceHotspot.TYPE_PASSAGE ||
-					 hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
-					 hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR ||
-					 hotSpot.type == PalaceHotspot.TYPE_BOLT)
-				)
+			if (hotSpot.type == PalaceHotspot.TYPE_PASSAGE ||
+				hotSpot.type == PalaceHotspot.TYPE_LOCKABLE_DOOR ||
+				hotSpot.type == PalaceHotspot.TYPE_SHUTABLE_DOOR ||
+				hotSpot.type == PalaceHotspot.TYPE_BOLT)
 			{
 				if (highlightOnMouseOver) {
 					addEventListener(MouseEvent.ROLL_OVER, handleMouseOver);
