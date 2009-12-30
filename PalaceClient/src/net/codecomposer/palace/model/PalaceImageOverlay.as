@@ -127,13 +127,15 @@ package net.codecomposer.palace.model
 				if (transparencyIndex > 0) {
 					// process transparency color from Palace
 					// Palette Index Lookup
-					transparencyColor = PalacePalette.clutARGB[transparencyIndex];
+					transparencyColor = PalacePalette.imageClutARGB[transparencyIndex];
 				}
 				else {
 					// Transparency index of 0 means "use the bottom-left
 					// pixel color as the transparency color" -- bizarre...
 					transparencyColor = bitmapData.getPixel32(1, bitmapData.height-1);					
 				}
+				trace("Transparency color: " + transparencyColor.toString(16));
+				
 				
 				bitmapData.threshold(
 					bitmapData,
