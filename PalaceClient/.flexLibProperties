@@ -156,6 +156,7 @@
     <classEntry path="net.codecomposer.palace.iptscrae.command.ROOMWIDTHCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.ROOMHEIGHTCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.SETPICLOCLOCALCommand"/>
+    <classEntry path="net.codecomposer.palace.message.NavErrorMessage"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

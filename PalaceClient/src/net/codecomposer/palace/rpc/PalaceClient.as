@@ -43,6 +43,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.iptscrae.IptEventHandler;
 	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
+	import net.codecomposer.palace.message.NavErrorMessage;
 	import net.codecomposer.palace.message.OutgoingMessageTypes;
 	import net.codecomposer.palace.model.AssetManager;
 	import net.codecomposer.palace.model.PalaceAsset;
@@ -1022,6 +1023,10 @@ package net.codecomposer.palace.rpc
 	//							handleIncomingFile(size, p);
 	//							break;
 							
+							case IncomingMessageTypes.NAV_ERROR:
+								handleNavError(size, p);
+								break;
+							
 							case IncomingMessageTypes.AUTHENTICATE:
 								handleAuthenticate(size, p);
 								break;
@@ -1331,6 +1336,39 @@ package net.codecomposer.palace.rpc
 			trace(output);
 		}
 
+		private function readMessage(size:int):ByteArray {
+			var ba:ByteArray = new ByteArray();
+			ba.endian = socket.endian;
+			socket.readBytes(ba, 0, size);
+			return ba;
+		}
+		
+		private function handleNavError(size:int, referenceId:int):void {
+			var navError:NavErrorMessage = new NavErrorMessage();
+			navError.read(readMessage(size), referenceId);
+			var reason:String = "unknown reason";
+			switch (navError.errorCode) {
+				case NavErrorMessage.INTERNAL_ERROR:
+					reason = "internal error";
+					break;
+				case NavErrorMessage.ROOM_UNKNOWN:
+					reason = "unknown room";
+					break;
+				case NavErrorMessage.ROOM_FULL:
+					reason = "room is full";
+					break;
+				case NavErrorMessage.ROOM_CLOSED:
+					reason = "room is closed";
+					break;
+				case NavErrorMessage.CANT_AUTHOR:
+					reason = "you can't author";
+					break;
+				case NavErrorMessage.PALACE_FULL:
+					reason = "palace is full";
+			}
+			currentRoom.statusMessage("Denied by server.");
+		}
+		
 		private function handleReceiveRoomDescription(size:int, referenceId:int):void {
 			palaceController.clearAlarms();
 			palaceController.midiStop();
@@ -1447,7 +1485,12 @@ package net.codecomposer.palace.rpc
 				hs.readData(socket.endian, rb, hotSpotOffset);
 				hotSpotOffset += hs.size;
 				currentRoom.hotSpots.addItem(hs);
-				currentRoom.hotSpotsById[hs.id] = hs;
+				if (currentRoom.hotSpotsById[hs.id] == null) {
+					currentRoom.hotSpotsById[hs.id] = hs;
+				}
+				else {
+					currentRoom.logScript("WARNING: There is more than one hotspot in this room with spot id " + hs.id + "!");
+				}
 			}
 			
 			// Loose Props
