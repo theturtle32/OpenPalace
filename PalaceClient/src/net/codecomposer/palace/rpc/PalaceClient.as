@@ -800,7 +800,7 @@ package net.codecomposer.palace.rpc
 				return;
 			}
 			var user:PalaceUser = currentUser;
-			var numProps:int = Math.max(user.props.length, 9);
+			var numProps:int = Math.min(user.props.length, 9);
 			socket.writeInt(OutgoingMessageTypes.USER_PROP);
 			// size -- 8 bytes per prop, 4 bytes for number of props 
 			socket.writeInt(user.props.length * 8 + 4);
