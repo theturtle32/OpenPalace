@@ -165,6 +165,7 @@
     <classEntry path="net.codecomposer.palace.iptscrae.command.SETSPOTNAMELOCALCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.HIDEAVATARSCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.SHOWAVATARSCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.GREPSTRCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
