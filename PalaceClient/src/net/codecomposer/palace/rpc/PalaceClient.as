@@ -799,12 +799,14 @@ package net.codecomposer.palace.rpc
 				return;
 			}
 			var user:PalaceUser = currentUser;
+			var numProps:int = Math.max(user.props.length, 9);
 			socket.writeInt(OutgoingMessageTypes.USER_PROP);
 			// size -- 8 bytes per prop, 4 bytes for number of props 
 			socket.writeInt(user.props.length * 8 + 4);
 			socket.writeInt(id);
 			socket.writeInt(user.props.length);
-			for each (var prop:PalaceProp in user.props) {
+			for (var i:int = 0; i < numProps; i ++) {
+				var prop:PalaceProp = PalaceProp(user.props.getItemAt(i));
 				socket.writeInt(prop.asset.id);
 				//socket.writeUnsignedInt(prop.asset.crc);
 				socket.writeUnsignedInt(0);

@@ -786,5 +786,56 @@ package net.codecomposer.palace.iptscrae
 			}, 1);
 		}
 		
+		public function moveLooseProp(index:int, x:int, y:int):void {
+			client.moveLooseProp(index, x, y);
+		}
+		
+		public function getLoosePropIdByIndex(index:int):int {
+			var prop:PalaceLooseProp;
+			try {
+				prop = PalaceLooseProp(client.currentRoom.looseProps.getItemAt(index));
+			}
+			catch (e:Error) {
+				// do nothing.
+			}
+			if (prop) {
+				return prop.id;
+			}
+			return 0;
+		}
+		
+		public function getLoosePropIndexById(propId:int):int {
+			var propIndex:int = 0;
+			var length:int = client.currentRoom.looseProps.length;
+			for (var i:int = 0; i < length; i ++) {
+				var prop:PalaceLooseProp = PalaceLooseProp(client.currentRoom.looseProps.getItemAt(i));
+				if (prop.id == propId) {
+					propIndex = i;
+					break;
+				}
+			}
+			return propIndex;
+		}
+		
+		public function getLoosePropPosition(index:int):Point {
+			var position:Point = new Point(0,0);
+			var prop:PalaceLooseProp;
+			try {
+				prop = PalaceLooseProp(client.currentRoom.looseProps.getItemAt(index));
+			}
+			catch (e:Error) {
+				// do nothing.
+			}
+			if (prop) {
+				position.x = prop.x;
+				position.y = prop.y;
+			}
+			return position;
+		}
+		
+		public function getLoosePropCount():int {
+			return client.currentRoom.looseProps.length;
+		}
+		
 	}
 }

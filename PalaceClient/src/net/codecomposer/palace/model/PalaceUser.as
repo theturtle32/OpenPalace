@@ -153,7 +153,7 @@ package net.codecomposer.palace.model
 				// times in a SETPROPS command, you wouldn't ever be able to
 				// remove the duplicate prop.  So we ignore any duplicate props
 				// when adding them.
-				if (this.props.getItemIndex(prop) == -1) {
+				if (this.props.getItemIndex(prop) == -1 && this.props.length < 9) {
 					prop.addEventListener(PropEvent.PROP_LOADED, handlePropLoaded);
 					this.props.addItem(prop);
 				}

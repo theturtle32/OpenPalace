@@ -157,6 +157,12 @@
     <classEntry path="net.codecomposer.palace.iptscrae.command.ROOMHEIGHTCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.SETPICLOCLOCALCommand"/>
     <classEntry path="net.codecomposer.palace.message.NavErrorMessage"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.MOVELOOSEPROPCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.REMOVELOOSEPROPCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.LOOSEPROPIDXCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.LOOSEPROPCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.LOOSEPROPPOSCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.NBRLOOSEPROPSCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
