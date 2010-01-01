@@ -42,6 +42,7 @@ package net.codecomposer.palace.iptscrae
 			output = "";
 			scriptManager = new PalaceIptManager(this);
 			scriptManager.parser.removeCommand("ALARMEXEC");
+			scriptManager.parser.removeCommand("GREPSTR");
 			scriptManager.parser.addCommands(PalaceIptscraeCommands.commands);
 			scriptManager.addEventListener(IptEngineEvent.TRACE, handleTrace);
 		}

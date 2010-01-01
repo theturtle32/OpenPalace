@@ -20,6 +20,7 @@ package net.codecomposer.palace.iptscrae
 			"GETSPOTSTATE": GETSPOTSTATECommand,
 			"GLOBALMSG": GLOBALMSGCommand,
 			"GOTOROOM": GOTOROOMCommand,
+			"GREPSTR": GREPSTRCommand,
 			"HASPROP": HASPROPCommand,
 			"HIDEAVATARS": HIDEAVATARSCommand,
 			"ID": MECommand,
