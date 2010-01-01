@@ -25,6 +25,36 @@ package
 			sharedObject = SharedObject.getLocal("OpenPalaceBrowserPreferences");
 		}
 		
+		[Bindable(event="hostNameChanged")]
+		public function set hostName(newValue:String):void {
+			sharedObject.data.hostName = newValue;
+			sharedObject.flush();
+			dispatchEvent(new Event('hostNameChanged'));
+		}
+		public function get hostName():String {
+			var returnValue:String = sharedObject.data.hostName;
+			if (!returnValue) {
+				sharedObject.data.hostName = returnValue = "openpalace.org";
+				sharedObject.flush();
+			}
+			return returnValue;
+		}
+		
+		[Bindable(event="portChanged")]
+		public function set port(newValue:String):void {
+			sharedObject.data.port = newValue;
+			sharedObject.flush();
+			dispatchEvent(new Event('portChanged'));
+		}
+		public function get port():String {
+			var returnValue:String = sharedObject.data.port;
+			if (!returnValue) {
+				sharedObject.data.port = returnValue = "9998";
+				sharedObject.flush();
+			}
+			return returnValue;
+		}
+		
 		[Bindable(event="userNameChanged")]
 		public function set userName(newValue:String):void {
 			sharedObject.data.userName = newValue;

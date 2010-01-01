@@ -49,6 +49,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		
 			private function connect():void {
 				preferences.userName = userName.text;
+				preferences.hostName = hostName.text;
+				preferences.port = port.text;
+				
 				browserManager.setFragment("palace=" + hostName.text + ":" + int(port.text).toString());
 				palace.connect(preferences.userName, hostName.text, int(port.text));
 			}
@@ -66,9 +69,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		<mx:Label text="Host:" textAlign="right" width="42" left="10" top="38"/>
 
 
-		<s:TextInput id="hostName" text="avatarpalace.net" keyDown="handleConnectionKeydown(event)"
+		<s:TextInput id="hostName" text="{preferences.hostName}" keyDown="handleConnectionKeydown(event)"
 			left="60" top="36" width="169"/>
-		<s:TextInput width="48" id="port" text="9998" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
+		<s:TextInput width="48" id="port" text="{preferences.port}" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
 		
 		<s:HGroup right="5" y="67">
 			<s:Button label="Cancel" click="close()"/>
