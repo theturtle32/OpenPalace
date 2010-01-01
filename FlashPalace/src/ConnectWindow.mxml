@@ -61,6 +61,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					connect();
 				}
 			}
+			
+			private function handleHostNameKeyUp():void {
+				port.text = "9998";
+			}
 		]]>
 	</mx:Script>
 		<s:TextInput id="userName" text="{preferences.userName}" left="60" top="8" />
@@ -70,7 +74,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 
 		<s:TextInput id="hostName" text="{preferences.hostName}" keyDown="handleConnectionKeydown(event)"
-			left="60" top="36" width="169"/>
+					 change="handleHostNameKeyUp()" left="60" top="36" width="169"/>
 		<s:TextInput width="48" id="port" text="{preferences.port}" keyDown="handleConnectionKeydown(event)" left="228" top="36"/>
 		
 		<s:HGroup right="5" y="67">
