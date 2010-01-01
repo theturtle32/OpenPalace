@@ -821,7 +821,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		</s:fill>
 	</s:Rect>
 	
-	<s:Rect width="100%" height="100%">
+	<s:Rect width="100%" height="100%" visible.unableToLoadBackground="false">
 		<s:fill>
 			<mx:SolidColor color="0x000000" id="roomFader" alpha="0" />
 		</s:fill>
@@ -845,6 +845,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	<view:PaintLayer dataProvider="{room.drawFrontCommands}" />
 
 	<s:Group id="nameTagGroup" mouseEnabled="false"
+			 mouseChildren="false"
 			 visible="{room.showAvatars}"
 			 dragEnter="handleLoosePropDragEnter(event)"
 			 dragDrop="handleLoosePropDragDrop(event)"
@@ -854,7 +855,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		</s:layout>
 	</s:Group>
 	
-	<s:Group id="textGroup" mouseEnabled="false" top="0" right="0" bottom="0" left="0">
+	<s:Group id="textGroup" mouseEnabled="false" mouseChildren="false"
+			 top="0" right="0" bottom="0" left="0">
 		<s:layout>
 			<s:BasicLayout />
 		</s:layout>
