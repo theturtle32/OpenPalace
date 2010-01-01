@@ -19,8 +19,11 @@ package org.openpalace.iptscrae.command
 					array.data[index.data] = data;
 				}
 				catch(e:Error) {
-					throw new IptError("Unable to set element " + index.data + " in the array: " + e.message);
+					throw new IptError("Unable to set element at index " + index.data + " in the array: " + e.message);
 				}
+			}
+			else {
+				throw new IptError("Array index " + index.data.toString() + " out of range");
 			}
 		}
 	}
