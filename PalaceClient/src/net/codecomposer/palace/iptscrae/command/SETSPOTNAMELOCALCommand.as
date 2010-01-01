@@ -6,14 +6,15 @@ package net.codecomposer.palace.iptscrae.command
 	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.IptExecutionContext;
 	import org.openpalace.iptscrae.token.IntegerToken;
+	import org.openpalace.iptscrae.token.StringToken;
 	
-	public class LOOSEPROPIDXCommand extends IptCommand
+	public class SETSPOTNAMELOCALCommand extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext) : void {
-			var propId:IntegerToken = context.stack.popType(IntegerToken);
+			var spotId:IntegerToken = context.stack.popType(IntegerToken);
+			var text:StringToken = context.stack.popType(StringToken);
 			var pc:PalaceController = PalaceIptManager(context.manager).pc;
-			var propIndex:int = pc.getLoosePropIndexById(propId.data);
-			context.stack.push(new IntegerToken(propIndex));
+			pc.setSpotName(spotId.data, text.data);
 		}
 	}
 }

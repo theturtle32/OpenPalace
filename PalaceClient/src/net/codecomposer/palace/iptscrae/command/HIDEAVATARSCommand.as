@@ -5,15 +5,12 @@ package net.codecomposer.palace.iptscrae.command
 	
 	import org.openpalace.iptscrae.IptCommand;
 	import org.openpalace.iptscrae.IptExecutionContext;
-	import org.openpalace.iptscrae.token.IntegerToken;
 	
-	public class LOOSEPROPIDXCommand extends IptCommand
+	public class HIDEAVATARSCommand extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext) : void {
-			var propId:IntegerToken = context.stack.popType(IntegerToken);
 			var pc:PalaceController = PalaceIptManager(context.manager).pc;
-			var propIndex:int = pc.getLoosePropIndexById(propId.data);
-			context.stack.push(new IntegerToken(propIndex));
+			pc.hideAvatars();
 		}
 	}
 }

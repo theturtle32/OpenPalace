@@ -99,7 +99,7 @@ package net.codecomposer.palace.model
 		
 		[Bindable('flagsChanged')]
 		public function get showName():Boolean {
-			return Boolean(flags & FLAG_SHOW_NAME) && (name != null && name.length > 0);
+			return Boolean(flags & FLAG_SHOW_NAME);
 		}
 		
 		[Bindable('flagsChanged')]

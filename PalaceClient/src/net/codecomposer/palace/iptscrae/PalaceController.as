@@ -837,5 +837,19 @@ package net.codecomposer.palace.iptscrae
 			return client.currentRoom.looseProps.length;
 		}
 		
+		public function setSpotName(spotId:int, name:String):void {
+			var hotspot:PalaceHotspot = client.currentRoom.getHotspotById(spotId);
+			if (hotspot) {
+				hotspot.name = name;
+			}
+		}
+		
+		public function hideAvatars():void {
+			client.currentRoom.showAvatars = false;
+		}
+		
+		public function showAvatars():void {
+			client.currentRoom.showAvatars = true;
+		}
 	}
 }

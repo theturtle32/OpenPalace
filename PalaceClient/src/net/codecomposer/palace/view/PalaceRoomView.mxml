@@ -835,7 +835,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		</s:layout>
 	</s:Group>
 
-	<s:Group id="avatarsGroup" top="0" right="0" bottom="0" left="0">
+	<s:Group id="avatarsGroup" top="0" right="0" bottom="0" left="0"
+			 visible="{room.showAvatars}">
 		<s:layout>
 			<s:BasicLayout />
 		</s:layout>
@@ -844,6 +845,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	<view:PaintLayer dataProvider="{room.drawFrontCommands}" />
 
 	<s:Group id="nameTagGroup" mouseEnabled="false"
+			 visible="{room.showAvatars}"
 			 dragEnter="handleLoosePropDragEnter(event)"
 			 dragDrop="handleLoosePropDragDrop(event)"
 			 dragOver="handleLoosePropDragOver(event)">

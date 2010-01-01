@@ -10,10 +10,10 @@ package net.codecomposer.palace.iptscrae.command
 	public class LOOSEPROPCommand extends IptCommand
 	{
 		override public function execute(context:IptExecutionContext) : void {
-			var propId:IntegerToken = context.stack.popType(IntegerToken);
+			var index:IntegerToken = context.stack.popType(IntegerToken);
 			var pc:PalaceController = PalaceIptManager(context.manager).pc;
-			var propIndex:int = pc.getLoosePropIndexById(propId.data);
-			context.stack.push(new IntegerToken(propIndex));
+			var propId:int = pc.getLoosePropIdByIndex(index.data);
+			context.stack.push(new IntegerToken(propId));
 		}
 	}
 }

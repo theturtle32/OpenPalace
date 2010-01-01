@@ -58,6 +58,7 @@ package net.codecomposer.palace.model
 		public var selfUserId:int = -1;
 		public var roomView:PalaceRoomView;
 		public var dimLevel:Number = 1;
+		public var showAvatars:Boolean = true;
 		
 		public var chatLog:String = "";
 		

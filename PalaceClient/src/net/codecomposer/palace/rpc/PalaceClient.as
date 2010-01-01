@@ -268,6 +268,7 @@ package net.codecomposer.palace.rpc
 			currentRoom.drawBackCommands.removeAll();
 			currentRoom.drawFrontCommands.removeAll();
 			currentRoom.drawLayerHistory = new Vector.<uint>();
+			currentRoom.showAvatars = true;
 			currentRoom.id = 0;
 			population = 0;
 			serverName = "No Server"
@@ -1537,6 +1538,7 @@ package net.codecomposer.palace.rpc
 			debugData = new DebugData(currentRoom);
 			
 			currentRoom.dimRoom(100);
+			currentRoom.showAvatars = true;
 			
 			var roomChangeEvent:PalaceEvent = new PalaceEvent(PalaceEvent.ROOM_CHANGED);
 			dispatchEvent(roomChangeEvent);
