@@ -127,6 +127,7 @@ package net.codecomposer.palace.view
 				playSoundAsset(SoundAsset(new sound()));
 			}
 			else {
+				soundName = soundName.replace(/\.wav$/i, "");
 				var request:URLRequest = new URLRequest(client.mediaServer + soundName.toLowerCase() + ".mp3");
 				var soundFactory:Sound = new Sound();
 				soundFactory.addEventListener(IOErrorEvent.IO_ERROR, handleIOError);
