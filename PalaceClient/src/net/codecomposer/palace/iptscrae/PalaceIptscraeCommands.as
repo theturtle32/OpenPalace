@@ -37,6 +37,7 @@ package net.codecomposer.palace.iptscrae
 			"LOCALMSG": LOCALMSGCommand,
 			"LOCK": LOCKCommand,
 			"LOGMSG": LOGMSGCommand,
+			"LOADPROPS": LOADPROPSCommand,
 			"LOOSEPROPIDX": LOOSEPROPIDXCommand,
 			"LOOSEPROP": LOOSEPROPCommand,
 			"LOOSEPROPPOS": LOOSEPROPPOSCommand,
