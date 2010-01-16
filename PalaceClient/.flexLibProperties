@@ -167,6 +167,7 @@
     <classEntry path="net.codecomposer.palace.iptscrae.command.SHOWAVATARSCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.GREPSTRCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.PROPOFFSETSCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.PROPDIMENSIONSCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
