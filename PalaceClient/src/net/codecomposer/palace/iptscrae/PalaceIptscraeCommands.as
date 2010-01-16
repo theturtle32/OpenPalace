@@ -72,6 +72,7 @@ package net.codecomposer.palace.iptscrae
 			"PENPOS": PENPOSCommand,
 			"PENSIZE": PENSIZECommand,
 			"PENTO": PENTOCommand,
+			"PROPOFFSETS": PROPOFFSETSCommand,
 			"REMOVELOOSEPROP": REMOVELOOSEPROPCommand,
 			"ROOMHEIGHT": ROOMHEIGHTCommand,
 			"ROOMWIDTH": ROOMWIDTHCommand,
