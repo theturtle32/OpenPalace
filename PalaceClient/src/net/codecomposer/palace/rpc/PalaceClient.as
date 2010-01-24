@@ -718,14 +718,14 @@ package net.codecomposer.palace.rpc
 		}
 		
 		public function requestAsset(assetType:int, assetId:uint, assetCrc:uint):void {
-			// Assets are requested in packets of up to 20 requests, separated by 1000ms
+			// Assets are requested in packets of up to 20 requests, separated by 500ms
 			// to prevent flooding the server and getting killed.
 			if (!connected) {
 				return;	
 			}
 //			trace("Requesting asset (Type:" + assetType.toString(16) + ") (ID:" + assetId + ") (CRC:" + assetCrc + ")");
 			if (assetRequestQueueTimer == null) {
-				assetRequestQueueTimer = new Timer(100, 1);
+				assetRequestQueueTimer = new Timer(50, 1);
 				assetRequestQueueTimer.addEventListener(TimerEvent.TIMER, sendAssetRequests);
 				assetRequestQueueTimer.start();
 			}
@@ -748,7 +748,7 @@ package net.codecomposer.palace.rpc
 			
 			if (assetRequestQueue.length == 0) {
 				assetRequestQueueTimer.reset();
-				assetRequestQueueTimer.delay = 100;
+				assetRequestQueueTimer.delay = 50;
 				return;
 			}
 
@@ -770,7 +770,7 @@ package net.codecomposer.palace.rpc
 			// If there are still assets left to request, schedule another timer.
 			if (assetRequestQueue.length > 0) {
 				assetRequestQueueTimer.reset();
-				assetRequestQueueTimer.delay = 1000;
+				assetRequestQueueTimer.delay = 500;
 				assetRequestQueueTimer.start();
 			}
 		}

@@ -45,7 +45,7 @@ package net.codecomposer.palace.model
 		private var client:PalaceClient = PalaceClient.getInstance();
 		
 		private var assetsToRequest:Array = [];
-		private var assetRequestTimer:Timer = new Timer(100, 1);
+		private var assetRequestTimer:Timer = new Timer(50, 1);
 		
 		private var propsToUpload:Array = [];
 		private var propsUploadtimer:Timer = new Timer(1000, 1);
