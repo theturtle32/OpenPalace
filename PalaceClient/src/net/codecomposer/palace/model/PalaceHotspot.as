@@ -231,6 +231,9 @@ package net.codecomposer.palace.model
 				nameByteArray.position = 0;
 				name = nameByteArray.readMultiByte(nameLength, 'Windows-1252');
 			}
+			else {
+				name = "";
+			}
 
 			// Script...
 			if (scriptTextOffset > 0) {
@@ -278,7 +281,7 @@ package net.codecomposer.palace.model
 				states.addItem(state);
 			}
 			
-//			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: " + this.name + " - PointCount: " + numPoints);
+//			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: '" + this.name + "' - PointCount: " + numPoints);
 		}
 		
 		public function hasEventHandler(eventType:int):Boolean {
