@@ -445,18 +445,7 @@ package net.codecomposer.palace.model
 			if (bm && bm is FlexBitmap) {
 				var bitmapData:BitmapData = bm.bitmapData;
 				var propBit16:Number = 31 / 255;
-				var data:Vector.<uint>;
-				if (bm.width != 44 || bm.height != 44) {
-					trace("Encoding proxy prop");
-					var pixelCount:uint = 44 * 44;
-					data = new Vector.<uint>(pixelCount);
-					for (var i:int = 0; i < pixelCount; i++) {
-						data[i] = 0x00FFFFFF;
-					}
-				}
-				else {
-					data = bitmapData.getVector(new Rectangle(0,0,44,44));
-				}
+				var data:Vector.<uint> = bitmapData.getVector(new Rectangle(0,0,44,44));
 				var pixelIndex:uint = 0;
 				var intComp:uint = 0;
 				var a:uint, r:uint, g:uint, b:uint;

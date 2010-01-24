@@ -777,8 +777,11 @@ package net.codecomposer.palace.rpc
 		
 		private function sendPropToServer(prop:PalaceProp):void {
 			if (prop.width != 44 || prop.height != 44 ||
-				prop.verticalOffset > 44 || prop.verticalOffset < -44 ||
-				prop.horizontalOffset > 44 || prop.horizontalOffset < -44) {
+				// have to allow standard props to extend a little bit beyond
+				// the allowed boundaries, because of props created in old
+				// versions of PalaceChat, and the old Mac Palace client.
+				prop.verticalOffset > 88 || prop.verticalOffset < -44 ||
+				prop.horizontalOffset > 88 || prop.horizontalOffset < -44) {
 				// web service big prop... ignore request.
 				return;
 			}
