@@ -157,7 +157,7 @@ package net.codecomposer.palace.model
 		
 		public function decodeProp():void {			
 			// Try not to block the UI while props are rendering.
-			setTimeout(renderBitmap, 200+20*(++itemsToRender));
+			setTimeout(renderBitmap, 20+10*(++itemsToRender));
 		}
 		
 		public function loadBitmapFromURL(url:String = null):void {
