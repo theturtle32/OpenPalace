@@ -133,6 +133,8 @@
 				palace.addEventListener(PalaceEvent.AUTHENTICATION_REQUESTED, handleAuthenticationRequested);
 				
 				palace.setRegistrationCode(preferences.regCode);
+				palace.setPuid(preferences.puid);
+					
 				palace.setCyborg(preferences.cyborg);
 			}
 			

@@ -3,6 +3,8 @@ package
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.net.SharedObject;
+	
+	import org.openpalace.registration.RegistrationCode;
 
 	public class Preferences extends EventDispatcher
 	{
@@ -83,6 +85,30 @@ package
 				sharedObject.flush();
 			}
 			return returnValue;
+		}
+		
+		[Bindable(event="puidChanged")]
+		public function set puid(newValue:RegistrationCode):void {
+			sharedObject.data.puid = {};
+			sharedObject.data.puid.crc = newValue.crc;
+			sharedObject.data.puid.counter = newValue.counter;
+			sharedObject.flush();
+			dispatchEvent(new Event('puidChanged'));
+		}
+		public function get puid():RegistrationCode {
+			var puid:RegistrationCode = new RegistrationCode();
+			if (sharedObject.data.puid) {
+				puid.crc = sharedObject.data.crc;
+				puid.counter = sharedObject.data.counter;
+			}
+			else {
+				puid = RegistrationCode.generate();
+				sharedObject.data.puid = {};
+				sharedObject.data.puid.crc = puid.crc;
+				sharedObject.data.puid.counter = puid.counter;
+				sharedObject.flush();
+			}
+			return puid;
 		}
 		
 		[Bindable(event="cyborgChanged")]

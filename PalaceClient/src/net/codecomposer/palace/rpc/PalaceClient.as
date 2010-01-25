@@ -243,6 +243,11 @@ package net.codecomposer.palace.rpc
 			}
 		}
 		
+		public function setPuid(puid:RegistrationCode):void {
+			puidCounter = puid.counter;
+			puidCRC = puid.crc;
+		}
+		
 		public function gotoURL(url:String):void {
 			var event:PalaceEvent = new PalaceEvent('gotoURL');
 			event.url = url;
