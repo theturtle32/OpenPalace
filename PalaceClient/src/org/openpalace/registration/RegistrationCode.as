@@ -43,6 +43,14 @@ package org.openpalace.registration
 			return regcode;
 		}
 		
+		public static function generatePuid():RegistrationCode {
+			var regcode:RegistrationCode = new RegistrationCode();
+			var seed:uint = (new Date()).valueOf();
+			regcode.crc = computeLicenseCRC(seed);
+			regcode.counter = computePuidCounter(seed, regcode.crc);
+			return regcode;
+		}
+		
 		private static function computeLicenseCRC(seed:uint):uint {
 			// Start by reversing the byte order of the seed
 			var ba:ByteArray = new ByteArray();
@@ -65,6 +73,10 @@ package org.openpalace.registration
 		
 		private static function computeLicenseCounter(seed:uint, crc:uint):uint {
 			return (seed ^ MAGIC_LONG) ^ crc;
+		}
+		
+		private static function computePuidCounter(seed:uint, crc:uint):uint {
+			return seed ^ crc;
 		}
 		
 		public static function fromString(regCode:String):RegistrationCode {

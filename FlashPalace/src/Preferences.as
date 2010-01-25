@@ -87,6 +87,11 @@ package
 			return returnValue;
 		}
 		
+		public function resetPuid():void {
+			sharedObject.data.puid = null;
+			sharedObject.flush();
+		}
+		
 		[Bindable(event="puidChanged")]
 		public function set puid(newValue:RegistrationCode):void {
 			sharedObject.data.puid = {};
@@ -97,15 +102,18 @@ package
 		}
 		public function get puid():RegistrationCode {
 			var puid:RegistrationCode = new RegistrationCode();
-			if (sharedObject.data.puid) {
-				puid.crc = sharedObject.data.crc;
-				puid.counter = sharedObject.data.counter;
+			if (sharedObject.data.puid && sharedObject.data.fixedPuid) {
+				trace("Loaded saved puid.  CRC: " + sharedObject.data.puid.crc + " Counter: " + sharedObject.data.puid.counter);
+				puid.crc = sharedObject.data.puid.crc;
+				puid.counter = sharedObject.data.puid.counter;
 			}
 			else {
-				puid = RegistrationCode.generate();
+				puid = RegistrationCode.generatePuid();
 				sharedObject.data.puid = {};
 				sharedObject.data.puid.crc = puid.crc;
 				sharedObject.data.puid.counter = puid.counter;
+				sharedObject.data.fixedPuid = true;
+				trace("Generated new puid.  CRC: " + sharedObject.data.puid.crc + " Counter: " + sharedObject.data.puid.counter);
 				sharedObject.flush();
 			}
 			return puid;
