@@ -47,7 +47,7 @@ package org.openpalace.registration
 			var regcode:RegistrationCode = new RegistrationCode();
 			var seed:uint = (new Date()).valueOf();
 			regcode.crc = computeLicenseCRC(seed);
-			regcode.counter = computePuidCounter(seed, regcode.crc);
+			regcode.counter = computeLicenseCounter(seed, regcode.crc);
 			return regcode;
 		}
 		
@@ -73,10 +73,6 @@ package org.openpalace.registration
 		
 		private static function computeLicenseCounter(seed:uint, crc:uint):uint {
 			return (seed ^ MAGIC_LONG) ^ crc;
-		}
-		
-		private static function computePuidCounter(seed:uint, crc:uint):uint {
-			return seed ^ crc;
 		}
 		
 		public static function fromString(regCode:String):RegistrationCode {

@@ -102,17 +102,19 @@ package
 		}
 		public function get puid():RegistrationCode {
 			var puid:RegistrationCode = new RegistrationCode();
-			if (sharedObject.data.puid && sharedObject.data.fixedPuid) {
+			if (sharedObject.data.puid && schemaVersion >= 1) {
 				trace("Loaded saved puid.  CRC: " + sharedObject.data.puid.crc + " Counter: " + sharedObject.data.puid.counter);
 				puid.crc = sharedObject.data.puid.crc;
 				puid.counter = sharedObject.data.puid.counter;
 			}
 			else {
+				if (schemaVersion < 1) {
+					schemaVersion = 1;
+				}
 				puid = RegistrationCode.generatePuid();
 				sharedObject.data.puid = {};
 				sharedObject.data.puid.crc = puid.crc;
 				sharedObject.data.puid.counter = puid.counter;
-				sharedObject.data.fixedPuid = true;
 				trace("Generated new puid.  CRC: " + sharedObject.data.puid.crc + " Counter: " + sharedObject.data.puid.counter);
 				sharedObject.flush();
 			}
@@ -132,6 +134,14 @@ package
 				sharedObject.flush();
 			}
 			return returnValue;
+		}
+		
+		private function get schemaVersion():uint {
+			return sharedObject.data.schemaVersion ? sharedObject.data.schemaVersion : 0;
+		}
+		private function set schemaVersion(newValue:uint):void {
+			sharedObject.data.schemaVersion = newValue;
+			sharedObject.flush();
 		}
 		
 	}
