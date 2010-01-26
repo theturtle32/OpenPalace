@@ -111,7 +111,7 @@ package
 				if (schemaVersion < 1) {
 					schemaVersion = 1;
 				}
-				puid = RegistrationCode.generatePuid();
+				puid = RegistrationCode.generate();
 				sharedObject.data.puid = {};
 				sharedObject.data.puid.crc = puid.crc;
 				sharedObject.data.puid.counter = puid.counter;
