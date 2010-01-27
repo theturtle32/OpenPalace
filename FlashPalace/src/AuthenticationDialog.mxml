@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <code:MDIWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
 				xmlns:s="library://ns.adobe.com/flex/spark" 
-				xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:code="http://code.google.com/p/flexlib/" width="370" height="150"
+				xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:code="http://code.google.com/p/flexlib/" width="390" height="160"
 				creationComplete="handleCreationComplete()"
 				paddingBottom="10"
 				paddingTop="10"
