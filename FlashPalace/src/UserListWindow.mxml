@@ -30,9 +30,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private function refreshUserList():void {
 				PalaceClient.getInstance().requestUserList();
 			}
+			
+			private function gotoSelectedRoom():void {
+				PalaceClient.getInstance().gotoRoom(userList.selectedRoomId);
+			}
 		]]>
 	</mx:Script>
-	<view:UserListGrid resizableColumns="false" id="userList" left="0" right="0" top="0" bottom="40" />
+	<view:UserListGrid resizableColumns="false" id="userList" left="0" right="0" top="0" bottom="40" roomSelected="gotoSelectedRoom();"  />
 	
 	<mx:HBox right="10" bottom="10">
 		<mx:Button label="Refresh" click="refreshUserList();" />

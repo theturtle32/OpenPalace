@@ -18,8 +18,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <mx:DataGrid xmlns:mx="http://www.adobe.com/2006/mxml"
-	itemClick="handleSelection(event)"
+	itemDoubleClick="handleSelection(event)"
+	itemClick="handleItemClick(event)"
+	doubleClickEnabled="true"
 	dataProvider="{palace.userList}" draggableColumns="false">
+	<mx:Metadata>
+		[Event(name="roomSelected",type="net.codecomposer.palace.event.RoomSelectedEvent")]
+	</mx:Metadata>
 	<mx:Script>
 		<![CDATA[
 			import mx.events.ListEvent;
@@ -32,8 +37,27 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			public var selectedUserId:int = -1;
 			[Bindable]
 			public var selectedRoomId:int = -1;
+			[Bindable]
+			public var gotoRoomOnClick:Boolean = true;
 			
 			private function handleSelection(event:ListEvent):void {
+				if (!this.selectedItem) {
+					return;
+				}
+				selectedRoomId = this.selectedItem.roomID;
+				selectedUserId = this.selectedItem.id;
+				if (!gotoRoomOnClick) {
+					return;
+				}
+				var roomSelectedEvent:RoomSelectedEvent = new RoomSelectedEvent();
+				roomSelectedEvent.roomID = this.selectedItem.roomID;
+				dispatchEvent(roomSelectedEvent);
+			}
+			
+			private function handleItemClick(event:ListEvent):void {
+				if (!this.selectedItem) {
+					return;
+				}
 				selectedRoomId = this.selectedItem.roomID;
 				selectedUserId = this.selectedItem.id;
 			}
