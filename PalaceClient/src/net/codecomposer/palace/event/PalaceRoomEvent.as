@@ -37,6 +37,7 @@ package net.codecomposer.palace.event
 		public static const LOOSE_PROP_MOVED:String = "loosePropMoved";
 		public static const LOOSE_PROPS_CLEARED:String = "loosePropsCleared";
 		public static const USER_MOVED:String = "userMoved";
+		public static const SELECTED_USER_CHANGED:String = "selectedUserChanged";
 		
 		public function PalaceRoomEvent(type:String, user:PalaceUser = null)
 		{

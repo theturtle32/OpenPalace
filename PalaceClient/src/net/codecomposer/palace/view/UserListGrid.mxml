@@ -18,48 +18,62 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 <mx:DataGrid xmlns:mx="http://www.adobe.com/2006/mxml"
-	itemDoubleClick="handleSelection(event)"
+	itemDoubleClick="handleItemDoubleClick(event)"
 	itemClick="handleItemClick(event)"
 	doubleClickEnabled="true"
 	dataProvider="{palace.userList}" draggableColumns="false">
 	<mx:Metadata>
 		[Event(name="roomSelected",type="net.codecomposer.palace.event.RoomSelectedEvent")]
+		[Event(name="userSelected",type="net.codecomposer.palace.event.UserSelectedEvent")]
 	</mx:Metadata>
 	<mx:Script>
 		<![CDATA[
 			import mx.events.ListEvent;
-			import net.codecomposer.palace.rpc.PalaceClient;
+			
 			import net.codecomposer.palace.event.RoomSelectedEvent;
+			import net.codecomposer.palace.event.UserSelectedEvent;
+			import net.codecomposer.palace.rpc.PalaceClient;
+			
 			[Bindable]
 			private var palace:PalaceClient = PalaceClient.getInstance();
-			
+		
 			[Bindable]
 			public var selectedUserId:int = -1;
 			[Bindable]
 			public var selectedRoomId:int = -1;
 			[Bindable]
 			public var gotoRoomOnClick:Boolean = true;
+			[Bindable]
+			public var espOnClick:Boolean = true;	
 			
-			private function handleSelection(event:ListEvent):void {
+			private function handleItemDoubleClick(event:ListEvent):void {
 				if (!this.selectedItem) {
 					return;
 				}
+				
 				selectedRoomId = this.selectedItem.roomID;
 				selectedUserId = this.selectedItem.id;
-				if (!gotoRoomOnClick) {
-					return;
+				
+				if (gotoRoomOnClick) {
+					var roomSelectedEvent:RoomSelectedEvent = new RoomSelectedEvent();
+					roomSelectedEvent.roomID = this.selectedItem.roomID;
+					dispatchEvent(roomSelectedEvent);
 				}
-				var roomSelectedEvent:RoomSelectedEvent = new RoomSelectedEvent();
-				roomSelectedEvent.roomID = this.selectedItem.roomID;
-				dispatchEvent(roomSelectedEvent);
 			}
 			
 			private function handleItemClick(event:ListEvent):void {
 				if (!this.selectedItem) {
 					return;
 				}
+				
 				selectedRoomId = this.selectedItem.roomID;
 				selectedUserId = this.selectedItem.id;
+				
+				if (espOnClick) {
+					var userSelectedEvent:UserSelectedEvent = new UserSelectedEvent();
+					userSelectedEvent.userID = this.selectedItem.id;
+					dispatchEvent(userSelectedEvent);
+				}
 			}
 		]]>
 	</mx:Script>

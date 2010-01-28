@@ -25,24 +25,67 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	xmlns:view="net.codecomposer.palace.view.*">
 	<mx:Script>
 		<![CDATA[
+			import net.codecomposer.palace.event.PalaceEvent;
+			import net.codecomposer.palace.model.PalaceUser;
 			import net.codecomposer.palace.rpc.PalaceClient;
 			
+			[Bindable]
+			private var palace:PalaceClient = PalaceClient.getInstance();
+			
 			private function refreshUserList():void {
-				PalaceClient.getInstance().requestUserList();
+				palace.requestUserList();
 			}
 			
 			private function gotoSelectedRoom():void {
-				PalaceClient.getInstance().gotoRoom(userList.selectedRoomId);
+				palace.gotoRoom(userList.selectedRoomId);
+			}
+			
+			private function espSelectedUser():void{
+				// Try to find a PalaceUser object from the current room
+				// Otherwise, build a new one.
+				
+				var event:PalaceEvent = new PalaceEvent(PalaceEvent.ESP_CHANGED);
+				var userID:int = userList.selectedUserId;
+				var user:PalaceUser = palace.currentRoom.getUserById(userID);
+				
+				if (userID == palace.currentUser.id) {
+					palace.currentRoom.selectedUser = null;
+				}
+				else if (user != null) {
+					palace.currentRoom.selectedUser = user;
+				}
+				else {
+					palace.currentRoom.selectedUser = PalaceUser(userList.selectedItem);
+				}
+				dispatchEvent(event);
+			}
+			
+			private function stopWhispering():void {
+				palace.currentRoom.selectedUser = null;
+			}
+			
+			private function killSelectedUser():void {
+				palace.privateMessage("`kill", palace.currentRoom.selectedUser.id);
+				setTimeout(function():void {
+					refreshUserList();
+				}, 200);
 			}
 		]]>
 	</mx:Script>
-	<view:UserListGrid resizableColumns="false" id="userList" left="0" right="0" top="0" bottom="40" roomSelected="gotoSelectedRoom();"  />
+	<view:UserListGrid resizableColumns="false" id="userList" left="0" right="0" top="0" bottom="40" roomSelected="gotoSelectedRoom();" userSelected="espSelectedUser();" />
 	
 	<mx:HBox right="10" bottom="10">
+		<mx:Button label="Kill"
+				   includeInLayout="{palace.currentUser.isWizard}"
+				   visible="{palace.currentUser.isWizard}"
+				   enabled="{palace.currentRoom.selectedUser != null}"
+				   click="killSelectedUser()" />
+		<mx:Button label="Stop Whispering"
+				   visible="{palace.currentRoom.selectedUser != null}"
+				   includeInLayout="{palace.currentRoom.selectedUser != null}"
+				   click="stopWhispering()" />
 		<mx:Button label="Refresh" click="refreshUserList();" />
 		<mx:Button label="Go To Room" click="if (userList.selectedRoomId != -1) { PalaceClient.getInstance().gotoRoom(userList.selectedRoomId); }"/>
 	</mx:HBox>
-	
-
 	
 </MDIWindow>

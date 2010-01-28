@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:view="net.codecomposer.palace.view.*" xmlns:code="http://code.google.com/p/flexlib/"
-	title="{palace.serverName} - {palace.currentRoom.name}"
+	title="{palace.serverName} - {palace.currentRoom.name}{palace.currentRoom.selectedUser ? ' - ' + palace.currentRoom.selectedUser.name : ''}"
 	creationComplete="handleCreationComplete()"
+    fontStyle="{palace.currentRoom.selectedUser ? 'italic' : 'normal'}"
+	click="handleTitleClicked(event)"
 	currentState="disconnected">
 	
 	<s:states>
@@ -25,6 +27,15 @@
 			// immediately in response to the keydown event
 			private var timer:Timer = new Timer(10, 1);
 			
+			private function handleTitleClicked(e:MouseEvent):void{
+				// FIXME: Find a better way to de-select the currently selected user.
+				if(e.target.name == "Label50")//need to make go from type titleDisplay
+				{
+					palace.currentRoom.selectedUser = null;
+				}
+	
+			}
+			
 			private function handleCreationComplete():void {
 				timer.addEventListener(TimerEvent.TIMER, clearChatBox);
 			}
@@ -40,6 +51,8 @@
 			private function clearChatBox(event:TimerEvent):void {
 				chatBox.text = "";
 			}
+
+
 		]]>
 	</fx:Script>
 	

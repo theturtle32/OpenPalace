@@ -54,7 +54,7 @@ package net.codecomposer.palace.model
 		public var drawFrontCommands:ArrayCollection = new ArrayCollection();
 		public var drawBackCommands:ArrayCollection = new ArrayCollection();
 		public var drawLayerHistory:Vector.<uint> = new Vector.<uint>();
-		public var selectedUser:PalaceUser;
+		public var _selectedUser:PalaceUser;
 		public var selfUserId:int = -1;
 		public var roomView:PalaceRoomView;
 		public var dimLevel:Number = 1;
@@ -71,6 +71,17 @@ package net.codecomposer.palace.model
 		public function PalaceCurrentRoom()
 		{
 			lastMessageTimer.addEventListener(TimerEvent.TIMER, handleLastMessageTimer);
+		}
+		
+		[Bindable(event="selectedUserChanged")]
+		public function set selectedUser(newValue:PalaceUser):void {
+			if (_selectedUser !== newValue) {
+				_selectedUser = newValue;
+				dispatchEvent(new Event("selectedUserChanged"));
+			}
+		}
+		public function get selectedUser():PalaceUser {
+			return _selectedUser;
 		}
 		
 		private function handleLastMessageTimer(event:TimerEvent):void {

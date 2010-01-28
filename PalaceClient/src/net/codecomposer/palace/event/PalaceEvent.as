@@ -12,6 +12,7 @@ package net.codecomposer.palace.event
 		public static const DISCONNECTED:String = "disconnected";
 		public static const GOTO_URL:String = "gotoURL";
 		public static const AUTHENTICATION_REQUESTED:String = "authenticationRequested";
+		public static const ESP_CHANGED:String = "espChanged";
 		
 		public var text:String;
 		public var url:String;

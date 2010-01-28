@@ -99,6 +99,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_MOVED, handleLoosePropMoved);
 					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROP_REMOVED, handleLoosePropRemoved);
 					_room.removeEventListener(PalaceRoomEvent.LOOSE_PROPS_CLEARED, handleLoosePropsCleared);
+					_room.removeEventListener(PalaceRoomEvent.SELECTED_USER_CHANGED, handleSelectedUserChanged);
 					_room.roomView = null;
 					roomBackgroundWatcher.unwatch();
 				}
@@ -115,8 +116,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					_room.addEventListener(PalaceRoomEvent.LOOSE_PROP_MOVED, handleLoosePropMoved);
 					_room.addEventListener(PalaceRoomEvent.LOOSE_PROP_REMOVED, handleLoosePropRemoved);
 					_room.addEventListener(PalaceRoomEvent.LOOSE_PROPS_CLEARED, handleLoosePropsCleared);
+					_room.addEventListener(PalaceRoomEvent.SELECTED_USER_CHANGED, handleSelectedUserChanged);
 					roomBackgroundWatcher = ChangeWatcher.watch(room, 'backgroundFile', handleBGChange);
 					_room.roomView = this;
+					updateAvatarTransparencies();
 					dispatchEvent(new Event("roomChanged"));
 				};
 			}
@@ -128,6 +131,10 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			
 			private function handleUserMoved(event:PalaceRoomEvent):void {
 				
+			}
+			
+			private function handleSelectedUserChanged(event:Event):void {
+				updateAvatarTransparencies();
 			}
 			
 			private function initializeLoosePropContextMenu():void {
@@ -432,7 +439,6 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 						event.stopPropagation();
 						room.selectedUser = null;
 					}
-					updateAvatarTransparencies();
 					event.stopPropagation();
 				}
 			}

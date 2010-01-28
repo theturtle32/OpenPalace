@@ -799,6 +799,7 @@ package net.codecomposer.palace.rpc
 			socket.writeBytes(assetResponse);
 		} 
 
+		[Bindable(event="currentUserChanged")]
 		public function get currentUser():PalaceUser {
 			return currentRoom.getUserById(id);
 		}
@@ -1285,6 +1286,7 @@ package net.codecomposer.palace.rpc
 			for (var i:int = 0; i < bytesRemaining; i ++) {
 				array.push(socket.readUnsignedByte());
 			}
+			dispatchEvent(new Event('currentUserChanged'));
 			trace("Interesting... there is more to the user status message than just the documented flags:");
 			outputHexView(array)
 		}
@@ -1780,6 +1782,10 @@ package net.codecomposer.palace.rpc
 					palaceController.triggerHotspotEvents(IptEventHandler.TYPE_ENTER);
 				}, 20);
 			}
+			else if (currentRoom.selectedUser && user.id == currentRoom.selectedUser.id) {
+				//if user was selected in user list then entered room
+				currentRoom.selectedUser = user;
+			}
 		}
 
 		private function handlePing(size:int, referenceId:int):void {
@@ -2038,6 +2044,11 @@ package net.codecomposer.palace.rpc
 			if (currentRoom.getUserById(referenceId) != null) {
 				currentRoom.removeUserById(referenceId);
 				PalaceSoundPlayer.getInstance().playConnectionPing();
+			}
+			//if user left room and ESP is active when they sign off
+			if (currentRoom.selectedUser && currentRoom.selectedUser.id == referenceId)
+			{
+				currentRoom.selectedUser = null;
 			}
 //			trace("User " + referenceId + " logged off");
 		}

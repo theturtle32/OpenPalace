@@ -131,7 +131,6 @@
 				palace.addEventListener(PalaceEvent.DISCONNECTED, handleDisconnected);
 				palace.addEventListener(PalaceEvent.GOTO_URL, handleGotoURL);
 				palace.addEventListener(PalaceEvent.AUTHENTICATION_REQUESTED, handleAuthenticationRequested);
-
 				palace.setRegistrationCode(preferences.regCode);
 				palace.setPuid(preferences.puid);
 					
