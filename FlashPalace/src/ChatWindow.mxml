@@ -23,6 +23,9 @@
 			[Bindable]
 			public var palace:PalaceClient;
 			
+			private var chatHistory:Array = [];
+			private var chatIndex:Number = 0;
+			
 			// Timer required because in Flex 4 the chat box won't clear
 			// immediately in response to the keydown event
 			private var timer:Timer = new Timer(10, 1);
@@ -46,9 +49,33 @@
 					timer.reset();
 					timer.start();
 				}
+				else if (event.keyCode == Keyboard.UP) {
+					if (chatIndex > 0) {
+						chatIndex--;
+					}
+					chatBox.text = chatHistory[chatIndex];
+					moveCursorToEnd();
+				}
+				else if (event.keyCode == Keyboard.DOWN){
+					if (chatIndex < chatHistory.length) {
+						chatIndex++;
+					}
+					chatBox.text = chatHistory[chatIndex];	
+					moveCursorToEnd();
+				}
+				else if (event.keyCode == Keyboard.ESCAPE) {
+					chatIndex = chatHistory.length;
+					chatBox.text = "";
+				}
+			}
+			
+			private function moveCursorToEnd():void {
+				chatBox.selectionBeginIndex = chatBox.selectionEndIndex = chatBox.text.length;
 			}
 			
 			private function clearChatBox(event:TimerEvent):void {
+				chatHistory.push(chatBox.text);
+				chatIndex = chatHistory.length;
 				chatBox.text = "";
 			}
 
