@@ -432,11 +432,9 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 						room.selectedUser = null;
 					}
 					else if (room.selectedUser != user) {
-						event.stopPropagation();
 						room.selectedUser = user;
 					}
 					else if (room.selectedUser == user) {
-						event.stopPropagation();
 						room.selectedUser = null;
 					}
 					event.stopPropagation();

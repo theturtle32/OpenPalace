@@ -41,6 +41,7 @@
 			
 			private function handleCreationComplete():void {
 				timer.addEventListener(TimerEvent.TIMER, clearChatBox);
+				roomView.addEventListener(MouseEvent.MOUSE_UP, handleRoomMouseUp);
 			}
 			
 			private function handleChatKeyDown(event:KeyboardEvent):void {
@@ -79,6 +80,10 @@
 				chatBox.text = "";
 			}
 
+			private function handleRoomMouseUp(event:MouseEvent):void {
+				focusManager.setFocus(chatBox);
+				moveCursorToEnd();
+			}
 
 		]]>
 	</fx:Script>
