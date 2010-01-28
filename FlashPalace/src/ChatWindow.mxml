@@ -51,14 +51,25 @@
 					timer.start();
 				}
 				else if (event.keyCode == Keyboard.UP) {
+					if (chatIndex == chatHistory.length &&
+						chatBox.text.length > 0) {
+						chatHistory.push(chatBox.text);
+					}
+					
 					if (chatIndex > 0) {
 						chatIndex--;
 					}
+					
 					chatBox.text = chatHistory[chatIndex];
 					moveCursorToEnd();
 				}
 				else if (event.keyCode == Keyboard.DOWN){
 					if (chatIndex < chatHistory.length) {
+						chatIndex++;
+					}
+					else if (chatIndex == chatHistory.length &&
+							 chatBox.text.length > 0) {
+						chatHistory.push(chatBox.text);
 						chatIndex++;
 					}
 					chatBox.text = chatHistory[chatIndex];	
