@@ -22,6 +22,16 @@
 			html, body	{ height:100%; }
 			body { margin:0; padding:0; overflow:auto; text-align:center; }   
 			#flashContent { display:none; }
+			/* These two declarations get rid of those nasty dotted link outlines
+			   in Firefox! */
+			object:active {
+			        outline: none;
+			}
+			object:focus {
+			        outline: none;
+			        -moz-outline-style: none;
+			}
+						
         </style>
 		
 		<!-- Enable Browser History by replacing useBrowserHistory tokens with two hyphens -->
