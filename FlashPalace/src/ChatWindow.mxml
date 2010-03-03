@@ -12,13 +12,17 @@
 		<s:State name="connected" />
 	</s:states>
 	
+	<fx:Metadata>
+		[Event(name="securityError", type="net.codecomposer.palace.event.PalaceSecurityErrorEvent")]
+	</fx:Metadata>
+	
 	<s:layout>
 		<s:BasicLayout />
 	</s:layout>
 	
 	<fx:Script>
 		<![CDATA[
-
+			import net.codecomposer.palace.event.PalaceSecurityErrorEvent;
 			import net.codecomposer.palace.rpc.PalaceClient;
 			[Bindable]
 			public var palace:PalaceClient;
@@ -96,6 +100,10 @@
 				moveCursorToEnd();
 			}
 
+			private function handleSecurityError(event:PalaceSecurityErrorEvent):void {
+				dispatchEvent(event.clone());
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -106,6 +114,7 @@
 		
 		<view:PalaceRoomView id="roomView"
 							 enabled="{palace.connected}"
+							 securityError="handleSecurityError(event)"
 							 room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
 		
 		<code:PromptingTextInput prompt="Type here to chat..."

@@ -26,6 +26,7 @@ package net.codecomposer.palace.rpc
 	import flash.events.SecurityErrorEvent;
 	import flash.events.TimerEvent;
 	import flash.net.Socket;
+	import flash.net.XMLSocket;
 	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
 	import flash.utils.Endian;
@@ -38,6 +39,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.openpalace.accountserver.rpc.AccountServerClient;
 	import net.codecomposer.palace.crypto.PalaceEncryption;
 	import net.codecomposer.palace.event.PalaceEvent;
+	import net.codecomposer.palace.event.PalaceSecurityErrorEvent;
 	import net.codecomposer.palace.event.PropEvent;
 	import net.codecomposer.palace.iptscrae.DebugData;
 	import net.codecomposer.palace.iptscrae.IptEventHandler;
@@ -72,6 +74,7 @@ package net.codecomposer.palace.rpc
 	[Event(type="net.codecomposer.event.PalaceEvent",name="gotoURL")]
 	[Event(type="net.codecomposer.event.PalaceEvent",name="roomChanged")]
 	[Event(type="net.codecomposer.event.PalaceEvent",name="authenticationRequested")]
+	[Event(type="net.codecomposer.event.PalaceSecurityErrorEvent",name="securityError")]
 	
 	public class PalaceClient extends EventDispatcher
 	{
@@ -314,14 +317,16 @@ package net.codecomposer.palace.rpc
 			}
 			connecting = true;
 			dispatchEvent(new PalaceEvent(PalaceEvent.CONNECT_START));
+			
 			socket = new Socket(this.host, this.port);
+			socket.timeout = 5000;
 			socket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData);
 			socket.addEventListener(IOErrorEvent.IO_ERROR, onIOError);
 			socket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSecurityError);
 			socket.addEventListener(Event.CONNECT, onConnect);
 			socket.addEventListener(Event.CLOSE, onClose);
 		}
-		
+
 		public function authenticate(username:String, password:String):void {
 			if (socket && socket.connected) {
 //				trace("Sending auth response");
@@ -1079,6 +1084,12 @@ package net.codecomposer.palace.rpc
 		
 		private function onSecurityError(event:SecurityErrorEvent):void {
 			trace("Security Error!");
+			if (connecting) {
+				connecting = false;
+				disconnect();
+				var securityEvent:PalaceSecurityErrorEvent = new PalaceSecurityErrorEvent(PalaceSecurityErrorEvent.SECURITY_ERROR);
+				dispatchEvent(securityEvent);
+			}
 		}
 	
 		// Handshake

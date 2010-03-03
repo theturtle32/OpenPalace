@@ -169,6 +169,7 @@
     <classEntry path="net.codecomposer.palace.iptscrae.command.PROPOFFSETSCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.PROPDIMENSIONSCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.LOADPROPSCommand"/>
+    <classEntry path="net.codecomposer.palace.event.PalaceSecurityErrorEvent"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
