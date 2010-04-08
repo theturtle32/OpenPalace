@@ -12,6 +12,6 @@
 	</fx:Script>
 
 	<s:filters>
-		<mx:GlowFilter color="0x000000" alpha="1" blurX="2" blurY="2" quality="2" strength="5" />
+		<s:GlowFilter color="0x000000" alpha="1" blurX="2" blurY="2" quality="2" strength="5" />
 	</s:filters>
 </s:Label>

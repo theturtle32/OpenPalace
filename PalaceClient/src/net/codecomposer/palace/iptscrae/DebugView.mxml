@@ -2,7 +2,7 @@
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		 xmlns:s="library://ns.adobe.com/flex/spark" 
 		 xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:local="*"
-		 creationComplete="handleCreationComplete()">
+		 creationComplete="handleCreationComplete()" xmlns:mx1="library://ns.adobe.com/flex/mx" xmlns:view="org.openpalace.iptscrae.view.*">
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
@@ -29,14 +29,14 @@
 		<s:CheckBox id="debugModeCheckbox" label="Debug Mode" change="handleDebugModeCheckboxChange()" />
 		<s:HGroup verticalAlign="middle">
 			<s:Label text="Hotspot:" />
-			<mx:ComboBox id="hotspotList" dataProvider="{client.debugData.hotspots}" change="eventHandlerList.selectedIndex = 0;" />
+			<s:ComboBox id="hotspotList" dataProvider="{client.debugData.hotspots}" change="eventHandlerList.selectedIndex = 0;" />
 		</s:HGroup>
 		<s:HGroup verticalAlign="middle">
 			<s:Label text="Event:" />
-			<mx:ComboBox id="eventHandlerList" dataProvider="{client.debugData.eventHandlers(PalaceHotspot(hotspotList.selectedItem))}" />
+			<s:ComboBox id="eventHandlerList" dataProvider="{client.debugData.eventHandlers(PalaceHotspot(hotspotList.selectedItem))}" />
 		</s:HGroup>
-		<mx:Text width="100%" height="50%" text="{IptEventHandler(eventHandlerList.selectedItem).script}" />
-		<local:DebugConsole iptManager="{client.palaceController.scriptManager}" width="100%" height="50%" />
+		<mx1:Text width="100%" height="50%" text="{IptEventHandler(eventHandlerList.selectedItem).script}" />
+		<view:DebugConsole iptManager="{client.palaceController.scriptManager}" width="100%" height="50%" />
 	</s:VGroup>
 		
 </s:Group>

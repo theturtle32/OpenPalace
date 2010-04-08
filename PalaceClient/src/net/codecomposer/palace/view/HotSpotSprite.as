@@ -41,6 +41,10 @@ package net.codecomposer.palace.view
 		private var mouseOver:Boolean = false;
 		private var useHand:Boolean = false;
 		
+		private var dragging:Boolean = false;
+		
+		private var processMouseMove:Boolean = false;
+		
 		public function HotSpotSprite(hotSpot:PalaceHotspot, highlightOnMouseOver:Boolean = false)
 		{
 			this.hotSpot = hotSpot;
@@ -52,7 +56,10 @@ package net.codecomposer.palace.view
 			addEventListener(MouseEvent.MOUSE_DOWN, handleHotSpotMouseDown);
 			addEventListener(MouseEvent.ROLL_OVER, handleIptscraeRollOver);
 			addEventListener(MouseEvent.ROLL_OUT, handleIptscraeRollOut);
-			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEMOVE)) {
+			addEventListener(MouseEvent.MOUSE_UP, handleHotSpotMouseUp);
+			processMouseMove = hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEMOVE);
+			if (processMouseMove ||
+				hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEDRAG)) {
 				addEventListener(Event.ENTER_FRAME, handleEnterFrame);
 			}
 			if (hotSpot.type == PalaceHotspot.TYPE_PASSAGE ||
@@ -81,12 +88,22 @@ package net.codecomposer.palace.view
 		private var lastMousePos:Point = new Point(-1, -1);
 		
 		private function handleEnterFrame(event:Event):void {
+			var globalPos:Point;
 			mousePos.x = client.currentRoom.roomView.mouseX;
 			mousePos.y = client.currentRoom.roomView.mouseY;
-			var globalPos:Point = client.currentRoom.roomView.localToGlobal(mousePos);
-			if (hitTestPoint(globalPos.x, globalPos.y, true) && (mousePos.x != lastMousePos.x || mousePos.y != lastMousePos.y)) {
-				lastMousePos = mousePos.clone();
-				client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEMOVE);
+
+			if (dragging) {
+				if (mousePos.x != lastMousePos.x || mousePos.y != lastMousePos.y) {
+					lastMousePos = mousePos.clone();
+					client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEDRAG);
+				}
+			}
+			else if (processMouseMove) {
+				globalPos = client.currentRoom.roomView.localToGlobal(mousePos);
+				if (hitTestPoint(globalPos.x, globalPos.y, true) && (mousePos.x != lastMousePos.x || mousePos.y != lastMousePos.y)) {
+					lastMousePos = mousePos.clone();
+					client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEMOVE);
+				}
 			}
 		}
 		
@@ -133,16 +150,33 @@ package net.codecomposer.palace.view
 		private function handleHotSpotMouseDown(event:MouseEvent):void {
 //			trace("Clicked hotspot - id: " + hotSpot.id + " Destination: " + hotSpot.dest + " type: " + hotSpot.type + " state: " + hotSpot.state);
 			
+			dragging = true;
+			stage.addEventListener(MouseEvent.MOUSE_UP, handleStageMouseUp);
+			mousePos.x = client.currentRoom.roomView.mouseX;
+			mousePos.y = client.currentRoom.roomView.mouseY;
+			lastMousePos = mousePos.clone();
+			
 			if (hotSpot.dontMoveHere) {
 				event.stopImmediatePropagation();
 			}
-			
+
+			var ranScript:Boolean = false;
 			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_SELECT)) {
 				setTimeout(function():void {
 					client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_SELECT);
 				}, 1);
+				ranScript = true;
+			}
+			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEDOWN)) {
+				setTimeout(function():void {
+					client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEDOWN);
+				}, 2);
+				ranScript = true;
+			}
+			if (ranScript) {
 				return;
 			}
+			
 			
 			switch (hotSpot.type) {
 				case PalaceHotspot.TYPE_NORMAL:
@@ -188,6 +222,17 @@ package net.codecomposer.palace.view
 						}
 					}
 					break;
+			}
+		}
+		
+		private function handleStageMouseUp(event:MouseEvent):void {
+			dragging = false;
+			stage.removeEventListener(MouseEvent.MOUSE_UP, handleStageMouseUp);
+		}
+		
+		private function handleHotSpotMouseUp(event:MouseEvent):void {
+			if (hotSpot.hasEventHandler(IptEventHandler.TYPE_MOUSEUP)) {
+				client.palaceController.triggerHotspotEvent(hotSpot, IptEventHandler.TYPE_MOUSEUP);
 			}
 		}
 		

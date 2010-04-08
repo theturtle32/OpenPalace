@@ -13,10 +13,11 @@ package net.codecomposer.palace.iptscrae.command
 			var pc:PalaceController = PalaceIptManager(context.manager).pc;
 			
 			var spotId:IntegerToken = context.stack.popType(IntegerToken);
+			var spotState:IntegerToken = context.stack.popType(IntegerToken);
 			var y:IntegerToken = context.stack.popType(IntegerToken);
 			var x:IntegerToken = context.stack.popType(IntegerToken);
 			
-			pc.setPicOffsetLocal(spotId.data, x.data, y.data);
+			pc.setPicOffsetLocal(spotId.data, spotState.data, x.data, y.data);
 		}
 	}
 }

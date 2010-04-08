@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:local="*" xmlns:view="net.codecomposer.palace.view.*"
 	backgroundColor="0xCCCCCC"
-	creationComplete="handleCreationComplete()">
+	creationComplete="handleCreationComplete()" xmlns:mx1="library://ns.adobe.com/flex/mx">
 	<s:layout>
 		<s:BasicLayout/>
 	</s:layout>
@@ -38,7 +38,7 @@
 		isWhisper="{whisperCheckbox.selected}"
 		click="trace('Click');" />
 	
-	<mx:ColorPicker left="10" bottom="80" id="colorPicker" change="handleColorChange(event)" />
+	<mx1:ColorPicker left="10" bottom="80" id="colorPicker" change="handleColorChange(event)" />
 	
 	<s:Button bottom="10" left="10" label="Try Next Position" 
 		click="chatBubble.tryNextPosition()" />

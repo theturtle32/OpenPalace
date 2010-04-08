@@ -4,7 +4,7 @@
 	layout="absolute"
 	label="Preferences"
 	resizable="false"
-	creationComplete="handleCreationComplete()">
+	creationComplete="handleCreationComplete()" xmlns:mx1="library://ns.adobe.com/flex/mx">
 	
 	<fx:Script>
 		<![CDATA[
@@ -35,8 +35,8 @@
 		]]>
 	</fx:Script>
 
-	<mx:TabNavigator top="5" left="5" right="5" bottom="35">
-		<mx:Canvas width="100%" height="100%" label="General">
+	<mx1:TabNavigator top="5" left="5" right="5" bottom="35">
+		<mx1:Canvas width="100%" height="100%" label="General">
 			<s:VGroup left="5" right="5" bottom="5" top="0">
 				<s:HGroup gap="3" verticalAlign="middle">
 					<s:Label text="Name:" />
@@ -47,13 +47,13 @@
 					<s:TextInput id="regCode" text="{preferences.regCode}" />
 				</s:HGroup>
 			</s:VGroup>
-		</mx:Canvas>
-		<mx:Canvas width="100%" height="100%" label="Cyborg">
+		</mx1:Canvas>
+		<mx1:Canvas width="100%" height="100%" label="Cyborg">
 			<s:TextArea width="100%" height="100%"
 						left="5" right="5" bottom="5" top="0"
 						id="cyborg" text="{preferences.cyborg}" />					
-		</mx:Canvas>
-	</mx:TabNavigator>
+		</mx1:Canvas>
+	</mx1:TabNavigator>
 	
 	<s:Button bottom="5" right="5" label="Save" click="handleSave()" />
 	

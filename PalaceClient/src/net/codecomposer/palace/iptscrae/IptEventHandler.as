@@ -7,11 +7,11 @@ package net.codecomposer.palace.iptscrae
 		public static const TYPE_SELECT:int = 0;
 		public static const TYPE_LOCK:int = 1;
 		public static const TYPE_UNLOCK:int = 2;
-		public static const TYPE_HIDE:int = 3; // Unused
-		public static const TYPE_SHOW:int = 4; // Unused
-		public static const TYPE_STARTUP:int = 5; // Unused
+		public static const TYPE_STATECHANGE:int = 3;
+		public static const TYPE_MOUSEDRAG:int = 4;
+		public static const TYPE_MOUSEDOWN:int = 5;
 		public static const TYPE_ALARM:int = 6;
-		public static const TYPE_CUSTOM:int = 7; // Unused
+		public static const TYPE_MOUSEUP:int = 7;
 		public static const TYPE_INCHAT:int = 8;
 		public static const TYPE_PROPCHANGE:int = 9; // Unused
 		public static const TYPE_ENTER:int = 10;
@@ -29,24 +29,24 @@ package net.codecomposer.palace.iptscrae
 		public static const TYPE_MACRO7:int = 22;
 		public static const TYPE_MACRO8:int = 23;
 		public static const TYPE_MACRO9:int = 24;
-		public static const TYPE_PPA_MACRO:int = 25; // ?? Unused.. PalacePresents
+		public static const TYPE_PPA_MACRO:int = 25; // ?? Unused.. Palace Plugin Macro
 		public static const TYPE_MOUSEMOVE:int = 26;
 		public static const TYPE_UNHANDLED:int = 27;
 		public static const TYPE_ROLLOVER:int = 28;
 		public static const TYPE_ROLLOUT:int = 29;
 		public static const TYPE_USERMOVE:int = 30;
 		public static const TYPE_USERENTER:int = 31;
-		public static const TYPE_PPA_MESSAGE:int = 32; // Unused... PalacePresents Message
+		public static const TYPE_PPA_MESSAGE:int = 32; // Unused... Palace Plugin Message
 		
 		public static const EVENT_NAME:Object = {
 			0: "SELECT",
 			1: "LOCK",
 			2: "UNLOCK",
-			3: "HIDE",
-			4: "SHOW",
-			5: "STARTUP",
+			3: "STATECHANGE",
+			4: "MOUSEDRAG",
+			5: "MOUSEDOWN",
 			6: "ALARM",
-			7: "CUSTOM",
+			7: "MOUSEUP",
 			8: "INCHAT",
 			9: "PROPCHANGE",
 			10: "ENTER",
@@ -85,8 +85,11 @@ package net.codecomposer.palace.iptscrae
 				case "SELECT":
 					return IptEventHandler.TYPE_SELECT;
 					break;
-				case "LOCK":
-					return IptEventHandler.TYPE_LOCK;
+				case "MOUSEDOWN":
+					return IptEventHandler.TYPE_MOUSEDOWN;
+					break;
+				case "STATECHANGE":
+					return IptEventHandler.TYPE_STATECHANGE;
 					break;
 				case "UNLOCK":
 					return IptEventHandler.TYPE_UNLOCK;
@@ -156,6 +159,12 @@ package net.codecomposer.palace.iptscrae
 					break;
 				case "USERENTER":
 					return IptEventHandler.TYPE_USERENTER;
+					break;
+				case "MOUSEUP":
+					return IptEventHandler.TYPE_MOUSEUP;
+					break;
+				case "MOUSEDRAG":
+					return IptEventHandler.TYPE_MOUSEDRAG;
 					break;
 				default:
 					return IptEventHandler.TYPE_UNHANDLED;

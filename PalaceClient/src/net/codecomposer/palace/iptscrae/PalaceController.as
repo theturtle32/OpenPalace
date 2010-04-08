@@ -6,6 +6,7 @@ package net.codecomposer.palace.iptscrae
 	
 	import net.codecomposer.palace.model.PalaceCurrentRoom;
 	import net.codecomposer.palace.model.PalaceHotspot;
+	import net.codecomposer.palace.model.PalaceHotspotState;
 	import net.codecomposer.palace.model.PalaceLooseProp;
 	import net.codecomposer.palace.model.PalaceProp;
 	import net.codecomposer.palace.model.PalacePropStore;
@@ -18,6 +19,8 @@ package net.codecomposer.palace.iptscrae
 	import org.openpalace.iptscrae.IptAlarm;
 	import org.openpalace.iptscrae.IptEngineEvent;
 	import org.openpalace.iptscrae.IptTokenList;
+	
+	import spark.primitives.Rect;
 
 	public class PalaceController implements IPalaceController
 	{
@@ -43,6 +46,8 @@ package net.codecomposer.palace.iptscrae
 			scriptManager = new PalaceIptManager(this);
 			scriptManager.parser.removeCommand("ALARMEXEC");
 			scriptManager.parser.removeCommand("GREPSTR");
+			scriptManager.parser.removeCommand("IPTVERSION");
+			
 			scriptManager.parser.addCommands(PalaceIptscraeCommands.commands);
 			scriptManager.addEventListener(IptEngineEvent.TRACE, handleTrace);
 		}
@@ -553,11 +558,74 @@ package net.codecomposer.palace.iptscrae
 			logResult("setPicOffset spotId: " + spotId + " x: " + x + " y: " + y);
 		}
 		
-		public function setPicOffsetLocal(spotId:int, x:int, y:int):void
+		public function setPicOffsetLocal(spotId:int, spotState:int, x:int, y:int):void
 		{
 			var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpotsById[spotId]);
 			if (hotspot) {
-				hotspot.movePicTo(x, y);
+				hotspot.movePicForState(spotState, x, y);
+			}
+		}
+		
+		public function getPicOffset(spotId:int, spotState:int):Point {
+			var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpotsById[spotId]);
+			var point:Point = new Point(0,0);
+			if (hotspot) {
+				if (spotState < 0) {
+					spotState = hotspot.state;
+				}
+				try {
+					var stateObj:PalaceHotspotState = PalaceHotspotState(hotspot.states.getItemAt(spotState));
+					if (stateObj) {
+						point.x = stateObj.x;
+						point.y = stateObj.y;
+					}
+				}
+				catch (e:Error) {
+					// do nothing.
+				}
+			}
+			return point;
+		}
+		
+		public function getPicDimensions(spotId:int, spotState:int):Rect {
+			var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpotsById[spotId]);
+			var rect:Rect = new Rect();
+			rect.x = 0;
+			rect.y = 0;
+			rect.width = 0;
+			rect.height = 0;
+			if (hotspot) {
+				if (spotState < 0) {
+					spotState = hotspot.state;
+				}
+				try {
+					var stateObj:PalaceHotspotState = PalaceHotspotState(hotspot.states.getItemAt(spotState));
+					if (stateObj && stateObj.hotspotImage) {
+						rect.width = stateObj.hotspotImage.width;
+						rect.height = stateObj.hotspotImage.height;
+					}
+				}
+				catch (e:Error) {
+					// do nothing.
+				}
+			}
+			return rect;
+		}
+		
+		public function getSpotLocation(spotId:int):Point {
+			var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpotsById[spotId]);
+			var point:Point = new Point(0,0);
+			if (hotspot) {
+				point.x = hotspot.location.x;
+				point.y = hotspot.location.y;
+			}
+			return point;
+		}
+		
+		public function setPicOpacity(spotId:int, spotState:int, opacity:Number = 1):void {
+			var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpotsById[spotId]);
+			if (hotspot) {
+				hotspot.setStateOpacity(spotState, opacity);
 			}
 		}
 		
@@ -662,6 +730,14 @@ package net.codecomposer.palace.iptscrae
 		{
 			// TODO: Implement
 			logResult("moveSpot spotId: " + spotId + " xBy: " + xBy + " yBy: " + yBy);
+		}
+		
+		public function moveSpotLocal(spotId:int, xBy:int, yBy:int):void
+		{
+			var hotspot:PalaceHotspot = client.currentRoom.getHotspotById(spotId);
+			if (hotspot) {
+				hotspot.moveTo(hotspot.location.x + xBy, hotspot.location.y + yBy);
+			}
 		}
 		
 		public function getRoomUserIdByIndex(userIndex:int):int

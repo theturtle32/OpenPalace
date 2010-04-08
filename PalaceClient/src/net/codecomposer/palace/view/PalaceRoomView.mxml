@@ -26,7 +26,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	dragEnter="handleLoosePropDragEnter(event)"
 	dragDrop="handleLoosePropDragDrop(event)"
 	dragOver="handleLoosePropDragOver(event)"
-	creationComplete="handleCreationComplete()" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009">
+	creationComplete="handleCreationComplete()" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:mx1="library://ns.adobe.com/flex/mx">
 
 	<s:layout>
 		<s:BasicLayout />
@@ -37,8 +37,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	</fx:Metadata>
 	
 	<s:states>
-		<mx:State name="normal" />
-		<mx:State name="unableToLoadBackground" />
+		<s:State name="normal" />
+		<s:State name="unableToLoadBackground" />
 	</s:states>
 	
 	<fx:Script>
@@ -792,7 +792,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				handleUnableToLoadBG();
 			}
 			
-			private function handleBGSecurityError(event:SecurityErrorEvent):void {
+			private function handleSecurityError(event:SecurityErrorEvent = null):void {
 				var security_event:PalaceSecurityErrorEvent = new PalaceSecurityErrorEvent(PalaceSecurityErrorEvent.SECURITY_ERROR);
 				dispatchEvent(event);
 			}
@@ -802,17 +802,17 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	
 	<s:Rect width="100%" height="100%">
 		<s:fill>
-			<mx:SolidColor color="0x000000" />
+			<s:SolidColor color="0x000000" />
 		</s:fill>
 	</s:Rect>
 	
-	<mx:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
+	<mx1:Image top="0" left="0" id="backgroundImage" minHeight="384" minWidth="512"
 		dragEnter="handleLoosePropDragEnter(event)"
 		dragDrop="handleLoosePropDragDrop(event)"
 		dragOver="handleLoosePropDragOver(event)"
 		smoothBitmapContent="true"
 		scaleContent="false" complete="handleBackgroundLoadComplete(event)"
-		loaderContext="{PalaceClient.loaderContext}" securityError="handleBGSecurityError(event)" ioError="handleBGioERROR(event);"
+		loaderContext="{PalaceClient.loaderContext}" securityError="handleSecurityError(event)" ioError="handleBGioERROR(event);"
 		visible="false" />
 	
 	<s:Label text="Unable to load background {room.backgroundFile}." width="90%"
@@ -823,7 +823,8 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			 verticalCenter="0" horizontalCenter="0" />
 	
 	<view:PalaceHotspotView id="hotSpotCanvas" room="{room}" mediaServer="{mediaServer}"
-							hotSpots="{room.hotSpots}" top="0" right="0" bottom="0" left="0"
+							securityError="handleSecurityError()"
+							hotSpots="{room.hotSpotsAboveNothing}" top="0" right="0" bottom="0" left="0"
 							dragEnter="handleLoosePropDragEnter(event)"
 							dragDrop="handleLoosePropDragDrop(event)"
 							dragOver="handleLoosePropDragOver(event)"
@@ -831,13 +832,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 	
 	<s:Rect width="100%" height="100%">
 		<s:fill>
-			<mx:SolidColor color="0x000000" alpha="{1 - room.dimLevel}" />
+			<s:SolidColor color="0x000000" alpha="{1 - room.dimLevel}" />
 		</s:fill>
 	</s:Rect>
 	
 	<s:Rect width="100%" height="100%" visible.unableToLoadBackground="false">
 		<s:fill>
-			<mx:SolidColor color="0x000000" id="roomFader" alpha="0" />
+			<s:SolidColor color="0x000000" id="roomFader" alpha="0" />
 		</s:fill>
 	</s:Rect>
 	
@@ -855,6 +856,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			<s:BasicLayout />
 		</s:layout>
 	</s:Group>
+
+	<view:PalaceHotspotView id="hotSpotAboveAvatarsCanvas" room="{room}" mediaServer="{mediaServer}"
+							securityError="handleSecurityError()"
+							hotSpots="{room.hotSpotsAboveAvatars}"
+							top="0" right="0" bottom="0" left="0"
+							dragEnter="handleLoosePropDragEnter(event)"
+							dragDrop="handleLoosePropDragDrop(event)"
+							dragOver="handleLoosePropDragOver(event)"
+							/>
 	
 	<view:PaintLayer dataProvider="{room.drawFrontCommands}" />
 
@@ -869,6 +879,15 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		</s:layout>
 	</s:Group>
 	
+	<view:PalaceHotspotView id="hotSpotAboveNametagsCanvas" room="{room}" mediaServer="{mediaServer}"
+							securityError="handleSecurityError()"
+							hotSpots="{room.hotSpotsAboveNametags}"
+							top="0" right="0" bottom="0" left="0"
+							dragEnter="handleLoosePropDragEnter(event)"
+							dragDrop="handleLoosePropDragDrop(event)"
+							dragOver="handleLoosePropDragOver(event)"
+							/>
+	
 	<s:Group id="textGroup" mouseEnabled="false" mouseChildren="false"
 			 top="0" right="0" bottom="0" left="0">
 		<s:layout>
@@ -876,7 +895,16 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		</s:layout>
 	</s:Group>
 	
-	<mx:ProgressBar bottom="0" width="100%"
+	<view:PalaceHotspotView id="hotSpotAboveEverythingCanvas" room="{room}" mediaServer="{mediaServer}"
+							securityError="handleSecurityError()"
+							hotSpots="{room.hotSpotsAboveEverything}"
+							top="0" right="0" bottom="0" left="0"
+							dragEnter="handleLoosePropDragEnter(event)"
+							dragDrop="handleLoosePropDragDrop(event)"
+							dragOver="handleLoosePropDragOver(event)"
+							/>
+	
+	<mx1:ProgressBar bottom="0" width="100%"
 		source="{backgroundImage}"
 		visible="{backgroundImage.source != null &amp;&amp; progressBar.percentComplete &lt; 100}"
 		labelPlacement="center"

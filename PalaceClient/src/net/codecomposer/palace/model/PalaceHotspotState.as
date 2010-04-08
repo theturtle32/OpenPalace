@@ -28,6 +28,7 @@ package net.codecomposer.palace.model
 		public var pictureId:int;
 		public var x:int;
 		public var y:int;
+		public var opacity:Number = 1;
 		public var hotspotImage:HotSpotImage;
 		
 		public static const size:int = 8;

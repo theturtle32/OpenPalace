@@ -8,7 +8,7 @@ package net.codecomposer.palace.iptscrae.command
 	{
 		override public function execute(context:IptExecutionContext):void {
 			context.stack.pop();
-			context.manager.traceMessage("Unsupported command");
+			context.manager.traceMessage("Unsupported Iptscrae Command");
 		}
 	}
 }

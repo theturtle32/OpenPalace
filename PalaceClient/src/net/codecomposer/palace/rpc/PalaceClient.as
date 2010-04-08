@@ -1470,6 +1470,7 @@ package net.codecomposer.palace.rpc
 			currentRoom.clearSpotImages();
 			for (i=0; i < imageCount; i++) {
 				var imageOverlay:PalaceImageOverlay = new PalaceImageOverlay();
+				imageOverlay.addEventListener(PalaceSecurityErrorEvent.SECURITY_ERROR, handleImageOverlaySecurityError);
 				imageOverlay.mediaServer = mediaServer;
 				var imageBA:ByteArray = new ByteArray();
 				for (var j:int=imageOffset; j < imageOffset+12; j++) {
@@ -1503,12 +1504,32 @@ package net.codecomposer.palace.rpc
 
 			// Hotspots
 			currentRoom.hotSpots.removeAll();
+			currentRoom.hotSpotsAboveAvatars.removeAll();
+			currentRoom.hotSpotsAboveEverything.removeAll();
+			currentRoom.hotSpotsAboveNametags.removeAll();
+			currentRoom.hotSpotsAboveNothing.removeAll();
+			
 			currentRoom.hotSpotsById = {};
 			for (i=0; i < hotSpotCount; i++) {
 				var hs:PalaceHotspot = new PalaceHotspot();
 				hs.readData(socket.endian, rb, hotSpotOffset);
 				hotSpotOffset += hs.size;
+				
+				if (hs.layerAboveAvatars) {
+					currentRoom.hotSpotsAboveAvatars.addItem(hs);
+				}
+				else if (hs.layerAboveNameTags) {
+					currentRoom.hotSpotsAboveNametags.addItem(hs);
+				}
+				else if (hs.layerAboveAll) {
+					currentRoom.hotSpotsAboveEverything.addItem(hs);
+				}
+				else {
+					currentRoom.hotSpotsAboveNothing.addItem(hs);
+				}
+				
 				currentRoom.hotSpots.addItem(hs);
+				
 				if (currentRoom.hotSpotsById[hs.id] == null) {
 					currentRoom.hotSpotsById[hs.id] = hs;
 				}
@@ -1563,6 +1584,12 @@ package net.codecomposer.palace.rpc
 			
 			var roomChangeEvent:PalaceEvent = new PalaceEvent(PalaceEvent.ROOM_CHANGED);
 			dispatchEvent(roomChangeEvent);
+		}
+		
+		private function handleImageOverlaySecurityError(error:PalaceSecurityErrorEvent):void {
+			disconnect();
+			var securityEvent:PalaceSecurityErrorEvent = new PalaceSecurityErrorEvent(PalaceSecurityErrorEvent.SECURITY_ERROR);
+			dispatchEvent(securityEvent);
 		}
 		
 		private function handleDrawCommand(size:int, referenceId:int):void {	

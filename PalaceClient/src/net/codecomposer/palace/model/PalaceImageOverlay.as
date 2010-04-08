@@ -24,16 +24,19 @@ package net.codecomposer.palace.model
 	import flash.events.EventDispatcher;
 	import flash.events.HTTPStatusEvent;
 	import flash.events.IOErrorEvent;
+	import flash.events.SecurityErrorEvent;
 	import flash.geom.Point;
 	import flash.net.URLRequest;
 	
 	import mx.core.FlexBitmap;
 	
+	import net.codecomposer.palace.event.PalaceSecurityErrorEvent;
 	import net.codecomposer.palace.rpc.PalaceClient;
 	
 	import org.openpalace.iptscrae.IptUtil;
 
 	[Event(type="flash.events.Event",name="imageLoaded")]
+	[Event(type="net.codecomposer.palace.event.PalaceSecurityErrorEvent",name="securityError")]
 	
 	[Bindable]
 	public class PalaceImageOverlay extends EventDispatcher
@@ -96,7 +99,14 @@ package net.codecomposer.palace.model
 			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, handleImageLoadComplete);
 			loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, handleLoadError);
 			loader.contentLoaderInfo.addEventListener(HTTPStatusEvent.HTTP_STATUS, handleLoadHttpStatus);
+			loader.contentLoaderInfo.addEventListener(SecurityErrorEvent.SECURITY_ERROR, handleSecurityError);
+			loader.addEventListener(SecurityErrorEvent.SECURITY_ERROR, handleSecurityError);
 			loader.load(urlRequest, PalaceClient.loaderContext);
+		}
+		
+		private function handleSecurityError(error:SecurityErrorEvent = null):void {
+			var securityError:PalaceSecurityErrorEvent = new PalaceSecurityErrorEvent(PalaceSecurityErrorEvent.SECURITY_ERROR);
+			dispatchEvent(securityError);
 		}
 		
 		private function processTransparency(bitmapData:BitmapData):void {
@@ -155,9 +165,11 @@ package net.codecomposer.palace.model
 		private function handleImageLoadComplete(event:Event):void {
 			if (loader.content is Bitmap) {
 				try {
-					processTransparency(Bitmap(loader.content).bitmapData);
+					var bitmapData:BitmapData = Bitmap(loader.content).bitmapData;
+					processTransparency(bitmapData);
 				}
 				catch (e:Error) {
+					handleSecurityError();
 					trace("Error while accessing BitmapData: " + e);
 				}
 			}

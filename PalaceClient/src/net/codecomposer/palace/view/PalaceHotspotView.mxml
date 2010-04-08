@@ -19,7 +19,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo"
 	clipAndEnableScrolling="true"
-	creationComplete="handleCreationComplete()" xmlns:view="net.codecomposer.palace.view.*">
+	creationComplete="handleCreationComplete()" xmlns:view="net.codecomposer.palace.view.*" xmlns:mx1="library://ns.adobe.com/flex/mx">
+	
+	<fx:Metadata>
+		[Event(name="securityError", type="net.codecomposer.palace.event.PalaceSecurityErrorEvent")]
+	</fx:Metadata>
+		
+	
 	<fx:Script>
 		<![CDATA[
 			import mx.collections.ArrayCollection;
@@ -27,6 +33,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			import mx.events.CollectionEventKind;
 			
 			import net.codecomposer.palace.event.HotspotEvent;
+			import net.codecomposer.palace.event.PalaceSecurityErrorEvent;
 			import net.codecomposer.palace.model.PalaceCurrentRoom;
 			import net.codecomposer.palace.model.PalaceHotspot;
 			import net.codecomposer.palace.model.PalaceHotspotState;
@@ -98,6 +105,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				}
 				
 				hotSpot.addEventListener(HotspotEvent.STATE_CHANGED, handleHotspotStateChanged);
+				hotSpot.addEventListener(HotspotEvent.OPACITY_CHANGED, handleHotspotOpacityChanged);
 				
 				for (var i:int = 0; i < hotSpot.states.length; i ++) {
 					var isCurrentState:Boolean = Boolean(hotSpot.state == i);
@@ -107,15 +115,22 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					
 					if (imageOverlay && imageOverlay.filename != null) {
 						var hotSpotImage:HotSpotImage = new HotSpotImage();
+						hotSpotImage.addEventListener(SecurityErrorEvent.SECURITY_ERROR, handleSecurityError);
 						hotSpotImage.state = state;
 						hotSpotImage.hotspot = hotSpot;
 						hotSpotImage.imageOverlay = imageOverlay;
 						hotSpotImage.visible = isCurrentState;
+						hotSpotImage.alpha = state.opacity;
 						state.hotspotImage = hotSpotImage;
 						imageGroup.addElement(hotSpotImage);
 					}
 				}
 
+			}
+			
+			private function handleSecurityError(event:SecurityErrorEvent):void {
+				var securityEvent:PalaceSecurityErrorEvent = new PalaceSecurityErrorEvent(PalaceSecurityErrorEvent.SECURITY_ERROR);
+				dispatchEvent(securityEvent);
 			}
 			
 			private function removeHotSpot(hotSpot:PalaceHotspot):void {
@@ -151,6 +166,14 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				}
 			}
 			
+			private function handleHotspotOpacityChanged(event:HotspotEvent):void {
+				var hotspot:PalaceHotspot = PalaceHotspot(event.target);
+				var hotspotState:PalaceHotspotState = PalaceHotspotState(hotspot.states.getItemAt(event.state));
+				if (hotspotState && hotspotState.hotspotImage) {
+					hotspotState.hotspotImage.alpha = hotspotState.opacity;
+				}
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -172,7 +195,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		</s:layout>
 	</s:Group>
 	
-	<mx:Canvas id="hotspotCanvas" top="0" left="0" bottom="0" right="0" 
+	<mx1:Canvas id="hotspotCanvas" top="0" left="0" bottom="0" right="0" 
 			   verticalScrollPolicy="off" horizontalScrollPolicy="off"/>
 	
 </s:Group>

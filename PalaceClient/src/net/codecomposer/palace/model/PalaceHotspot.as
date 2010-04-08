@@ -127,6 +127,31 @@ package net.codecomposer.palace.model
 			return Boolean(flags & FLAG_FILL);
 		}
 		
+		[Bindable('flagsChanged')]
+		public function get invisible():Boolean {
+			return Boolean(flags & FLAG_INVISIBLE);
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get layerAboveAll():Boolean {
+			return draggable;
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get layerAboveAvatars():Boolean {
+			return invisible;
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get layerAboveNameTags():Boolean {
+			return fill;
+		}
+		
+		[Bindable('flagsChanged')]
+		public function get layerNormal():Boolean {
+			return (!draggable && !invisible && !fill);
+		}
+		
 		public static const TYPE_NORMAL:int = 0;
 		public static const TYPE_PASSAGE:int = 1;
 		public static const TYPE_SHUTABLE_DOOR:int = 2;
@@ -140,10 +165,22 @@ package net.codecomposer.palace.model
 		public static const FLAG_SHOW_NAME:int = 0x08;
 		public static const FLAG_DONT_MOVE_HERE:int = 0x02;
 		public static const FLAG_DRAGGABLE:int = 0x01;
+		public static const FLAG_INVISIBLE:int = 0x04;
 		public static const FLAG_DRAW_FRAME:int = 0x10;
 		public static const FLAG_SHADOW:int = 0x20;
 		public static const FLAG_FILL:int = 0x40;
 		
+		
+//		PicturesAboveAll        0x00000001        /* was "Draggable" */
+//		DontMoveHere            0x00000002
+//		PicturesAboveProps        0x00000004        /* was "Invisible" */
+//		ShowName                0x00000008
+//		ShowFrame                0x00000010
+//		Shadow                    0x00000020
+//		PicturesAboveNameTags    0x00000040        /* was "Fill" */
+//		Forbidden                0x00000080        /* Linux 4.5.1 PServer */
+//		Mandatory                0x00000100        /* Linux 4.5.1 PServer */
+//		Landingpad                0x00000200        /* Linux 4.5.1 PServer */
 		
 		// Hotspot records are 48 bytes
 		public const size:int = 48;
@@ -159,21 +196,48 @@ package net.codecomposer.palace.model
 		}
 		
 		public function changeState(newState:int):void {
+			var previousState:int = state;
 			if (newState != state) {
 				state = newState;
 			}
 			var event:HotspotEvent = new HotspotEvent(HotspotEvent.STATE_CHANGED);
 			event.state = state;
+			event.previousState = previousState;
 			dispatchEvent(event);
 		}
 		
-		public function movePicTo(x:int, y:int):void {
+		public function movePicForState(stateId:int, x:int, y:int):void {
 			try {
-				var stateObj:PalaceHotspotState = PalaceHotspotState(states.getItemAt(this.state));
+				if (stateId < 0) {
+					stateId = this.state;
+				}
+				var stateObj:PalaceHotspotState = PalaceHotspotState(states.getItemAt(stateId));
 				stateObj.x = x;
 				stateObj.y = y;
 				var event:HotspotEvent = new HotspotEvent(HotspotEvent.MOVED);
 				dispatchEvent(event);
+			}
+			catch (e:Error) {
+				// do nothing.
+			}
+		}
+		
+		public function movePicTo(x:int, y:int):void {
+			movePicForState(this.state, x, y);
+		}
+		
+		public function setStateOpacity(state:int, opacity:Number = 1):void {
+			try {
+				if (state < 0) {
+					state = this.state;
+				}
+				var stateObj:PalaceHotspotState = PalaceHotspotState(states.getItemAt(state));
+				if (stateObj) {
+					stateObj.opacity = opacity;
+					var event:HotspotEvent = new HotspotEvent(HotspotEvent.OPACITY_CHANGED);
+					event.state = state;
+					dispatchEvent(event);
+				}
 			}
 			catch (e:Error) {
 				// do nothing.

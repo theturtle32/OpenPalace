@@ -49,6 +49,10 @@ package net.codecomposer.palace.model
 		public var images:Object = {};
 		public var spotImages:Object = {};
 		public var hotSpots:ArrayCollection = new ArrayCollection();
+		public var hotSpotsAboveNothing:ArrayCollection = new ArrayCollection();
+		public var hotSpotsAboveAvatars:ArrayCollection = new ArrayCollection();
+		public var hotSpotsAboveNametags:ArrayCollection = new ArrayCollection();
+		public var hotSpotsAboveEverything:ArrayCollection = new ArrayCollection();
 		public var hotSpotsById:Object = {};
 		public var looseProps:ArrayCollection = new ArrayCollection();
 		public var drawFrontCommands:ArrayCollection = new ArrayCollection();

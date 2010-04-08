@@ -2,7 +2,7 @@
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		 xmlns:s="library://ns.adobe.com/flex/spark" 
 		 xmlns:mx="library://ns.adobe.com/flex/halo" width="500" height="350"
-		 creationComplete="handleCreationComplete()">
+		 creationComplete="handleCreationComplete()" xmlns:mx1="library://ns.adobe.com/flex/mx">
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
@@ -85,16 +85,16 @@
 		<s:VerticalLayout horizontalAlign="right" />
 	</s:layout>
 
-	<mx:DataGrid itemDoubleClick="handleConnectClick()" id="directoryList" dataProvider="{directory}" width="100%" height="100%" enabled="{!loading}">
+	<mx1:DataGrid itemDoubleClick="handleConnectClick()" id="directoryList" dataProvider="{directory}" width="100%" height="100%" enabled="{!loading}">
 		
-		<mx:columns>
-			<mx:DataGridColumn headerText="Name" dataField="name" width="200" />
-			<mx:DataGridColumn headerText="Category" dataField="category" width="100" />
-			<mx:DataGridColumn headerText="Language" dataField="language" width="100" />
-			<mx:DataGridColumn headerText="Rooms" dataField="roomCount" width="50" />
-			<mx:DataGridColumn headerText="Users" dataField="population" width="50" />
-		</mx:columns>
-	</mx:DataGrid>
+		<mx1:columns>
+			<mx1:DataGridColumn headerText="Name" dataField="name" width="200" />
+			<mx1:DataGridColumn headerText="Category" dataField="category" width="100" />
+			<mx1:DataGridColumn headerText="Language" dataField="language" width="100" />
+			<mx1:DataGridColumn headerText="Rooms" dataField="roomCount" width="50" />
+			<mx1:DataGridColumn headerText="Users" dataField="population" width="50" />
+		</mx1:columns>
+	</mx1:DataGrid>
 	
 	<s:Group right="0">
 		<s:layout>

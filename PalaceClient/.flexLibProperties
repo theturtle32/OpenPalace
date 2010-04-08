@@ -170,6 +170,14 @@
     <classEntry path="net.codecomposer.palace.iptscrae.command.PROPDIMENSIONSCommand"/>
     <classEntry path="net.codecomposer.palace.iptscrae.command.LOADPROPSCommand"/>
     <classEntry path="net.codecomposer.palace.event.PalaceSecurityErrorEvent"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.SETPICOPACITYCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.GETPICLOCCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.GETSPOTLOCCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.IPTVERSIONCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.SETPICBRIGHTNESSCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.SETPICSATURATIONCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.SETLOCLOCALCommand"/>
+    <classEntry path="net.codecomposer.palace.iptscrae.command.GETPICDIMENSIONSCommand"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
