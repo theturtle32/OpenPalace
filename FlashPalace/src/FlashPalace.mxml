@@ -181,7 +181,7 @@
 			}
 			
 			private function updateTitle(serverName:String, roomName:String):void {
-				browserManager.setTitle(roomName + " - " + serverName + " - OpenPalace");
+				browserManager.setTitle(serverName + " - " + roomName + " - OpenPalace");
 			}
 			
 			private function handleRoomChange(event:PropertyChangeEvent):void {

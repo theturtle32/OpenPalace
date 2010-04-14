@@ -273,6 +273,10 @@ package net.codecomposer.palace.rpc
 			currentRoom.removeAllUsers();
 			currentRoom.clearLooseProps();
 			currentRoom.hotSpots.removeAll();
+			currentRoom.hotSpotsAboveAvatars.removeAll();
+			currentRoom.hotSpotsAboveEverything.removeAll();
+			currentRoom.hotSpotsAboveNametags.removeAll();
+			currentRoom.hotSpotsAboveNothing.removeAll();
 			currentRoom.drawBackCommands.removeAll();
 			currentRoom.drawFrontCommands.removeAll();
 			currentRoom.drawLayerHistory = new Vector.<uint>();
