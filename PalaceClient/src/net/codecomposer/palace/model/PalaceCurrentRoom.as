@@ -71,10 +71,14 @@ package net.codecomposer.palace.model
 		public var lastMessageReceived:Number = 0;
 		public var lastMessageTimer:Timer = new Timer(250, 1);
 		
+		public var statusMessageString:String = "";
+		
+		private var statusDisappearTimer:Timer = new Timer(30000, 1);
 		
 		public function PalaceCurrentRoom()
 		{
 			lastMessageTimer.addEventListener(TimerEvent.TIMER, handleLastMessageTimer);
+			statusDisappearTimer.addEventListener(TimerEvent.TIMER, handleStatusDisappearTimer);
 		}
 		
 		[Bindable(event="selectedUserChanged")]
@@ -279,8 +283,19 @@ package net.codecomposer.palace.model
 			}
 		}
 		
+		private function handleStatusDisappearTimer(event:TimerEvent):void {
+			clearStatusMessage();
+		}
+		
+		public function clearStatusMessage():void {
+			statusMessageString = "";
+		}
+		
 		public function statusMessage(message:String):void {
 			recordChat("<i>" + message + "</i>\n");
+			statusMessageString = message;
+			statusDisappearTimer.reset();
+			statusDisappearTimer.start();
 			dispatchEvent(new Event('chatLogUpdated'));
 		}
 		

@@ -430,6 +430,11 @@
 			}
 			
 
+			protected function resetZoom():void {
+				chatWindow.roomView.scaleX = chatWindow.roomView.scaleY = 1;
+				zoomSlider.value = 1;
+			}
+			
 			protected function handleZoomChange(event:Event):void
 			{
 				chatWindow.roomView.scaleX = chatWindow.roomView.scaleY = zoomSlider.value;
@@ -455,11 +460,11 @@
 		<mx1:Spacer width="15" />
 		<s:Label text="Zoom:" />
 		<s:HSlider id="zoomSlider" width="75" value="1.0" minimum="0.5" maximum="1.5" snapInterval="0.01" liveDragging="true" change="handleZoomChange(event)" />
+		<s:Button label="Reset" click="resetZoom()" />
 	</s:HGroup>
 			
 	
 	<s:HGroup top="5" right="5" verticalAlign="middle">
-		<s:Label text="{palace.currentRoom.users.length}/{palace.population}" />
 		<s:Button label="Disconnect" click="disconnect()" enabled="{palace.connected}" />
 		<s:ToggleButton selected="true" label="Directory" id="directoryButton" click="handleDirectoryClick(event)" />
 		<s:Button label="Connect" click="showConnectWindow()" />

@@ -1398,6 +1398,7 @@ package net.codecomposer.palace.rpc
 		}
 		
 		private function handleReceiveRoomDescription(size:int, referenceId:int):void {
+			currentRoom.clearStatusMessage();
 			palaceController.clearAlarms();
 			palaceController.midiStop();
 			

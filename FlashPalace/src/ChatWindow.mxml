@@ -2,9 +2,8 @@
 <s:Panel xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/halo" xmlns:view="net.codecomposer.palace.view.*" xmlns:code="http://code.google.com/p/flexlib/"
 	title="{palace.serverName} - {palace.currentRoom.name}{palace.currentRoom.selectedUser ? ' - ' + palace.currentRoom.selectedUser.name : ''}"
 	creationComplete="handleCreationComplete()"
-    fontStyle="{palace.currentRoom.selectedUser ? 'italic' : 'normal'}"
 	click="handleTitleClicked(event)"
-	currentState="disconnected">
+	currentState="disconnected" xmlns:layout="flexlib.scheduling.scheduleClasses.layout.*">
 	
 	<s:states>
 		<s:State name="disconnected" />
@@ -104,6 +103,10 @@
 				dispatchEvent(event.clone());
 			}
 			
+			private function clearStatusMessage():void {
+				palace.currentRoom.clearStatusMessage();
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -117,7 +120,26 @@
 							 securityError="handleSecurityError(event)"
 							 room="{palace.currentRoom}" mediaServer="{palace.mediaServer}"/>
 		
+		<s:Group width="100%">
+			<s:layout>
+				<s:BasicLayout />
+			</s:layout>
+			<s:Rect top="0" width="100%" height="1">
+				<s:fill>
+					<s:SolidColor color="#333333" />
+				</s:fill>
+			</s:Rect>
+			<s:Rect width="100%" height="100%">
+				<s:fill>
+					<s:SolidColor color="#EEEEEE" />
+				</s:fill>
+			</s:Rect>
+			<s:Label left="5" top="5" bottom="3" text="Users: {palace.currentRoom.users.length}/{palace.population}" />
+			<s:Label right="5" top="5" bottom="3" text="{palace.currentRoom.statusMessageString}" click="clearStatusMessage()" />
+		</s:Group>
+		
 		<code:PromptingTextInput prompt="Type here to chat..."
+								 fontStyle="{palace.currentRoom.selectedUser ? 'italic' : 'normal'}"
 								 width="100%"
 								 enabled="{palace.connected}"
 								 id="chatBox" keyDown="handleChatKeyDown(event);" maxChars="254"/>
