@@ -152,6 +152,7 @@ package net.codecomposer.palace.view
 			
 			dragging = true;
 			stage.addEventListener(MouseEvent.MOUSE_UP, handleStageMouseUp);
+			addEventListener(Event.REMOVED_FROM_STAGE, handleRemovedFromStage);
 			mousePos.x = client.currentRoom.roomView.mouseX;
 			mousePos.y = client.currentRoom.roomView.mouseY;
 			lastMousePos = mousePos.clone();
@@ -222,6 +223,17 @@ package net.codecomposer.palace.view
 						}
 					}
 					break;
+			}
+		}
+		
+		private function handleRemovedFromStage(event:Event):void {
+			// If the object is removed from the stage before the
+			// MOUSE_UP handler is fired, we can't unregister the
+			// event listener because we don't have a reference to
+			// the stage anymore.
+			if (dragging) {
+				dragging = false;
+				stage.removeEventListener(MouseEvent.MOUSE_UP, handleStageMouseUp);
 			}
 		}
 		
