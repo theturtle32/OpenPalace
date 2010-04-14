@@ -736,7 +736,7 @@ package net.codecomposer.palace.iptscrae
 		{
 			var hotspot:PalaceHotspot = client.currentRoom.getHotspotById(spotId);
 			if (hotspot) {
-				hotspot.moveTo(hotspot.location.x + xBy, hotspot.location.y + yBy);
+				hotspot.moveTo(hotspot.location.x, hotspot.location.y);
 			}
 		}
 		
