@@ -20,8 +20,10 @@
 			}
 			
 			private function handleSave():void {
+				preferences.muteSounds = muteSounds.selected;
 				preferences.userName = userName.text;
 				preferences.regCode = regCode.text;
+				palace.muteSounds = preferences.muteSounds;
 				palace.changeName(preferences.userName);
 				palace.setRegistrationCode(preferences.regCode);
 				
@@ -45,6 +47,9 @@
 				<s:HGroup gap="3" verticalAlign="middle">
 					<s:Label text="Reg Code:" />
 					<s:TextInput id="regCode" text="{preferences.regCode}" />
+				</s:HGroup>
+				<s:HGroup gap="3" verticalAlign="middle">
+					<s:CheckBox id="muteSounds" label="Mute Sounds:" selected="{preferences.muteSounds}" />
 				</s:HGroup>
 			</s:VGroup>
 		</mx1:Canvas>

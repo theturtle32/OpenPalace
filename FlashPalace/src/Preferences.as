@@ -72,6 +72,23 @@ package
 			return returnValue;
 		}
 		
+		
+		[Bindable(event="muteSoundsChanged")]
+		public function set muteSounds(newValue:Boolean):void {
+			sharedObject.data.muteSounds = newValue;
+			sharedObject.flush();
+			dispatchEvent(new Event('muteSoundsChanged'));
+		}
+		public function get muteSounds():Boolean {
+			var returnValue:Boolean = sharedObject.data.muteSounds;
+			if (!returnValue) {
+				sharedObject.data.muteSounds = false;
+				sharedObject.flush();
+			}
+			return returnValue;
+		}
+		
+		
 		[Bindable(event="regCodeChanged")]
 		public function set regCode(newValue:String):void {
 			sharedObject.data.regCode = newValue;

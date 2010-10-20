@@ -53,6 +53,7 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 				preferences.port = port.text;
 				
 				browserManager.setFragment("palace=" + hostName.text + ":" + int(port.text).toString());
+				palace.muteSounds = preferences.muteSounds;
 				palace.connect(preferences.userName, hostName.text, int(port.text));
 			}
 			

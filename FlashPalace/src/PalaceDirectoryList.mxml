@@ -71,6 +71,7 @@
 						
 						if (hostName && hostName.length > 0) {
 							browserManager.setFragment("palace=" + hostName + ":" + port.toString());
+							PalaceClient.getInstance().muteSounds = Preferences.getInstance().muteSounds;
 							PalaceClient.getInstance().connect(Preferences.getInstance().userName, hostName, port);
 						}
 					}

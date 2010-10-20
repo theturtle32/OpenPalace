@@ -10,6 +10,7 @@ package net.codecomposer.palace.view
 	
 	import net.codecomposer.palace.rpc.PalaceClient;
 
+	
 	public class PalaceSoundPlayer
 	{
 		
@@ -117,23 +118,27 @@ package net.codecomposer.palace.view
 		}
 		
 		private function playSoundAsset(soundAsset:SoundAsset):void {
+			if (!client.muteSounds) {
 				var soundTransform:SoundTransform = new SoundTransform(1,0);
 				soundAsset.play(0,0,soundTransform);
+			}
 		}
 		
 		public function playSound(soundName:String):void {
-			var sound:Class = Class(soundMap[soundName.toLowerCase()]);
-			if (sound != null) {
-				playSoundAsset(SoundAsset(new sound()));
-			}
-			else {
-				soundName = soundName.replace(/\.wav$/i, "");
-				var request:URLRequest = new URLRequest(client.mediaServer + soundName.toLowerCase() + ".mp3");
-				var soundFactory:Sound = new Sound();
-				soundFactory.addEventListener(IOErrorEvent.IO_ERROR, handleIOError);
-				soundFactory.load(request);
-				var soundTransform:SoundTransform = new SoundTransform(1,0);
-				var dynamicSound:SoundChannel = soundFactory.play(0,0,soundTransform);
+			if (!client.muteSounds) {
+				var sound:Class = Class(soundMap[soundName.toLowerCase()]);
+				if (sound != null) {
+					playSoundAsset(SoundAsset(new sound()));
+				}
+				else {
+					soundName = soundName.replace(/\.wav$/i, "");
+					var request:URLRequest = new URLRequest(client.mediaServer + soundName.toLowerCase() + ".mp3");
+					var soundFactory:Sound = new Sound();
+					soundFactory.addEventListener(IOErrorEvent.IO_ERROR, handleIOError);
+					soundFactory.load(request);
+					var soundTransform:SoundTransform = new SoundTransform(1,0);
+					var dynamicSound:SoundChannel = soundFactory.play(0,0,soundTransform);
+				}
 			}
 		}
 		

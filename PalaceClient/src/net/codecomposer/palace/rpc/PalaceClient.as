@@ -25,6 +25,7 @@ package net.codecomposer.palace.rpc
 	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
 	import flash.events.TimerEvent;
+	import flash.net.SharedObject;
 	import flash.net.Socket;
 	import flash.net.XMLSocket;
 	import flash.system.LoaderContext;
@@ -83,6 +84,7 @@ package net.codecomposer.palace.rpc
 		
 		[Bindable]
 		public static var loaderContext:LoaderContext = new LoaderContext();
+		
 
 		/* FLAGS */
 		
@@ -184,14 +186,20 @@ package net.codecomposer.palace.rpc
 		public var cyborgHotspot:PalaceHotspot = new PalaceHotspot();
 		
 		private var recentLogonUserIds:ArrayCollection = new ArrayCollection();
-		
+		public var muteSounds:Boolean;
 		private var _userName:String = "OpenPalace User";
+		private var sharedObject:SharedObject;
 		
 		[Bindable]
 		public var palaceController:PalaceController;
 		
 		private var temporaryUserFlags:int;
 		// We get the user flags before we have the current user
+		
+		
+
+		
+		
 		
 		[Bindable(event="userNameChange")]
 		public function get userName():String {
@@ -200,7 +208,7 @@ package net.codecomposer.palace.rpc
 		
 		public function set userName(newValue:String):void {
 			if (newValue.length > 31) {
-				newValue = newValue.slice(0, 31); 
+				newValue = newValue.slice(0, 31);
 			}
 			_userName = newValue;
 			dispatchEvent(new Event('userNameChange'));
