@@ -79,7 +79,7 @@
 					var propRecord:SavedPropRecord = new SavedPropRecord();
 					propRecord.id = prop.id;
 					propRecord.crc = prop.crc;
-					propRecord.imageDataURL = prop.imageDataURL;
+					propRecord.imageDataURL = prop.imageDataURL.replace("openpalace-props-dev", "openpalace-props");
 					propRecord.guid = prop.guid;
 					propRecord.width = prop.width || 44;
 					propRecord.height = prop.height || 44;
