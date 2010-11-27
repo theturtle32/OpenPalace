@@ -36,6 +36,7 @@
 			private var preferencesWindow:PreferencesWindow;
 			private var propsWindow:PropsWindow;
 			private var newPropWindow:NewPropWindow;
+			private var debugWindow:DebugWindow;
 			
 			private var preferences:Preferences = Preferences.getInstance();
 			
@@ -350,6 +351,28 @@
 				}
 			}
 			
+			private function showDebugWindow():void {
+				debugWindow = new DebugWindow();
+				debugWindow.addEventListener(MDIWindowEvent.CLOSE, function(event:Event):void {
+					debugButton.selected = false;
+				});
+				mdic.windowManager.add(debugWindow);
+			}
+			
+			private function hideDebugWindow():void {
+				mdic.windowManager.remove(debugWindow);
+				debugWindow = null;
+				palace.palaceController.scriptManager.resume();
+			}
+			
+			private function handleDebugClick(event:MouseEvent):void {
+				if (ToggleButton(event.target).selected) {
+					showDebugWindow();
+				}
+				else {
+					hideDebugWindow();
+				}
+			}
 			
 			private function showDirectoryWindow():void {
 				directoryWindow = new DirectoryWindow();
@@ -433,6 +456,7 @@
 		<s:ToggleButton id="logButton" label="Log" click="handleLogClick(event)" />
 		<s:ToggleButton id="propsButton" label="Props" click="handlePropsClick(event)" />
 		<s:ToggleButton id="preferencesButton" label="Preferences" click="handlePreferencesClick(event)" />
+		<s:ToggleButton id="debugButton" label="Debug" click="handleDebugClick(event)" visible="false" includeInLayout="false" />
 		<mx1:Spacer width="15" />
 		<s:Label text="Zoom:" />
 		<s:HSlider id="zoomSlider" width="75" value="1.0" minimum="0.5" maximum="1.5" snapInterval="0.01" liveDragging="true" change="handleZoomChange(event)" />

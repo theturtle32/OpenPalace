@@ -42,6 +42,7 @@ package net.codecomposer.palace.rpc
 	import net.codecomposer.palace.event.PalaceEvent;
 	import net.codecomposer.palace.event.PalaceSecurityErrorEvent;
 	import net.codecomposer.palace.event.PropEvent;
+	import net.codecomposer.palace.iptscrae.DebugData;
 	import net.codecomposer.palace.iptscrae.IptEventHandler;
 	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.message.IncomingMessageTypes;
@@ -132,7 +133,8 @@ package net.codecomposer.palace.rpc
 		public var messageP:int = 0;
 		public var waitingForMore:Boolean = false;
 		
-
+		[Bindable]
+		public var debugData:DebugData;
 		[Bindable]
 		public var utf8:Boolean = false;
 		[Bindable]
@@ -187,7 +189,6 @@ package net.codecomposer.palace.rpc
 		public var muteSounds:Boolean;
 		private var _userName:String = "OpenPalace User";
 		private var sharedObject:SharedObject;
-		public var isIdle:Boolean = false;
 		
 		[Bindable]
 		public var palaceController:PalaceController;
@@ -564,7 +565,6 @@ package net.codecomposer.palace.rpc
 			
 			currentUser.x = x;
 			currentUser.y = y;
-
 		}
 		
 		public function setFace(face:int):void {
@@ -1590,7 +1590,7 @@ package net.codecomposer.palace.rpc
 			currentRoom.name = roomName;
 //			trace("Room name: " + currentRoom.name);
 			
-
+			debugData = new DebugData(currentRoom);
 			
 			currentRoom.dimRoom(100);
 			currentRoom.showAvatars = true;
@@ -1933,7 +1933,7 @@ package net.codecomposer.palace.rpc
 					
 				}
 				else if (currentChatItem.direction == PalaceChatRecord.OUTCHAT) {
-					isIdle = false;
+					
 					if (currentChatItem.whisper) {
 						privateMessage(currentChatItem.chatstr, currentChatItem.whotarget);
 					}

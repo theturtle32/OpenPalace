@@ -57,7 +57,7 @@ package net.codecomposer.palace.model
 		public var groupId:int;
 		public var scriptRecordOffset:int;
 		public var states:ArrayCollection = new ArrayCollection();
-		private var eventHandlers:Object = {};
+		public var eventHandlers:Vector.<IptEventHandler> = new Vector.<IptEventHandler>();
 		
 		[Bindable('idChanged')]
 		public function set id(newValue:int):void {
@@ -348,15 +348,21 @@ package net.codecomposer.palace.model
 //			trace("Got new hotspot: " + this.id + " - DestID: " + dest + " - name: '" + this.name + "' - PointCount: " + numPoints);
 		}
 		
-		public function hasEventHandler(eventType:String):Boolean {
-			return Boolean(eventHandlers[eventType]);
+		public function hasEventHandler(eventType:int):Boolean {
+			return (nbrScripts > 0 && (scriptEventMask & 1 << eventType) != 0);
 		}
 		
-		public function getEventHandler(eventType:String):IptTokenList {
-			var tokenList:IptTokenList = eventHandlers[eventType];
-			if(tokenList)
+		public function getEventHandler(eventType:int):IptTokenList {
+			if(nbrScripts > 0 && (scriptEventMask & 1 << eventType) != 0)
 			{
-				return tokenList;
+				for(var i:int = 0; i < nbrScripts; i++)
+				{
+					var eventHandler:IptEventHandler = eventHandlers[i];
+					if (eventHandler.eventType == eventType) {
+						return eventHandler.tokenList;
+					}
+				}
+				
 			}
 			return null;
 		}
@@ -369,8 +375,18 @@ package net.codecomposer.palace.model
 //				trace("Hotspot " + id + " name: " + name + " script:\n" + scriptString);
 				
 				var manager:PalaceIptManager = PalaceClient.getInstance().palaceController.scriptManager;
-				eventHandlers = manager.parseEventHandlers(scriptString);
+				var foundHandlers:Object = manager.parseEventHandlers(scriptString);
 				
+				for (var eventName:String in foundHandlers) {
+					var handler:IptTokenList = foundHandlers[eventName];
+					var eventType:int = IptEventHandler.getEventType(eventName)
+					var eventHandler:IptEventHandler =
+						new IptEventHandler(eventType, handler.sourceScript, handler);
+					eventHandlers.push(eventHandler);
+//					trace("Got event handler.  Type: " + eventHandler.eventType + " Script: \n" + eventHandler.script);
+					nbrScripts ++;
+					scriptEventMask |= (1 << eventType);
+				}
 			}
 		}
 
