@@ -26,7 +26,7 @@ package net.codecomposer.palace.iptscrae
 			trace(value);
 		}
 		
-		public function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):Boolean {
+		public function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:String):Boolean {
 			return true;
 		}
 		

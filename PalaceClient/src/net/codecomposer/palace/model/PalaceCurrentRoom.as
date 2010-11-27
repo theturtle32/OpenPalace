@@ -27,6 +27,8 @@ package net.codecomposer.palace.model
 	
 	import net.codecomposer.palace.event.ChatEvent;
 	import net.codecomposer.palace.event.PalaceRoomEvent;
+	import net.codecomposer.palace.iptscrae.IptEventHandler;
+	import net.codecomposer.palace.iptscrae.PalaceController;
 	import net.codecomposer.palace.util.PalaceUtil;
 	import net.codecomposer.palace.view.PalaceRoomView;
 

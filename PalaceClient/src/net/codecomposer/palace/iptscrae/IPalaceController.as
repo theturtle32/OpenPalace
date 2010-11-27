@@ -88,6 +88,6 @@ package net.codecomposer.palace.iptscrae
 		function getRoomUserIdByIndex(userIndex:int):int;
 		function getChatString():String;
 		function setSpotAlarm(spotId:int, futureTime:int):void;
-		function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):Boolean;
+		function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:String):Boolean;
 	}
 }

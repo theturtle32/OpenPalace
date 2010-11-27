@@ -45,15 +45,20 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 		<![CDATA[
 			import mx.binding.utils.ChangeWatcher;
 			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
 			import mx.core.DragSource;
 			import mx.core.FlexBitmap;
 			import mx.core.IUIComponent;
 			import mx.core.IVisualElement;
+			import mx.core.mx_internal;
 			import mx.events.DragEvent;
 			import mx.events.EffectEvent;
+			import mx.events.FlexEvent;
 			import mx.events.PropertyChangeEvent;
 			import mx.managers.DragManager;
+			import mx.managers.SystemManager;
 			
+			import net.codecomposer.palace.iptscrae.IptEventHandler;
 			import net.codecomposer.palace.event.ChatEvent;
 			import net.codecomposer.palace.event.PalaceRoomEvent;
 			import net.codecomposer.palace.event.PalaceSecurityErrorEvent;
@@ -86,6 +91,19 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 			private var baseBackgroundFile:String;
 			private var forcingPng:Boolean = false;
 			private var forcingJpeg:Boolean = false;
+			private var client:PalaceClient = PalaceClient.getInstance();
+			
+			use namespace mx_internal;
+			private function userIdle(e:FlexEvent):void {
+				if( e.currentTarget.mx_internal::idleCounter == 6000) {
+					if (client.isIdle == false) {
+						client.palaceController.triggerHotspotEvent(client.cyborgHotspot, IptEventHandler.TYPE_IDLE);
+					}
+					client.isIdle = true;
+				} else {
+					client.isIdle = false;
+				}
+			}
 			
 			[Bindable(event="roomChanged")]
 			public function get room():PalaceCurrentRoom {
@@ -127,11 +145,13 @@ along with OpenPalace.  If not, see <http://www.gnu.org/licenses/>.
 					updateAvatarTransparencies();
 					dispatchEvent(new Event("roomChanged"));
 				};
+			
 			}
 			
 			private function handleCreationComplete():void {
 				initializeLoosePropContextMenu();
 				this.addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown);
+				this.systemManager.addEventListener(FlexEvent.IDLE, userIdle);
 			}
 			
 			private function handleUserMoved(event:PalaceRoomEvent):void {

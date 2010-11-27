@@ -66,7 +66,7 @@ package net.codecomposer.palace.iptscrae
 			trace(value);
 		}
 				
-		public function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:int):Boolean {
+		public function triggerHotspotEvent(hotspot:PalaceHotspot, eventType:String):Boolean {
 			var tokenList:IptTokenList = hotspot.getEventHandler(eventType);
 			if (tokenList) {
 				var context:PalaceIptExecutionContext = new PalaceIptExecutionContext(scriptManager);
@@ -78,7 +78,7 @@ package net.codecomposer.palace.iptscrae
 			return false;
 		}
 		
-		public function triggerHotspotEvents(eventType:int):Boolean {
+		public function triggerHotspotEvents(eventType:String):Boolean {
 			var ranScripts:Boolean = false;
 			for (var i:int = client.currentRoom.hotSpots.length-1; i > -1; i --) {
 				var hotspot:PalaceHotspot = PalaceHotspot(client.currentRoom.hotSpots.getItemAt(i));
@@ -92,7 +92,7 @@ package net.codecomposer.palace.iptscrae
 			return ranScripts;
 		}
 		
-		public function getHotspotEvents(eventType:int):Vector.<IptTokenList> {
+		public function getHotspotEvents(eventType:String):Vector.<IptTokenList> {
 			var scripts:Vector.<IptTokenList> = new Vector.<IptTokenList>;
 			var handler:IptTokenList;
 			for (var i:int = client.currentRoom.hotSpots.length-1; i > -1; i --) {
