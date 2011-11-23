@@ -41,7 +41,6 @@
         <!${useBrowserHistory} END Browser History required section -->  
 		    
         <script type="text/javascript" src="swfobject.js"></script>
-        <script type="text/javascript" src="swfmacmousewheel2.js"></script>
         <script type="text/javascript">
             <!-- For version detection, set to min. required Flash Player version, or 0 (or 0.0.0), for no version detection. --> 
             var swfVersionStr = "${version_major}.${version_minor}.${version_revision}";
@@ -66,7 +65,6 @@
                 flashvars, params, attributes);
 			<!-- JavaScript enabled so display the flashContent div in case it is not replaced with a swf object. -->
 			swfobject.createCSS("#flashContent", "display:block;text-align:left;");
-			swfmacmousewheel.registerObject("${application}");
         </script>
     </head>
     <body>

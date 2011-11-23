@@ -9,8 +9,6 @@
  
 	<fx:Script>
 		<![CDATA[
-			import com.pixelbreaker.ui.osx.MacMouseWheel;
-			
 			import flexlib.mdi.events.MDIWindowEvent;
 			
 			import mx.binding.utils.ChangeWatcher;
@@ -49,9 +47,6 @@
 				var version:Array = String(platform[1]).split(",");
 				var maj:int = parseInt(version[0]);
 				var min:int = parseInt(version[1]);
-				if (maj == 10 && min < 1) {
-					MacMouseWheel.setup(stage);
-				}
 			}
 			
 			private function handleStageKeyDown(event:KeyboardEvent):void {
